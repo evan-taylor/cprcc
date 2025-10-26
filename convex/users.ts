@@ -35,12 +35,15 @@ export const createUserProfile = mutation({
       .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
       .first();
 
-    if (existingProfile) {
-      return existingProfile._id;
-    }
-
     const isAdmin = args.email.trim().toLowerCase() === "etaylo28@calpoly.edu";
     const role = isAdmin ? "board" : "member";
+
+    if (existingProfile) {
+      if (isAdmin && existingProfile.role !== "board") {
+        await ctx.db.patch(existingProfile._id, { role: "board" });
+      }
+      return existingProfile._id;
+    }
 
     const profileId = await ctx.db.insert("userProfiles", {
       name: args.name,
