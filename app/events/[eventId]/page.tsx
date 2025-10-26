@@ -266,13 +266,25 @@ export default function EventDetailPage() {
                 </div>
                 <p className="mt-4 text-slate-600">{event.description}</p>
               </div>
-              {currentUser?.role === "board" && event.isOffsite && (
-                <button type="button"
-                  className="rounded-full bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700"
-                  onClick={() => router.push(`/events/${eventId}/carpools`)}
-                >
-                  Manage Carpools
-                </button>
+              {currentUser?.role === "board" && (
+                <div className="flex flex-col gap-2">
+                  <button
+                    className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
+                    onClick={() => router.push(`/events/${eventId}/edit`)}
+                    type="button"
+                  >
+                    Edit Event
+                  </button>
+                  {event.isOffsite && (
+                    <button
+                      className="rounded-full bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700"
+                      onClick={() => router.push(`/events/${eventId}/carpools`)}
+                      type="button"
+                    >
+                      Manage Carpools
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
