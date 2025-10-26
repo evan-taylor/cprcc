@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SiteHeader from "@/components/site-header";
@@ -8,8 +8,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function AdminPage() {
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const currentUser = useQuery(api.users.getCurrentUser);
-  const allUsers = useQuery(api.users.listAllUsers);
   const promoteToBoard = useMutation(api.users.promoteToBoard);
   const ensureCurrentUserProfile = useMutation(
     api.users.ensureCurrentUserProfile
@@ -18,6 +18,14 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [profileEnsured, setProfileEnsured] = useState(false);
   const router = useRouter();
+
+  const shouldFetchUsers =
+    isAuthenticated && currentUser && currentUser.role === "board";
+
+  const allUsers = useQuery(
+    api.users.listAllUsers,
+    shouldFetchUsers ? {} : "skip"
+  );
 
   useEffect(() => {
     if (currentUser === undefined) {
@@ -39,7 +47,17 @@ export default function AdminPage() {
       });
   }, [currentUser, profileEnsured, ensureCurrentUserProfile]);
 
-  if (currentUser === undefined || allUsers === undefined) {
+  useEffect(() => {
+    if (!isAuthenticated || currentUser === null) {
+      router.push("/signin");
+    }
+  }, [isAuthenticated, currentUser, router]);
+
+  if (
+    authLoading ||
+    currentUser === undefined ||
+    (shouldFetchUsers && allUsers === undefined)
+  ) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-slate-600">Loading...</div>
@@ -47,8 +65,7 @@ export default function AdminPage() {
     );
   }
 
-  if (currentUser === null) {
-    router.push("/signin");
+  if (!isAuthenticated || currentUser === null) {
     return null;
   }
 
@@ -91,8 +108,8 @@ export default function AdminPage() {
     }
   };
 
-  const members = allUsers.filter((user) => user.role === "member");
-  const boardMembers = allUsers.filter((user) => user.role === "board");
+  const members = allUsers?.filter((user) => user.role === "member") ?? [];
+  const boardMembers = allUsers?.filter((user) => user.role === "board") ?? [];
 
   return (
     <div className="min-h-screen bg-slate-50">
