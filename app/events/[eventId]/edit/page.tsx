@@ -7,12 +7,27 @@ import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
+const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
+
 export default function EditEventPage() {
   const params = useParams();
   const router = useRouter();
-  const eventId = params.eventId as Id<"events">;
+  const eventIdOrSlug = params.eventId as string;
 
-  const event = useQuery(api.events.getEvent, { eventId });
+  const isSlug =
+    eventIdOrSlug.includes("-") || !eventIdOrSlug.match(CONVEX_ID_PATTERN);
+
+  const eventById = useQuery(
+    api.events.getEvent,
+    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
+  );
+  const eventBySlug = useQuery(
+    api.events.getEventBySlug,
+    isSlug ? { slug: eventIdOrSlug } : "skip"
+  );
+
+  const event = isSlug ? eventBySlug : eventById;
+  const eventId = event?._id;
   const currentUser = useQuery(api.users.getCurrentUser);
   const updateEvent = useMutation(api.events.updateEvent);
   const deleteEvent = useMutation(api.events.deleteEvent);
@@ -35,7 +50,7 @@ export default function EditEventPage() {
 
   const suggestedSlug = useQuery(
     api.events.generateSlugSuggestion,
-    title && slugTouched ? { title, excludeEventId: eventId } : "skip"
+    title && slugTouched && eventId ? { title, excludeEventId: eventId } : "skip"
   );
 
   useEffect(() => {
@@ -123,6 +138,12 @@ export default function EditEventPage() {
     setIsSubmitting(true);
 
     try {
+      if (!eventId) {
+        setError("Event not found");
+        setIsSubmitting(false);
+        return;
+      }
+
       const startDateTime = new Date(`${startDate}T${startTime}`).getTime();
       const endDateTime = new Date(`${endDate}T${endTime}`).getTime();
 
@@ -151,6 +172,8 @@ export default function EditEventPage() {
   };
 
   const handleDelete = async () => {
+    if (!eventId) return;
+    
     setIsDeleting(true);
     setError(null);
 
