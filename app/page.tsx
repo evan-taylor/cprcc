@@ -1,5 +1,29 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import SiteHeader from "@/components/site-header";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description:
+    "Cal Poly Red Cross Club at Cal Poly SLO. Join our mission to prevent and relieve suffering through disaster relief, blood services, and health & safety training. No experience required!",
+  openGraph: {
+    title: "Cal Poly Red Cross Club | Volunteer & Make a Difference",
+    description:
+      "Cal Poly Red Cross Club at Cal Poly SLO. Join our mission to prevent and relieve suffering through disaster relief, blood services, and health & safety training.",
+    url: "https://calpolyredcross.org",
+    images: [
+      {
+        url: "/hero.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Cal Poly Red Cross Club volunteers tabling at an event",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "/",
+  },
+};
 
 const heroImage = "/hero.jpg";
 
