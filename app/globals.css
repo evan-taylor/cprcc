@@ -24,3 +24,105 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer base {
+  /* Form inputs with proper contrast and readability */
+  /* Forms are intentionally locked to light theme (white bg, dark text) per product requirement */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  select,
+  textarea {
+    width: 100%;
+    border-radius: 0.5rem;
+    border-width: 1px;
+    border-color: rgb(203 213 225);
+    background-color: rgb(255 255 255);
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: rgb(15 23 42);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    color-scheme: light;
+  }
+
+  input[type="text"]::placeholder,
+  input[type="email"]::placeholder,
+  input[type="password"]::placeholder,
+  input[type="tel"]::placeholder,
+  input[type="number"]::placeholder,
+  input[type="search"]::placeholder,
+  input[type="url"]::placeholder,
+  select::placeholder,
+  textarea::placeholder {
+    color: rgb(148 163 184);
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="tel"]:focus,
+  input[type="number"]:focus,
+  input[type="search"]:focus,
+  input[type="url"]:focus,
+  input[type="date"]:focus,
+  input[type="time"]:focus,
+  input[type="datetime-local"]:focus,
+  select:focus,
+  textarea:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: rgb(59 130 246);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+  }
+
+  input[type="text"]:disabled,
+  input[type="email"]:disabled,
+  input[type="password"]:disabled,
+  input[type="tel"]:disabled,
+  input[type="number"]:disabled,
+  input[type="search"]:disabled,
+  input[type="url"]:disabled,
+  input[type="date"]:disabled,
+  input[type="time"]:disabled,
+  input[type="datetime-local"]:disabled,
+  select:disabled,
+  textarea:disabled {
+    background-color: rgb(241 245 249);
+    color: rgb(100 116 139);
+    cursor: not-allowed;
+  }
+
+  input[type="text"]:disabled::placeholder,
+  input[type="email"]:disabled::placeholder,
+  input[type="password"]:disabled::placeholder,
+  input[type="tel"]:disabled::placeholder,
+  input[type="number"]:disabled::placeholder,
+  input[type="search"]:disabled::placeholder,
+  input[type="url"]:disabled::placeholder,
+  select:disabled::placeholder,
+  textarea:disabled::placeholder {
+    color: rgb(148 163 184);
+  }
+
+  /* Checkboxes and radios */
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: rgb(225 29 72);
+  }
+
+  /* Labels */
+  label {
+    color: rgb(30 41 59);
+  }
+}

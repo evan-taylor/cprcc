@@ -15,27 +15,22 @@ export default function SignIn() {
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [shouldEnsureProfile, setShouldEnsureProfile] = useState(false);
   const createdRef = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated && shouldEnsureProfile && !createdRef.current) {
+    if (isAuthenticated && !createdRef.current) {
+      const pathname = window.location.pathname;
+      if (pathname !== "/signin") {
+        return;
+      }
       createdRef.current = true;
-      ensureCurrentUserProfile()
-        .then(() => {
-          setShouldEnsureProfile(false);
-          router.push("/");
-        })
-        .catch((e) => {
-          setError(e instanceof Error ? e.message : "Failed to create profile");
-          createdRef.current = false;
-        })
-        .finally(() => {
-          setLoading(false);
+      ensureCurrentUserProfile({})
+        .catch(() => {
+          // Silently ignore profile creation errors for existing users
         });
     }
-  }, [isAuthenticated, shouldEnsureProfile, ensureCurrentUserProfile, router]);
+  }, [isAuthenticated, ensureCurrentUserProfile]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,6 +41,7 @@ export default function SignIn() {
       const formData = new FormData(e.target as HTMLFormElement);
       const _email = formData.get("email") as string;
       const name = formData.get("name") as string;
+      const phoneNumber = formData.get("phoneNumber") as string;
 
       if (flow === "signUp") {
         if (!name || name.trim().length === 0) {
@@ -53,9 +49,19 @@ export default function SignIn() {
           setLoading(false);
           return;
         }
+        
+        const localPhone = phoneNumber && phoneNumber.trim().length > 0 
+          ? phoneNumber.trim() 
+          : undefined;
+        
         formData.set("flow", "signUp");
-        setShouldEnsureProfile(true);
+        
         await signIn("password", formData);
+        
+        await ensureCurrentUserProfile({ phoneNumber: localPhone });
+        
+        router.push("/");
+        setLoading(false);
       } else {
         formData.set("flow", "signIn");
         await signIn("password", formData);
@@ -69,7 +75,7 @@ export default function SignIn() {
         setError("Something went wrong. Please try again.");
       }
       setLoading(false);
-      setShouldEnsureProfile(false);
+      createdRef.current = false;
     }
   };
 
@@ -121,22 +127,42 @@ export default function SignIn() {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             {flow === "signUp" && (
-              <div>
-                <label
-                  className="mb-1.5 block font-medium text-slate-700 text-sm"
-                  htmlFor="name"
-                >
-                  Full Name
-                </label>
-                <input
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 transition focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                  id="name"
-                  name="name"
-                  placeholder="Enter your full name"
-                  required={flow === "signUp"}
-                  type="text"
-                />
-              </div>
+              <>
+                <div>
+                  <label
+                    className="mb-1.5 block font-medium text-slate-700 text-sm"
+                    htmlFor="name"
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 transition focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    id="name"
+                    name="name"
+                    placeholder="Enter your full name"
+                    required={flow === "signUp"}
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="mb-1.5 block font-medium text-slate-700 text-sm"
+                    htmlFor="phoneNumber"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 transition focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    placeholder="(555) 123-4567"
+                    type="tel"
+                  />
+                  <p className="mt-1.5 text-slate-500 text-xs">
+                    Optional but recommended for carpool coordination
+                  </p>
+                </div>
+              </>
             )}
 
             <div>

@@ -38,7 +38,7 @@ export default function AdminPage() {
       return;
     }
 
-    ensureCurrentUserProfile()
+    ensureCurrentUserProfile({})
       .then(() => {
         setProfileEnsured(true);
       })

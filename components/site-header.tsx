@@ -137,7 +137,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
       return;
     }
 
-    ensureCurrentUserProfile()
+    ensureCurrentUserProfile({})
       .then(() => {
         setProfileEnsured(true);
       })
