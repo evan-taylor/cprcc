@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import SiteHeader from "@/components/site-header";
 
@@ -208,6 +209,15 @@ function GapSection() {
           before you request training.
         </p>
       </header>
+      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Image
+          alt="American Red Cross Group/Activity/Position (GAP) Chart showing Disaster Cycle Services organizational structure"
+          className="h-auto w-full"
+          height={1545}
+          src="/gap-chart.jpg"
+          width={2000}
+        />
+      </div>
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         {gapLegend.map((item) => (
           <article
@@ -221,23 +231,10 @@ function GapSection() {
           </article>
         ))}
       </div>
-      <ul className="mt-4 space-y-2 text-slate-700 text-sm">
-        <li className="leading-relaxed">
-          Light blue = client-facing, yellow = first-time volunteer priorities,
-          green = best for volunteers with health licenses.
-        </li>
-        <li className="leading-relaxed">
-          Download the full chart:
-          <Link
-            className="ml-2 text-rose-700 underline-offset-4 hover:underline"
-            href="https://pacificdivision.weebly.com/uploads/4/3/9/9/43993831/group%20activitypositionchart.pdf"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            GAP chart PDF
-          </Link>
-        </li>
-      </ul>
+      <p className="mt-4 text-slate-700 text-sm leading-relaxed">
+        Light blue = client-facing, yellow = first-time volunteer priorities,
+        green = best for volunteers with health licenses.
+      </p>
     </section>
   );
 }
