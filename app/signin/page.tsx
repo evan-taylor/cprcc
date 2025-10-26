@@ -1,18 +1,42 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 
 export default function SignIn() {
   const { signIn } = useAuthActions();
+  const { isAuthenticated } = useConvexAuth();
   const createUserProfile = useMutation(api.users.createUserProfile);
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pendingProfile, setPendingProfile] = useState<{
+    name: string;
+    email: string;
+  } | null>(null);
+  const createdRef = useRef(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated && pendingProfile && !createdRef.current) {
+      createdRef.current = true;
+      createUserProfile(pendingProfile)
+        .then(() => {
+          setPendingProfile(null);
+          router.push("/");
+        })
+        .catch((e) => {
+          setError(e instanceof Error ? e.message : "Failed to create profile");
+          createdRef.current = false;
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [isAuthenticated, pendingProfile, createUserProfile, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,22 +55,22 @@ export default function SignIn() {
           return;
         }
         formData.set("flow", "signUp");
+        setPendingProfile({ name, email });
         await signIn("password", formData);
-        await createUserProfile({ name, email });
       } else {
         formData.set("flow", "signIn");
         await signIn("password", formData);
+        router.push("/");
+        setLoading(false);
       }
-
-      router.push("/");
     } catch (authError) {
       if (authError instanceof Error) {
         setError(authError.message);
       } else {
         setError("Something went wrong. Please try again.");
       }
-    } finally {
       setLoading(false);
+      setPendingProfile(null);
     }
   };
 
