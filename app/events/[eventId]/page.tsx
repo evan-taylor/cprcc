@@ -18,9 +18,9 @@ export default function EventDetailPage() {
   const deleteRsvp = useMutation(api.events.deleteRsvp);
 
   const [showRsvpForm, setShowRsvpForm] = useState(false);
-  const [selectedShiftId, setSelectedShiftId] = useState<
-    Id<"shifts"> | undefined
-  >();
+  const [selectedShiftIds, setSelectedShiftIds] = useState<
+    Set<Id<"shifts">>
+  >(new Set());
   const [needsRide, setNeedsRide] = useState(false);
   const [canDrive, setCanDrive] = useState(false);
   const [carType, setCarType] = useState("");
@@ -66,6 +66,45 @@ export default function EventDetailPage() {
   );
   const hasRsvped = userRsvps.length > 0;
 
+  const toggleShiftSelection = (shiftId: Id<"shifts">) => {
+    setSelectedShiftIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(shiftId)) {
+        next.delete(shiftId);
+      } else {
+        next.add(shiftId);
+      }
+      return next;
+    });
+  };
+
+  const selectAllAvailableShifts = () => {
+    if (event.eventType !== "boothing") return;
+    
+    const availableShiftIds = event.shifts
+      .filter((shift) => {
+        const shiftRsvps = event.rsvps.filter((r) => r.shiftId === shift._id);
+        const isFull = shiftRsvps.length >= shift.requiredPeople;
+        const userHasThisShift = userRsvps.some((r) => r.shiftId === shift._id);
+        return !isFull && !userHasThisShift;
+      })
+      .map((shift) => shift._id);
+    
+    setSelectedShiftIds(new Set(availableShiftIds));
+  };
+
+  const clearShiftSelection = () => {
+    setSelectedShiftIds(new Set());
+  };
+
+  const removeShiftFromSelection = (shiftId: Id<"shifts">) => {
+    setSelectedShiftIds((prev) => {
+      const next = new Set(prev);
+      next.delete(shiftId);
+      return next;
+    });
+  };
+
   const handleRsvpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -78,8 +117,8 @@ export default function EventDetailPage() {
         return;
       }
 
-      if (event.eventType === "boothing" && !selectedShiftId) {
-        setError("Please select a shift above before confirming");
+      if (event.eventType === "boothing" && selectedShiftIds.size === 0) {
+        setError("Please select at least one shift above before confirming");
         setIsSubmitting(false);
         return;
       }
@@ -98,21 +137,64 @@ export default function EventDetailPage() {
         return;
       }
 
-      await createRsvp({
-        eventId,
-        shiftId: selectedShiftId,
-        needsRide: event.isOffsite ? needsRide : false,
-        canDrive: event.isOffsite ? canDrive : false,
-        driverInfo: canDrive ? { carType, carColor, capacity } : undefined,
-      });
+      const shiftsToRsvp = event.eventType === "boothing" 
+        ? Array.from(selectedShiftIds)
+        : [undefined];
 
-      setShowRsvpForm(false);
-      setNeedsRide(false);
-      setCanDrive(false);
-      setCarType("");
-      setCarColor("");
-      setCapacity(4);
-      setSelectedShiftId(undefined);
+      const results: Array<{ shiftId?: Id<"shifts">; success: boolean; error?: string }> = [];
+
+      for (const shiftId of shiftsToRsvp) {
+        try {
+          await createRsvp({
+            eventId,
+            shiftId,
+            needsRide: event.isOffsite ? needsRide : false,
+            canDrive: event.isOffsite ? canDrive : false,
+            driverInfo: canDrive ? { carType, carColor, capacity } : undefined,
+          });
+          results.push({ shiftId, success: true });
+        } catch (err) {
+          results.push({
+            shiftId,
+            success: false,
+            error: err instanceof Error ? err.message : "Failed to RSVP",
+          });
+        }
+      }
+
+      const successCount = results.filter((r) => r.success).length;
+      const failureCount = results.filter((r) => !r.success).length;
+
+      if (failureCount === 0) {
+        setShowRsvpForm(false);
+        setNeedsRide(false);
+        setCanDrive(false);
+        setCarType("");
+        setCarColor("");
+        setCapacity(4);
+        setSelectedShiftIds(new Set());
+      } else if (successCount > 0) {
+        const failedShifts = results
+          .filter((r) => !r.success)
+          .map((r) => {
+            const shift = event.shifts.find((s) => s._id === r.shiftId);
+            return shift
+              ? `${new Date(shift.startTime).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}`
+              : "Unknown shift";
+          });
+        setError(
+          `${successCount} shift(s) confirmed. Failed to reserve: ${failedShifts.join(", ")}. ${results.find((r) => !r.success)?.error || ""}`
+        );
+        const failedShiftIds = results
+          .filter((r) => !r.success && r.shiftId)
+          .map((r) => r.shiftId as Id<"shifts">);
+        setSelectedShiftIds(new Set(failedShiftIds));
+      } else {
+        setError(results[0]?.error || "Failed to RSVP");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to RSVP");
     } finally {
@@ -213,9 +295,34 @@ export default function EventDetailPage() {
 
           {event.eventType === "boothing" && event.shifts.length > 0 && (
             <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <h2 className="mb-4 font-semibold text-slate-900 text-xl">
-                Available Shifts
-              </h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-semibold text-slate-900 text-xl">
+                  Available Shifts
+                  {selectedShiftIds.size > 0 && (
+                    <span className="ml-2 rounded-full bg-rose-100 px-3 py-1 font-semibold text-rose-700 text-sm">
+                      {selectedShiftIds.size} selected
+                    </span>
+                  )}
+                </h2>
+                {currentUser && (
+                  <div className="flex gap-2">
+                    <button
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 text-sm transition hover:bg-slate-50"
+                      onClick={selectAllAvailableShifts}
+                      type="button"
+                    >
+                      Select All
+                    </button>
+                    <button
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 text-sm transition hover:bg-slate-50"
+                      onClick={clearShiftSelection}
+                      type="button"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="space-y-3">
                 {event.shifts.map((shift) => {
                   const shiftStart = new Date(shift.startTime);
@@ -227,63 +334,72 @@ export default function EventDetailPage() {
                   const userHasThisShift = userRsvps.some(
                     (r) => r.shiftId === shift._id
                   );
-                  const isSelected = selectedShiftId === shift._id;
+                  const isSelected = selectedShiftIds.has(shift._id);
+                  const isDisabled = isFull || userHasThisShift;
 
                   return (
-                    <div
-                      className={`flex items-center justify-between rounded-lg border p-4 ${
-                        isSelected
-                          ? "border-rose-400 bg-rose-50 ring-2 ring-rose-400"
-                          : "border-slate-200 bg-slate-50"
+                    <label
+                      className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition ${
+                        isDisabled
+                          ? "cursor-not-allowed opacity-60"
+                          : isSelected
+                            ? "border-rose-400 bg-rose-50 ring-2 ring-rose-400"
+                            : "border-slate-200 bg-slate-50 hover:border-rose-200"
                       }`}
+                      htmlFor={`shift-${shift._id}`}
                       key={shift._id}
                     >
-                      <div>
-                        <p className="font-semibold text-slate-900">
-                          {shiftStart.toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}{" "}
-                          -{" "}
-                          {shiftEnd.toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                        <p className="mt-1 text-slate-600 text-sm">
-                          {shiftRsvps.length} / {shift.requiredPeople}{" "}
-                          volunteers
-                          {isFull && " (Full)"}
-                        </p>
+                      <div className="flex flex-1 items-center gap-3">
+                        {currentUser && !isDisabled && (
+                          <input
+                            checked={isSelected}
+                            className="h-5 w-5 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                            id={`shift-${shift._id}`}
+                            onChange={() => {
+                              toggleShiftSelection(shift._id);
+                              if (!showRsvpForm) {
+                                setShowRsvpForm(true);
+                                setTimeout(() => {
+                                  rsvpFormRef.current?.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "nearest",
+                                  });
+                                }, 100);
+                              }
+                            }}
+                            type="checkbox"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-900">
+                            {shiftStart.toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}{" "}
+                            -{" "}
+                            {shiftEnd.toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                          <p className="mt-1 text-slate-600 text-sm">
+                            {shiftRsvps.length} / {shift.requiredPeople}{" "}
+                            volunteers
+                            {isFull && " (Full)"}
+                          </p>
+                        </div>
                       </div>
                       {currentUser && userHasThisShift && (
-                        <span className="rounded-full bg-green-100 px-4 py-2 font-semibold text-green-700 text-sm">
-                          You&apos;re in this shift
+                        <span className="rounded-full bg-green-100 px-3 py-1.5 font-semibold text-green-700 text-xs">
+                          Already signed up
                         </span>
                       )}
-                      {currentUser && !userHasThisShift && !isFull && (
-                        <button
-                          className={`rounded-full px-4 py-2 font-semibold text-sm transition ${
-                            isSelected
-                              ? "bg-rose-700 text-white"
-                              : "bg-rose-600 text-white hover:bg-rose-700"
-                          }`}
-                          onClick={() => {
-                            setSelectedShiftId(shift._id);
-                            setShowRsvpForm(true);
-                            setTimeout(() => {
-                              rsvpFormRef.current?.scrollIntoView({
-                                behavior: "smooth",
-                                block: "nearest",
-                              });
-                            }, 100);
-                          }}
-                          type="button"
-                        >
-                          {isSelected ? "Selected" : "Sign Up"}
-                        </button>
+                      {currentUser && isFull && !userHasThisShift && (
+                        <span className="rounded-full bg-slate-100 px-3 py-1.5 font-semibold text-slate-600 text-xs">
+                          Full
+                        </span>
                       )}
-                    </div>
+                    </label>
                   );
                 })}
               </div>
@@ -301,35 +417,62 @@ export default function EventDetailPage() {
 
               {showRsvpForm ? (
                 <form className="space-y-4" onSubmit={handleRsvpSubmit}>
-                  {selectedShiftId && (() => {
-                    const selectedShift = event.shifts.find(
-                      (s) => s._id === selectedShiftId
-                    );
-                    return selectedShift ? (
-                      <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
-                        <p className="font-semibold text-rose-900 text-sm">
-                          Selected Shift
-                        </p>
-                        <p className="mt-1 text-rose-700 text-sm">
-                          {new Date(selectedShift.startTime).toLocaleTimeString(
-                            "en-US",
-                            {
-                              hour: "numeric",
-                              minute: "2-digit",
-                            }
-                          )}{" "}
-                          -{" "}
-                          {new Date(selectedShift.endTime).toLocaleTimeString(
-                            "en-US",
-                            {
-                              hour: "numeric",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </p>
+                  {event.eventType === "boothing" && selectedShiftIds.size > 0 && (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
+                      <p className="mb-2 font-semibold text-rose-900 text-sm">
+                        Selected Shifts ({selectedShiftIds.size})
+                      </p>
+                      <div className="space-y-2">
+                        {Array.from(selectedShiftIds).map((shiftId) => {
+                          const shift = event.shifts.find((s) => s._id === shiftId);
+                          if (!shift) return null;
+                          return (
+                            <div
+                              className="flex items-center justify-between rounded-md bg-white px-3 py-2"
+                              key={shiftId}
+                            >
+                              <p className="text-rose-700 text-sm">
+                                {new Date(shift.startTime).toLocaleTimeString(
+                                  "en-US",
+                                  {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  }
+                                )}{" "}
+                                -{" "}
+                                {new Date(shift.endTime).toLocaleTimeString(
+                                  "en-US",
+                                  {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </p>
+                              <button
+                                className="text-rose-600 hover:text-rose-800"
+                                onClick={() => removeShiftFromSelection(shiftId)}
+                                type="button"
+                              >
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    d="M6 18L18 6M6 6l12 12"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
-                    ) : null;
-                  })()}
+                    </div>
+                  )}
 
                   {event.isOffsite && (
                     <div className="space-y-3">
@@ -452,7 +595,7 @@ export default function EventDetailPage() {
                       className="flex-1 rounded-full border border-slate-300 px-4 py-2 font-semibold text-slate-700 text-sm transition hover:bg-slate-50"
                       onClick={() => {
                         setShowRsvpForm(false);
-                        setSelectedShiftId(undefined);
+                        setSelectedShiftIds(new Set());
                         setError(null);
                       }}
                       type="button"
@@ -461,7 +604,7 @@ export default function EventDetailPage() {
                     </button>
                     <button
                       className="flex-1 rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700 disabled:bg-slate-400"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || (event.eventType === "boothing" && selectedShiftIds.size === 0)}
                       type="submit"
                     >
                       {isSubmitting ? "Submitting..." : "Confirm RSVP"}
