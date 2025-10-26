@@ -276,19 +276,18 @@ export default function EventDetailPage() {
                         <p className="font-semibold text-green-900">
                           You&apos;re signed up!
                         </p>
-                        {rsvp.shiftId && (
-                          <p className="mt-1 text-green-700 text-sm">
-                            Shift:{" "}
-                            {event.shifts.find((s) => s._id === rsvp.shiftId) &&
-                              new Date(
-                                event.shifts.find((s) => s._id === rsvp.shiftId)
-                                  ?.startTime
-                              ).toLocaleTimeString("en-US", {
+                        {rsvp.shiftId && (() => {
+                          const shift = event.shifts.find((s) => s._id === rsvp.shiftId);
+                          return shift ? (
+                            <p className="mt-1 text-green-700 text-sm">
+                              Shift:{" "}
+                              {new Date(shift.startTime).toLocaleTimeString("en-US", {
                                 hour: "numeric",
                                 minute: "2-digit",
                               })}
-                          </p>
-                        )}
+                            </p>
+                          ) : null;
+                        })()}
                         {rsvp.canDrive && (
                           <p className="mt-1 text-green-700 text-sm">
                             Driving: {rsvp.driverInfo?.carColor}{" "}
@@ -509,19 +508,18 @@ export default function EventDetailPage() {
                           </p>
                         )}
                       </div>
-                      {rsvp.shiftId && (
-                        <p className="text-slate-600 text-xs">
-                          Shift:{" "}
-                          {event.shifts.find((s) => s._id === rsvp.shiftId) &&
-                            new Date(
-                              event.shifts.find((s) => s._id === rsvp.shiftId)
-                                ?.startTime
-                            ).toLocaleTimeString("en-US", {
+                      {rsvp.shiftId && (() => {
+                        const shift = event.shifts.find((s) => s._id === rsvp.shiftId);
+                        return shift ? (
+                          <p className="text-slate-600 text-xs">
+                            Shift:{" "}
+                            {new Date(shift.startTime).toLocaleTimeString("en-US", {
                               hour: "numeric",
                               minute: "2-digit",
                             })}
-                        </p>
-                      )}
+                          </p>
+                        ) : null;
+                      })()}
                     </div>
                   ))}
                 </div>
