@@ -22,6 +22,7 @@ export default function CreateEventPage() {
   const [isOffsite, setIsOffsite] = useState(false);
   const [shifts, setShifts] = useState<
     Array<{
+      id: string;
       startTime: string;
       endTime: string;
       requiredPeople: number;
@@ -63,6 +64,7 @@ export default function CreateEventPage() {
     setShifts([
       ...shifts,
       {
+        id: `shift-${Date.now()}-${Math.random()}`,
         startTime: "",
         endTime: "",
         requiredPeople: 3,
@@ -154,7 +156,7 @@ export default function CreateEventPage() {
                   Event Title
                 </label>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="title"
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -171,7 +173,7 @@ export default function CreateEventPage() {
                   Description
                 </label>
                 <textarea
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="description"
                   onChange={(e) => setDescription(e.target.value)}
                   required
@@ -188,7 +190,7 @@ export default function CreateEventPage() {
                   Location
                 </label>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="location"
                   onChange={(e) => setLocation(e.target.value)}
                   required
@@ -206,7 +208,7 @@ export default function CreateEventPage() {
                     Start Date
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="startDate"
                     onChange={(e) => setStartDate(e.target.value)}
                     required
@@ -223,7 +225,7 @@ export default function CreateEventPage() {
                     Start Time
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="startTime"
                     onChange={(e) => setStartTime(e.target.value)}
                     required
@@ -240,7 +242,7 @@ export default function CreateEventPage() {
                     End Date
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="endDate"
                     onChange={(e) => setEndDate(e.target.value)}
                     required
@@ -257,7 +259,7 @@ export default function CreateEventPage() {
                     End Time
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="endTime"
                     onChange={(e) => setEndTime(e.target.value)}
                     required
@@ -275,7 +277,7 @@ export default function CreateEventPage() {
                   Event Type
                 </label>
                 <select
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="eventType"
                   onChange={(e) =>
                     setEventType(e.target.value as "regular" | "boothing")
@@ -328,7 +330,7 @@ export default function CreateEventPage() {
                   {shifts.map((shift, index) => (
                     <div
                       className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-                      key={index}
+                      key={shift.id}
                     >
                       <div className="mb-3 flex items-center justify-between">
                         <h3 className="font-semibold text-slate-900">
@@ -344,11 +346,12 @@ export default function CreateEventPage() {
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
-                          <label className="block text-slate-700 text-sm">
+                          <label className="block text-slate-700 text-sm" htmlFor={`shift-${shift.id}-start`}>
                             Start Time
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            id={`shift-${shift.id}-start`}
                             onChange={(e) =>
                               updateShift(index, "startTime", e.target.value)
                             }
@@ -358,11 +361,12 @@ export default function CreateEventPage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-700 text-sm">
+                          <label className="block text-slate-700 text-sm" htmlFor={`shift-${shift.id}-end`}>
                             End Time
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            id={`shift-${shift.id}-end`}
                             onChange={(e) =>
                               updateShift(index, "endTime", e.target.value)
                             }
@@ -372,11 +376,12 @@ export default function CreateEventPage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-700 text-sm">
+                          <label className="block text-slate-700 text-sm" htmlFor={`shift-${shift.id}-people`}>
                             People Needed
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            id={`shift-${shift.id}-people`}
                             min="1"
                             onChange={(e) =>
                               updateShift(
