@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -28,6 +28,7 @@ export default function EventDetailPage() {
   const [capacity, setCapacity] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const rsvpFormRef = useRef<HTMLDivElement>(null);
 
   if (event === undefined || currentUser === undefined) {
     return (
@@ -73,6 +74,12 @@ export default function EventDetailPage() {
     try {
       if (!currentUser) {
         setError("You must be signed in to RSVP");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (event.eventType === "boothing" && !selectedShiftId) {
+        setError("Please select a shift above before confirming");
         setIsSubmitting(false);
         return;
       }
@@ -217,10 +224,18 @@ export default function EventDetailPage() {
                     (r) => r.shiftId === shift._id
                   );
                   const isFull = shiftRsvps.length >= shift.requiredPeople;
+                  const userHasThisShift = userRsvps.some(
+                    (r) => r.shiftId === shift._id
+                  );
+                  const isSelected = selectedShiftId === shift._id;
 
                   return (
                     <div
-                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4"
+                      className={`flex items-center justify-between rounded-lg border p-4 ${
+                        isSelected
+                          ? "border-rose-400 bg-rose-50 ring-2 ring-rose-400"
+                          : "border-slate-200 bg-slate-50"
+                      }`}
                       key={shift._id}
                     >
                       <div>
@@ -241,15 +256,31 @@ export default function EventDetailPage() {
                           {isFull && " (Full)"}
                         </p>
                       </div>
-                      {currentUser && !isFull && (
-                        <button type="button"
-                          className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
+                      {currentUser && userHasThisShift && (
+                        <span className="rounded-full bg-green-100 px-4 py-2 font-semibold text-green-700 text-sm">
+                          You&apos;re in this shift
+                        </span>
+                      )}
+                      {currentUser && !userHasThisShift && !isFull && (
+                        <button
+                          className={`rounded-full px-4 py-2 font-semibold text-sm transition ${
+                            isSelected
+                              ? "bg-rose-700 text-white"
+                              : "bg-rose-600 text-white hover:bg-rose-700"
+                          }`}
                           onClick={() => {
                             setSelectedShiftId(shift._id);
                             setShowRsvpForm(true);
+                            setTimeout(() => {
+                              rsvpFormRef.current?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "nearest",
+                              });
+                            }, 100);
                           }}
+                          type="button"
                         >
-                          Sign Up
+                          {isSelected ? "Selected" : "Sign Up"}
                         </button>
                       )}
                     </div>
@@ -260,57 +291,46 @@ export default function EventDetailPage() {
           )}
 
           {currentUser && (
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div
+              className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
+              ref={rsvpFormRef}
+            >
               <h2 className="mb-4 font-semibold text-slate-900 text-xl">
                 Your RSVP
               </h2>
 
-              {hasRsvped ? (
-                <div className="space-y-3">
-                  {userRsvps.map((rsvp) => (
-                    <div
-                      className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4"
-                      key={rsvp._id}
-                    >
-                      <div>
-                        <p className="font-semibold text-green-900">
-                          You&apos;re signed up!
-                        </p>
-                        {rsvp.shiftId && (() => {
-                          const shift = event.shifts.find((s) => s._id === rsvp.shiftId);
-                          return shift ? (
-                            <p className="mt-1 text-green-700 text-sm">
-                              Shift:{" "}
-                              {new Date(shift.startTime).toLocaleTimeString("en-US", {
-                                hour: "numeric",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                          ) : null;
-                        })()}
-                        {rsvp.canDrive && (
-                          <p className="mt-1 text-green-700 text-sm">
-                            Driving: {rsvp.driverInfo?.carColor}{" "}
-                            {rsvp.driverInfo?.carType}
-                          </p>
-                        )}
-                        {rsvp.needsRide && (
-                          <p className="mt-1 text-green-700 text-sm">
-                            Needs a ride
-                          </p>
-                        )}
-                      </div>
-                      <button type="button"
-                        className="rounded-full border border-rose-300 px-4 py-2 font-semibold text-rose-700 text-sm transition hover:bg-rose-50"
-                        onClick={() => handleCancelRsvp(rsvp._id)}
-                      >
-                        Cancel RSVP
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : showRsvpForm ? (
+              {showRsvpForm ? (
                 <form className="space-y-4" onSubmit={handleRsvpSubmit}>
+                  {selectedShiftId && (() => {
+                    const selectedShift = event.shifts.find(
+                      (s) => s._id === selectedShiftId
+                    );
+                    return selectedShift ? (
+                      <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
+                        <p className="font-semibold text-rose-900 text-sm">
+                          Selected Shift
+                        </p>
+                        <p className="mt-1 text-rose-700 text-sm">
+                          {new Date(selectedShift.startTime).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            }
+                          )}{" "}
+                          -{" "}
+                          {new Date(selectedShift.endTime).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </p>
+                      </div>
+                    ) : null;
+                  })()}
+
                   {event.isOffsite && (
                     <div className="space-y-3">
                       <p className="font-semibold text-slate-700 text-sm">
@@ -432,6 +452,7 @@ export default function EventDetailPage() {
                       className="flex-1 rounded-full border border-slate-300 px-4 py-2 font-semibold text-slate-700 text-sm transition hover:bg-slate-50"
                       onClick={() => {
                         setShowRsvpForm(false);
+                        setSelectedShiftId(undefined);
                         setError(null);
                       }}
                       type="button"
@@ -447,10 +468,70 @@ export default function EventDetailPage() {
                     </button>
                   </div>
                 </form>
+              ) : hasRsvped ? (
+                <div className="space-y-3">
+                  {userRsvps.map((rsvp) => (
+                    <div
+                      className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4"
+                      key={rsvp._id}
+                    >
+                      <div>
+                        <p className="font-semibold text-green-900">
+                          You&apos;re signed up!
+                        </p>
+                        {rsvp.shiftId && (() => {
+                          const shift = event.shifts.find(
+                            (s) => s._id === rsvp.shiftId
+                          );
+                          return shift ? (
+                            <p className="mt-1 text-green-700 text-sm">
+                              Shift:{" "}
+                              {new Date(shift.startTime).toLocaleTimeString(
+                                "en-US",
+                                {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </p>
+                          ) : null;
+                        })()}
+                        {rsvp.canDrive && (
+                          <p className="mt-1 text-green-700 text-sm">
+                            Driving: {rsvp.driverInfo?.carColor}{" "}
+                            {rsvp.driverInfo?.carType}
+                          </p>
+                        )}
+                        {rsvp.needsRide && (
+                          <p className="mt-1 text-green-700 text-sm">
+                            Needs a ride
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        className="rounded-full border border-rose-300 px-4 py-2 font-semibold text-rose-700 text-sm transition hover:bg-rose-50"
+                        onClick={() => handleCancelRsvp(rsvp._id)}
+                        type="button"
+                      >
+                        Cancel RSVP
+                      </button>
+                    </div>
+                  ))}
+                  {event.eventType === "boothing" && (
+                    <button
+                      className="w-full rounded-full border-2 border-rose-600 px-6 py-3 font-semibold text-rose-600 transition hover:bg-rose-50"
+                      onClick={() => setShowRsvpForm(true)}
+                      type="button"
+                    >
+                      Sign Up for Another Shift
+                    </button>
+                  )}
+                </div>
               ) : (
-                <button type="button"
+                <button
                   className="w-full rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition hover:bg-rose-700"
                   onClick={() => setShowRsvpForm(true)}
+                  type="button"
                 >
                   RSVP to Event
                 </button>
