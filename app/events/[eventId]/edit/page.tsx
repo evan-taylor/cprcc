@@ -25,17 +25,25 @@ export default function EditEventPage() {
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
   const [isOffsite, setIsOffsite] = useState(false);
+  const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  const suggestedSlug = useQuery(
+    api.events.generateSlugSuggestion,
+    title && slugTouched ? { title, excludeEventId: eventId } : "skip"
+  );
+
   useEffect(() => {
     if (event && !isLoaded) {
       setTitle(event.title);
       setDescription(event.description);
       setLocation(event.location);
+      setSlug(event.slug);
 
       const startDateTime = new Date(event.startTime);
       const endDateTime = new Date(event.endTime);
@@ -132,9 +140,10 @@ export default function EditEventPage() {
         startTime: startDateTime,
         endTime: endDateTime,
         isOffsite,
+        slug: slugTouched ? slug : undefined,
       });
 
-      router.push(`/events/${eventId}`);
+      router.push(`/events/${slugTouched ? slug : event.slug}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update event");
       setIsSubmitting(false);
@@ -162,7 +171,7 @@ export default function EditEventPage() {
         <div className="mb-6">
           <button
             className="text-rose-600 text-sm hover:text-rose-700"
-            onClick={() => router.push(`/events/${eventId}`)}
+            onClick={() => router.push(`/events/${event.slug}`)}
             type="button"
           >
             ← Back to Event
@@ -216,6 +225,30 @@ export default function EditEventPage() {
                   rows={4}
                   value={description}
                 />
+              </div>
+
+              <div>
+                <label
+                  className="block font-semibold text-slate-700 text-sm"
+                  htmlFor="slug"
+                >
+                  URL Slug
+                </label>
+                <input
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  id="slug"
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    setSlugTouched(true);
+                  }}
+                  placeholder={suggestedSlug || slug}
+                  type="text"
+                  value={slug}
+                />
+                <p className="mt-1 text-slate-500 text-xs">
+                  The URL will be: /events/
+                  {slug || suggestedSlug || "your-event-slug"}
+                </p>
               </div>
 
               <div>
@@ -388,7 +421,7 @@ export default function EditEventPage() {
           <div className="flex gap-4">
             <button
               className="flex-1 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-              onClick={() => router.push(`/events/${eventId}`)}
+              onClick={() => router.push(`/events/${event.slug}`)}
               type="button"
             >
               Cancel

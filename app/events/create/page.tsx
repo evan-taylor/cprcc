@@ -20,6 +20,8 @@ export default function CreateEventPage() {
   const [endTime, setEndTime] = useState("");
   const [eventType, setEventType] = useState<"regular" | "boothing">("regular");
   const [isOffsite, setIsOffsite] = useState(false);
+  const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
   const [shifts, setShifts] = useState<
     Array<{
       id: string;
@@ -30,6 +32,11 @@ export default function CreateEventPage() {
   >([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const suggestedSlug = useQuery(
+    api.events.generateSlugSuggestion,
+    title ? { title } : "skip"
+  );
 
   if (currentUser === undefined) {
     return (
@@ -110,7 +117,7 @@ export default function CreateEventPage() {
             }))
           : undefined;
 
-      await createEvent({
+      const eventId = await createEvent({
         title,
         description,
         location,
@@ -118,6 +125,7 @@ export default function CreateEventPage() {
         endTime: endDateTime,
         eventType,
         isOffsite,
+        slug: slugTouched ? slug : undefined,
         shifts: eventShifts,
       });
 
@@ -180,6 +188,30 @@ export default function CreateEventPage() {
                   rows={4}
                   value={description}
                 />
+              </div>
+
+              <div>
+                <label
+                  className="block font-semibold text-slate-700 text-sm"
+                  htmlFor="slug"
+                >
+                  URL Slug
+                </label>
+                <input
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  id="slug"
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    setSlugTouched(true);
+                  }}
+                  placeholder={suggestedSlug || "auto-generated-from-title"}
+                  type="text"
+                  value={slug}
+                />
+                <p className="mt-1 text-slate-500 text-xs">
+                  The URL will be: /events/
+                  {slug || suggestedSlug || "your-event-slug"}
+                </p>
               </div>
 
               <div>
@@ -346,11 +378,14 @@ export default function CreateEventPage() {
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
-                          <label className="block text-slate-700 text-sm" htmlFor={`shift-${shift.id}-start`}>
+                          <label
+                            className="block text-slate-700 text-sm"
+                            htmlFor={`shift-${shift.id}-start`}
+                          >
                             Start Time
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-start`}
                             onChange={(e) =>
                               updateShift(index, "startTime", e.target.value)
@@ -361,11 +396,14 @@ export default function CreateEventPage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-700 text-sm" htmlFor={`shift-${shift.id}-end`}>
+                          <label
+                            className="block text-slate-700 text-sm"
+                            htmlFor={`shift-${shift.id}-end`}
+                          >
                             End Time
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-end`}
                             onChange={(e) =>
                               updateShift(index, "endTime", e.target.value)
@@ -376,11 +414,14 @@ export default function CreateEventPage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-700 text-sm" htmlFor={`shift-${shift.id}-people`}>
+                          <label
+                            className="block text-slate-700 text-sm"
+                            htmlFor={`shift-${shift.id}-people`}
+                          >
                             People Needed
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-people`}
                             min="1"
                             onChange={(e) =>
