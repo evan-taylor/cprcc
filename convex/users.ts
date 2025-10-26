@@ -39,7 +39,7 @@ export const createUserProfile = mutation({
       return existingProfile._id;
     }
 
-    const isAdmin = args.email === "etaylo28@calpoly.edu";
+    const isAdmin = args.email.trim().toLowerCase() === "etaylo28@calpoly.edu";
     const role = isAdmin ? "board" : "member";
 
     const profileId = await ctx.db.insert("userProfiles", {
