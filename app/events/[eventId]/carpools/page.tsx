@@ -30,11 +30,11 @@ export default function CarpoolManagementPage() {
 
   const eventById = useQuery(
     api.events.getEvent,
-    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
+    isSlug ? undefined : { eventId: eventIdOrSlug as Id<"events"> }
   );
   const eventBySlug = useQuery(
     api.events.getEventBySlug,
-    isSlug ? { slug: eventIdOrSlug } : "skip"
+    isSlug ? { slug: eventIdOrSlug } : undefined
   );
 
   const event = isSlug ? eventBySlug : eventById;
@@ -43,7 +43,7 @@ export default function CarpoolManagementPage() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const carpools = useQuery(
     api.events.getCarpools,
-    eventId ? { eventId } : "skip"
+    eventId ? { eventId } : undefined
   );
   const generateCarpools = useMutation(api.events.generateCarpools);
   const finalizeCarpools = useMutation(api.events.finalizeCarpools);
@@ -272,7 +272,7 @@ export default function CarpoolManagementPage() {
         <div className="mb-6">
           <button
             className="text-rose-600 text-sm hover:text-rose-700"
-            onClick={() => router.push(`/events/${event.slug}`)}
+            onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
           >
             ← Back to Event
           </button>

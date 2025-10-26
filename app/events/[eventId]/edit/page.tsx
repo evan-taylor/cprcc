@@ -35,7 +35,7 @@ export default function EditEventPage() {
 
   const suggestedSlug = useQuery(
     api.events.generateSlugSuggestion,
-    title && slugTouched ? { title, excludeEventId: eventId } : "skip"
+    title && slugTouched ? { title, excludeEventId: eventId } : undefined
   );
 
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function EditEventPage() {
         slug: slugTouched ? slug : undefined,
       });
 
-      router.push(`/events/${slugTouched ? slug : event.slug}`);
+      router.push(`/events/${slugTouched ? slug : (event.slug ?? event._id)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update event");
       setIsSubmitting(false);
@@ -171,7 +171,7 @@ export default function EditEventPage() {
         <div className="mb-6">
           <button
             className="text-rose-600 text-sm hover:text-rose-700"
-            onClick={() => router.push(`/events/${event.slug}`)}
+            onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
             type="button"
           >
             ← Back to Event
@@ -421,7 +421,7 @@ export default function EditEventPage() {
           <div className="flex gap-4">
             <button
               className="flex-1 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-              onClick={() => router.push(`/events/${event.slug}`)}
+              onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
               type="button"
             >
               Cancel

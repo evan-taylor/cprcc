@@ -19,11 +19,11 @@ export default function EventDetailPage() {
 
   const eventById = useQuery(
     api.events.getEvent,
-    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
+    isSlug ? undefined : { eventId: eventIdOrSlug as Id<"events"> }
   );
   const eventBySlug = useQuery(
     api.events.getEventBySlug,
-    isSlug ? { slug: eventIdOrSlug } : "skip"
+    isSlug ? { slug: eventIdOrSlug } : undefined
   );
 
   const event = isSlug ? eventBySlug : eventById;
@@ -292,7 +292,7 @@ export default function EventDetailPage() {
                 <div className="flex flex-col gap-2">
                   <button
                     className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
-                    onClick={() => router.push(`/events/${event.slug}/edit`)}
+                    onClick={() => router.push(`/events/${event.slug ?? event._id}/edit`)}
                     type="button"
                   >
                     Edit Event
@@ -301,7 +301,7 @@ export default function EventDetailPage() {
                     <button
                       className="rounded-full bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700"
                       onClick={() =>
-                        router.push(`/events/${event.slug}/carpools`)
+                        router.push(`/events/${event.slug ?? event._id}/carpools`)
                       }
                       type="button"
                     >
