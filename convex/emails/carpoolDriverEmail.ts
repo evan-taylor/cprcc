@@ -7,7 +7,7 @@ interface DriverEmailProps {
   carColor: string;
   carType: string;
   capacity: number;
-  riders: Array<{ name: string; email: string }>;
+  riders: Array<{ name: string; email: string; phoneNumber?: string }>;
 }
 
 export function generateDriverEmailHtml(props: DriverEmailProps): string {
@@ -60,7 +60,7 @@ export function generateDriverEmailHtml(props: DriverEmailProps): string {
           riders.length > 0
             ? `
         <ul class="rider-list">
-          ${riders.map((rider) => `<li>${rider.name} (${rider.email})</li>`).join("")}
+          ${riders.map((rider) => `<li>${rider.name}<br/><a href="mailto:${rider.email}">${rider.email}</a>${rider.phoneNumber ? `<br/><a href="tel:${rider.phoneNumber}">${rider.phoneNumber}</a>` : ""}</li>`).join("")}
         </ul>
         `
             : "<p>No passengers assigned to your vehicle.</p>"

@@ -231,6 +231,7 @@ export const getEvent = query({
           ...rsvp,
           userName: userProfile?.name ?? "Unknown",
           userEmail: userProfile?.email ?? "",
+          userPhoneNumber: userProfile?.phoneNumber,
         };
       })
     );
@@ -561,6 +562,7 @@ export const getShiftRsvps = query({
           ...rsvp,
           userName: userProfile?.name ?? "Unknown",
           userEmail: userProfile?.email ?? "",
+          userPhoneNumber: userProfile?.phoneNumber,
         };
       })
     );
@@ -711,6 +713,7 @@ export const getCarpools = query({
               rsvpId: member.rsvpId,
               name: profile?.name ?? "Unknown",
               email: profile?.email ?? "",
+              phoneNumber: profile?.phoneNumber,
             };
           })
         );
@@ -721,6 +724,7 @@ export const getCarpools = query({
           driver: {
             name: driverProfile?.name ?? "Unknown",
             email: driverProfile?.email ?? "",
+            phoneNumber: driverProfile?.phoneNumber,
             carType: driverRsvp?.driverInfo?.carType ?? "",
             carColor: driverRsvp?.driverInfo?.carColor ?? "",
             capacity: driverRsvp?.driverInfo?.capacity ?? 0,

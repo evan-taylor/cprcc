@@ -19,12 +19,15 @@ export default function SignIn() {
   const createdRef = useRef(false);
   const router = useRouter();
 
+  const [phoneNumberForProfile, setPhoneNumberForProfile] = useState<string | undefined>();
+
   useEffect(() => {
     if (isAuthenticated && shouldEnsureProfile && !createdRef.current) {
       createdRef.current = true;
-      ensureCurrentUserProfile()
+      ensureCurrentUserProfile({ phoneNumber: phoneNumberForProfile })
         .then(() => {
           setShouldEnsureProfile(false);
+          setPhoneNumberForProfile(undefined);
           router.push("/");
         })
         .catch((e) => {
@@ -35,7 +38,7 @@ export default function SignIn() {
           setLoading(false);
         });
     }
-  }, [isAuthenticated, shouldEnsureProfile, ensureCurrentUserProfile, router]);
+  }, [isAuthenticated, shouldEnsureProfile, ensureCurrentUserProfile, router, phoneNumberForProfile]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,12 +49,16 @@ export default function SignIn() {
       const formData = new FormData(e.target as HTMLFormElement);
       const _email = formData.get("email") as string;
       const name = formData.get("name") as string;
+      const phoneNumber = formData.get("phoneNumber") as string;
 
       if (flow === "signUp") {
         if (!name || name.trim().length === 0) {
           setError("Please enter your name");
           setLoading(false);
           return;
+        }
+        if (phoneNumber && phoneNumber.trim().length > 0) {
+          setPhoneNumberForProfile(phoneNumber.trim());
         }
         formData.set("flow", "signUp");
         setShouldEnsureProfile(true);
@@ -121,22 +128,42 @@ export default function SignIn() {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             {flow === "signUp" && (
-              <div>
-                <label
-                  className="mb-1.5 block font-medium text-slate-700 text-sm"
-                  htmlFor="name"
-                >
-                  Full Name
-                </label>
-                <input
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 transition focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                  id="name"
-                  name="name"
-                  placeholder="Enter your full name"
-                  required={flow === "signUp"}
-                  type="text"
-                />
-              </div>
+              <>
+                <div>
+                  <label
+                    className="mb-1.5 block font-medium text-slate-700 text-sm"
+                    htmlFor="name"
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 transition focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    id="name"
+                    name="name"
+                    placeholder="Enter your full name"
+                    required={flow === "signUp"}
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="mb-1.5 block font-medium text-slate-700 text-sm"
+                    htmlFor="phoneNumber"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 transition focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    placeholder="(555) 123-4567"
+                    type="tel"
+                  />
+                  <p className="mt-1.5 text-slate-500 text-xs">
+                    Optional but recommended for carpool coordination
+                  </p>
+                </div>
+              </>
             )}
 
             <div>

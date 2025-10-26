@@ -16,6 +16,7 @@ export default function EventDetailPage() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const createRsvp = useMutation(api.events.createRsvp);
   const deleteRsvp = useMutation(api.events.deleteRsvp);
+  const updatePhoneNumber = useMutation(api.users.updatePhoneNumber);
 
   const [showRsvpForm, setShowRsvpForm] = useState(false);
   const [selectedShiftIds, setSelectedShiftIds] = useState<
@@ -28,6 +29,8 @@ export default function EventDetailPage() {
   const [capacity, setCapacity] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
   const rsvpFormRef = useRef<HTMLDivElement>(null);
 
   if (event === undefined || currentUser === undefined) {
@@ -207,6 +210,25 @@ export default function EventDetailPage() {
       await deleteRsvp({ rsvpId });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to cancel RSVP");
+    }
+  };
+
+  const handleUpdatePhoneNumber = async () => {
+    if (!phoneNumber || phoneNumber.trim().length === 0) {
+      setError("Please enter a phone number");
+      return;
+    }
+
+    setIsUpdatingPhone(true);
+    setError(null);
+
+    try {
+      await updatePhoneNumber({ phoneNumber: phoneNumber.trim() });
+      setPhoneNumber("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update phone number");
+    } finally {
+      setIsUpdatingPhone(false);
     }
   };
 
@@ -474,6 +496,34 @@ export default function EventDetailPage() {
                     </div>
                   )}
 
+                  {event.isOffsite && !currentUser?.phoneNumber && (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <p className="mb-2 font-semibold text-blue-900 text-sm">
+                        Phone Number Required for Carpools
+                      </p>
+                      <p className="mb-3 text-blue-800 text-xs">
+                        Please add your phone number to coordinate with drivers and riders.
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          className="flex-1 rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          placeholder="(555) 123-4567"
+                          type="tel"
+                          value={phoneNumber}
+                        />
+                        <button
+                          className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700 disabled:bg-slate-400"
+                          disabled={isUpdatingPhone}
+                          onClick={handleUpdatePhoneNumber}
+                          type="button"
+                        >
+                          {isUpdatingPhone ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {event.isOffsite && (
                     <div className="space-y-3">
                       <p className="font-semibold text-slate-700 text-sm">
@@ -720,6 +770,16 @@ export default function EventDetailPage() {
                         <p className="text-slate-600 text-xs">
                           {rsvp.userEmail}
                         </p>
+                        {rsvp.userPhoneNumber && (
+                          <p className="text-slate-600 text-xs">
+                            <a 
+                              className="hover:text-rose-600"
+                              href={`tel:${rsvp.userPhoneNumber}`}
+                            >
+                              {rsvp.userPhoneNumber}
+                            </a>
+                          </p>
+                        )}
                         {rsvp.canDrive && (
                           <p className="mt-1 text-blue-700 text-xs">
                             Driver: {rsvp.driverInfo?.carColor}{" "}

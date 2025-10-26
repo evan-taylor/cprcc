@@ -13,6 +13,7 @@ export default defineSchema({
   userProfiles: defineTable({
     name: v.string(),
     email: v.string(),
+    phoneNumber: v.optional(v.string()),
     role: v.union(v.literal("member"), v.literal("board")),
     userId: v.id("users"),
   })

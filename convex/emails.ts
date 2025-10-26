@@ -81,7 +81,11 @@ export const sendCarpoolEmails = action({
         carColor: carpool.driver.carColor,
         carType: carpool.driver.carType,
         capacity: carpool.driver.capacity,
-        riders: carpool.riders.map((r) => ({ name: r.name, email: r.email })),
+        riders: carpool.riders.map((r) => ({ 
+          name: r.name, 
+          email: r.email,
+          phoneNumber: r.phoneNumber,
+        })),
       });
 
       try {
@@ -100,7 +104,7 @@ export const sendCarpoolEmails = action({
       for (const rider of carpool.riders) {
         const otherRiders = carpool.riders
           .filter((r) => r.email !== rider.email)
-          .map((r) => ({ name: r.name }));
+          .map((r) => ({ name: r.name, phoneNumber: r.phoneNumber }));
 
         const riderEmailHtml = generateRiderEmailHtml({
           eventTitle: event.title,
@@ -110,6 +114,7 @@ export const sendCarpoolEmails = action({
           riderName: rider.name,
           driverName: carpool.driver.name,
           driverEmail: carpool.driver.email,
+          driverPhoneNumber: carpool.driver.phoneNumber,
           carColor: carpool.driver.carColor,
           carType: carpool.driver.carType,
           otherRiders,

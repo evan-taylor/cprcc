@@ -6,9 +6,10 @@ interface RiderEmailProps {
   riderName: string;
   driverName: string;
   driverEmail: string;
+  driverPhoneNumber?: string;
   carColor: string;
   carType: string;
-  otherRiders: Array<{ name: string }>;
+  otherRiders: Array<{ name: string; phoneNumber?: string }>;
 }
 
 export function generateRiderEmailHtml(props: RiderEmailProps): string {
@@ -19,6 +20,7 @@ export function generateRiderEmailHtml(props: RiderEmailProps): string {
     eventLocation,
     driverName,
     driverEmail,
+    driverPhoneNumber,
     carColor,
     carType,
     otherRiders,
@@ -54,7 +56,7 @@ export function generateRiderEmailHtml(props: RiderEmailProps): string {
       <div class="carpool-info">
         <h4>Your Carpool Assignment</h4>
         <p><strong>Role:</strong> Passenger</p>
-        <p><strong>Driver:</strong> ${driverName} (${driverEmail})</p>
+        <p><strong>Driver:</strong> ${driverName}<br/><a href="mailto:${driverEmail}">${driverEmail}</a>${driverPhoneNumber ? `<br/><a href="tel:${driverPhoneNumber}">${driverPhoneNumber}</a>` : ""}</p>
         <p><strong>Vehicle:</strong> ${carColor} ${carType}</p>
         
         <h4>Other Passengers:</h4>
@@ -62,7 +64,7 @@ export function generateRiderEmailHtml(props: RiderEmailProps): string {
           otherRiders.length > 0
             ? `
         <ul class="rider-list">
-          ${otherRiders.map((r) => `<li>${r.name}</li>`).join("")}
+          ${otherRiders.map((r) => `<li>${r.name}${r.phoneNumber ? `<br/><a href="tel:${r.phoneNumber}">${r.phoneNumber}</a>` : ""}</li>`).join("")}
         </ul>
         `
             : "<p>You are the only passenger in this carpool.</p>"
