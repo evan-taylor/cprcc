@@ -505,16 +505,24 @@ export default function EventDetailPage() {
                         Please add your phone number to coordinate with drivers and riders.
                       </p>
                       <div className="flex gap-2">
-                        <input
-                          className="flex-1 rounded-lg border border-blue-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          placeholder="(555) 123-4567"
-                          type="tel"
-                          value={phoneNumber}
-                        />
+                        <div className="flex-1">
+                          <label className="sr-only" htmlFor="phoneNumber">
+                            Phone Number
+                          </label>
+                          <input
+                            autoComplete="tel"
+                            className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            id="phoneNumber"
+                            inputMode="tel"
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="(555) 123-4567"
+                            type="tel"
+                            value={phoneNumber}
+                          />
+                        </div>
                         <button
                           className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700 disabled:bg-slate-400"
-                          disabled={isUpdatingPhone}
+                          disabled={isUpdatingPhone || !phoneNumber || phoneNumber.trim().length === 0}
                           onClick={handleUpdatePhoneNumber}
                           type="button"
                         >

@@ -1,5 +1,16 @@
 "use client";
 
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  MouseSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -18,12 +29,32 @@ export default function CarpoolManagementPage() {
   const generateCarpools = useMutation(api.events.generateCarpools);
   const finalizeCarpools = useMutation(api.events.finalizeCarpools);
   const sendCarpoolEmails = useAction(api.emails.sendCarpoolEmails);
+  const reassignRider = useMutation(api.events.reassignRider);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [isSendingEmails, setIsSendingEmails] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [activeRider, setActiveRider] = useState<{
+    rsvpId: Id<"rsvps">;
+    name: string;
+    email: string;
+  } | null>(null);
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 6,
+      },
+    })
+  );
 
   if (
     event === undefined ||
@@ -144,10 +175,76 @@ export default function CarpoolManagementPage() {
     }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const riderId = event.active.id.toString().replace("rider:", "");
+    const rider = carpools
+      .flatMap((c) => c.riders)
+      .find((r) => r.rsvpId === riderId);
+    if (rider) {
+      setActiveRider({
+        rsvpId: rider.rsvpId as Id<"rsvps">,
+        name: rider.name,
+        email: rider.email,
+      });
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveRider(null);
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const riderId = active.id.toString().replace("rider:", "") as Id<"rsvps">;
+    const targetId = over.id.toString();
+
+    await performReassignment(riderId, targetId);
+  };
+
+  const performReassignment = async (riderId: string, targetId: string) => {
+    const fromCarpool = carpools.find((c) =>
+      c.riders.some((r) => r.rsvpId === riderId)
+    );
+
+    let toCarpoolId: Id<"carpools"> | undefined;
+    if (targetId !== "unassigned") {
+      toCarpoolId = targetId.replace("carpool:", "") as Id<"carpools">;
+      const toCarpool = carpools.find((c) => c.carpoolId === toCarpoolId);
+      
+      if (toCarpool && toCarpool.riders.length >= toCarpool.driver.capacity) {
+        setError("Target carpool is at capacity");
+        return;
+      }
+    }
+
+    try {
+      await reassignRider({
+        eventId,
+        riderRsvpId: riderId as Id<"rsvps">,
+        fromCarpoolId: fromCarpool?.carpoolId,
+        toCarpoolId,
+      });
+      setSuccess("Rider reassigned successfully");
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reassign rider");
+    }
+  };
+
   const drivers = event.rsvps.filter((rsvp) => rsvp.canDrive);
   const riders = event.rsvps.filter((rsvp) => rsvp.needsRide);
   const allFinalized =
     carpools.length > 0 && carpools.every((c) => c.status === "finalized");
+  const anyDraft = carpools.some((c) => c.status === "draft");
+  
+  const assignedRiderIds = new Set(
+    carpools.flatMap((c) => c.riders.map((r) => r.rsvpId))
+  );
+  const unassignedRiders = event.rsvps.filter(
+    (rsvp) => rsvp.needsRide && !assignedRiderIds.has(rsvp._id)
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -244,77 +341,186 @@ export default function CarpoolManagementPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
-            <h2 className="font-semibold text-2xl text-slate-900">
-              Carpool Assignments ({carpools.length})
-            </h2>
-            {carpools.map((carpool, index) => (
-              <div
-                className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
-                key={carpool.carpoolId}
-              >
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-900 text-xl">
-                    Carpool {index + 1}
-                  </h3>
-                  <span
-                    className={`rounded-full px-3 py-1 font-semibold text-xs uppercase tracking-wide ${
-                      carpool.status === "finalized"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {carpool.status}
-                  </span>
-                </div>
-
-                <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                  <p className="mb-2 font-semibold text-blue-900 text-sm uppercase tracking-wide">
-                    Driver
+          <DndContext
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            onDragStart={handleDragStart}
+            sensors={sensors}
+          >
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-2xl text-slate-900">
+                  Carpool Assignments ({carpools.length})
+                </h2>
+                {anyDraft && (
+                  <p className="text-slate-600 text-sm">
+                    💡 Drag passengers between carpools to reassign
                   </p>
-                  <p className="font-semibold text-blue-900">
-                    {carpool.driver.name}
-                  </p>
-                  <p className="text-blue-700 text-sm">
-                    {carpool.driver.email}
-                  </p>
-                  <p className="mt-2 text-blue-700 text-sm">
-                    Vehicle: {carpool.driver.carColor} {carpool.driver.carType}
-                  </p>
-                  <p className="text-blue-700 text-sm">
-                    Capacity: {carpool.driver.capacity} passengers
-                  </p>
-                </div>
-
-                <div>
-                  <p className="mb-3 font-semibold text-slate-900 text-sm uppercase tracking-wide">
-                    Passengers ({carpool.riders.length})
-                  </p>
-                  {carpool.riders.length === 0 ? (
-                    <p className="text-center text-slate-600 text-sm">
-                      No passengers assigned
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {carpool.riders.map((rider) => (
-                        <div
-                          className="rounded-lg border border-slate-200 bg-slate-50 p-3"
-                          key={rider.rsvpId}
-                        >
-                          <p className="font-semibold text-slate-900 text-sm">
-                            {rider.name}
-                          </p>
-                          <p className="text-slate-600 text-xs">
-                            {rider.email}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            ))}
-          </div>
+
+              {unassignedRiders.length > 0 && (
+                <div
+                  className="rounded-3xl border-2 border-dashed border-orange-300 bg-orange-50 p-8 shadow-sm"
+                  data-droppable-id="unassigned"
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-semibold text-orange-900 text-xl">
+                      Unassigned Riders ({unassignedRiders.length})
+                    </h3>
+                    <span className="rounded-full bg-orange-200 px-3 py-1 font-semibold text-orange-800 text-xs uppercase tracking-wide">
+                      Need Assignment
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {unassignedRiders.map((rsvp) => (
+                      <div
+                        className="cursor-move rounded-lg border border-orange-300 bg-white p-3 shadow-sm transition hover:shadow-md"
+                        draggable={anyDraft}
+                        key={rsvp._id}
+                        onDragStart={(e) => {
+                          e.dataTransfer.effectAllowed = "move";
+                          e.dataTransfer.setData("text/plain", `rider:${rsvp._id}`);
+                        }}
+                      >
+                        <p className="font-semibold text-slate-900 text-sm">
+                          {rsvp.userName}
+                        </p>
+                        <p className="text-slate-600 text-xs">{rsvp.userEmail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {carpools.map((carpool, index) => {
+                const isFull = carpool.riders.length >= carpool.driver.capacity;
+                const isDraft = carpool.status === "draft";
+                
+                return (
+                  <div
+                    className={`rounded-3xl border-2 bg-white p-8 shadow-sm transition ${
+                      isDraft && !isFull
+                        ? "border-slate-200 hover:border-blue-300"
+                        : isDraft && isFull
+                          ? "border-slate-300 bg-slate-50"
+                          : "border-green-200"
+                    }`}
+                    data-droppable-id={`carpool:${carpool.carpoolId}`}
+                    key={carpool.carpoolId}
+                    onDragOver={(e) => {
+                      if (isDraft && !isFull) {
+                        e.preventDefault();
+                        e.currentTarget.classList.add("ring-2", "ring-blue-400");
+                      }
+                    }}
+                    onDragLeave={(e) => {
+                      e.currentTarget.classList.remove("ring-2", "ring-blue-400");
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.classList.remove("ring-2", "ring-blue-400");
+                      
+                      if (!isDraft || isFull) return;
+                      
+                      const riderId = e.dataTransfer.getData("text/plain").replace("rider:", "");
+                      performReassignment(riderId, `carpool:${carpool.carpoolId}`);
+                    }}
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="font-semibold text-slate-900 text-xl">
+                        Carpool {index + 1}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-full px-3 py-1 font-semibold text-xs ${
+                            isFull
+                              ? "bg-red-100 text-red-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {carpool.riders.length}/{carpool.driver.capacity} seats
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-1 font-semibold text-xs uppercase tracking-wide ${
+                            carpool.status === "finalized"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {carpool.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <p className="mb-2 font-semibold text-blue-900 text-sm uppercase tracking-wide">
+                        Driver
+                      </p>
+                      <p className="font-semibold text-blue-900">
+                        {carpool.driver.name}
+                      </p>
+                      <p className="text-blue-700 text-sm">
+                        {carpool.driver.email}
+                      </p>
+                      <p className="mt-2 text-blue-700 text-sm">
+                        Vehicle: {carpool.driver.carColor} {carpool.driver.carType}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="mb-3 font-semibold text-slate-900 text-sm uppercase tracking-wide">
+                        Passengers ({carpool.riders.length})
+                      </p>
+                      {carpool.riders.length === 0 ? (
+                        <p className="text-center text-slate-600 text-sm">
+                          No passengers assigned
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {carpool.riders.map((rider) => (
+                            <div
+                              className={`rounded-lg border border-slate-200 bg-slate-50 p-3 ${
+                                isDraft ? "cursor-move hover:bg-slate-100" : ""
+                              }`}
+                              draggable={isDraft}
+                              key={rider.rsvpId}
+                              onDragStart={(e) => {
+                                if (!isDraft) {
+                                  e.preventDefault();
+                                  return;
+                                }
+                                e.dataTransfer.effectAllowed = "move";
+                                e.dataTransfer.setData("text/plain", `rider:${rider.rsvpId}`);
+                              }}
+                            >
+                              <p className="font-semibold text-slate-900 text-sm">
+                                {rider.name}
+                              </p>
+                              <p className="text-slate-600 text-xs">
+                                {rider.email}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <DragOverlay>
+              {activeRider && (
+                <div className="cursor-grabbing rounded-lg border-2 border-blue-400 bg-white p-3 shadow-xl">
+                  <p className="font-semibold text-slate-900 text-sm">
+                    {activeRider.name}
+                  </p>
+                  <p className="text-slate-600 text-xs">{activeRider.email}</p>
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
         )}
 
         {drivers.length === 0 && riders.length > 0 && (

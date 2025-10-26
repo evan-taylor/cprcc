@@ -15,30 +15,22 @@ export default function SignIn() {
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [shouldEnsureProfile, setShouldEnsureProfile] = useState(false);
   const createdRef = useRef(false);
   const router = useRouter();
 
-  const [phoneNumberForProfile, setPhoneNumberForProfile] = useState<string | undefined>();
-
   useEffect(() => {
-    if (isAuthenticated && shouldEnsureProfile && !createdRef.current) {
+    if (isAuthenticated && !createdRef.current) {
+      const pathname = window.location.pathname;
+      if (pathname !== "/signin") {
+        return;
+      }
       createdRef.current = true;
-      ensureCurrentUserProfile({ phoneNumber: phoneNumberForProfile })
-        .then(() => {
-          setShouldEnsureProfile(false);
-          setPhoneNumberForProfile(undefined);
-          router.push("/");
-        })
-        .catch((e) => {
-          setError(e instanceof Error ? e.message : "Failed to create profile");
-          createdRef.current = false;
-        })
-        .finally(() => {
-          setLoading(false);
+      ensureCurrentUserProfile({})
+        .catch(() => {
+          // Silently ignore profile creation errors for existing users
         });
     }
-  }, [isAuthenticated, shouldEnsureProfile, ensureCurrentUserProfile, router, phoneNumberForProfile]);
+  }, [isAuthenticated, ensureCurrentUserProfile]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,12 +49,19 @@ export default function SignIn() {
           setLoading(false);
           return;
         }
-        if (phoneNumber && phoneNumber.trim().length > 0) {
-          setPhoneNumberForProfile(phoneNumber.trim());
-        }
+        
+        const localPhone = phoneNumber && phoneNumber.trim().length > 0 
+          ? phoneNumber.trim() 
+          : undefined;
+        
         formData.set("flow", "signUp");
-        setShouldEnsureProfile(true);
+        
         await signIn("password", formData);
+        
+        await ensureCurrentUserProfile({ phoneNumber: localPhone });
+        
+        router.push("/");
+        setLoading(false);
       } else {
         formData.set("flow", "signIn");
         await signIn("password", formData);
@@ -76,7 +75,7 @@ export default function SignIn() {
         setError("Something went wrong. Please try again.");
       }
       setLoading(false);
-      setShouldEnsureProfile(false);
+      createdRef.current = false;
     }
   };
 

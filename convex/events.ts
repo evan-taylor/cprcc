@@ -792,6 +792,89 @@ export const updateCarpoolAssignment = mutation({
   },
 });
 
+export const reassignRider = mutation({
+  args: {
+    eventId: v.id("events"),
+    riderRsvpId: v.id("rsvps"),
+    fromCarpoolId: v.optional(v.id("carpools")),
+    toCarpoolId: v.optional(v.id("carpools")),
+  },
+  handler: async (ctx, args) => {
+    const authUserId = await getAuthUserId(ctx);
+    if (!authUserId) {
+      throw new Error("Not authenticated");
+    }
+
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
+      .first();
+
+    if (!userProfile || userProfile.role !== "board") {
+      throw new Error("Only board members can reassign riders");
+    }
+
+    const event = await ctx.db.get(args.eventId);
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    if (args.toCarpoolId) {
+      const toCarpool = await ctx.db.get(args.toCarpoolId);
+      if (!toCarpool) {
+        throw new Error("Target carpool not found");
+      }
+
+      if (toCarpool.eventId !== args.eventId) {
+        throw new Error("Target carpool does not belong to this event");
+      }
+
+      if (toCarpool.status !== "draft") {
+        throw new Error("Cannot reassign riders to finalized carpools");
+      }
+
+      const driverRsvp = await ctx.db.get(toCarpool.driverRsvpId);
+      const capacity = driverRsvp?.driverInfo?.capacity ?? 0;
+
+      const existingMembers = await ctx.db
+        .query("carpoolMembers")
+        .withIndex("by_carpool", (q) => q.eq("carpoolId", toCarpool._id))
+        .collect();
+
+      if (existingMembers.length >= capacity) {
+        throw new Error("Target carpool is at capacity");
+      }
+    }
+
+    const existingMember = await ctx.db
+      .query("carpoolMembers")
+      .withIndex("by_rsvp", (q) => q.eq("rsvpId", args.riderRsvpId))
+      .first();
+
+    if (existingMember) {
+      const fromCarpool = await ctx.db.get(existingMember.carpoolId);
+      if (fromCarpool && fromCarpool.status !== "draft") {
+        throw new Error("Cannot reassign riders from finalized carpools");
+      }
+      await ctx.db.delete(existingMember._id);
+    }
+
+    if (args.toCarpoolId) {
+      await ctx.db.insert("carpoolMembers", {
+        carpoolId: args.toCarpoolId,
+        rsvpId: args.riderRsvpId,
+      });
+    }
+
+    return {
+      success: true,
+      riderRsvpId: args.riderRsvpId,
+      fromCarpoolId: existingMember?.carpoolId,
+      toCarpoolId: args.toCarpoolId,
+    };
+  },
+});
+
 export const finalizeCarpools = mutation({
   args: {
     eventId: v.id("events"),
