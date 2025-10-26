@@ -1,10 +1,11 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { api } from "@/convex/_generated/api";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -88,6 +89,7 @@ export default function SiteHeader({
 function AuthButton({ inverted }: { inverted: boolean }) {
   const { isAuthenticated } = useConvexAuth();
   const { signOut } = useAuthActions();
+  const currentUser = useQuery(api.users.getCurrentUser);
   const router = useRouter();
 
   if (!isAuthenticated) {
@@ -111,16 +113,39 @@ function AuthButton({ inverted }: { inverted: boolean }) {
   };
 
   return (
-    <button
-      className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
-        inverted
-          ? "bg-white/20 hover:bg-white/30"
-          : "bg-rose-600 hover:bg-rose-700"
-      }`}
-      onClick={handleSignOut}
-      type="button"
-    >
-      Sign out
-    </button>
+    <div className="flex items-center gap-3">
+      {currentUser?.role === "board" && (
+        <Link
+          className={`rounded-lg px-3 py-1.5 font-medium text-sm transition ${
+            inverted
+              ? "text-white/90 hover:bg-white/10 hover:text-white"
+              : "text-slate-700 hover:bg-slate-100 hover:text-rose-700"
+          }`}
+          href="/admin"
+        >
+          Admin
+        </Link>
+      )}
+      <div className="flex items-center gap-2">
+        {currentUser && (
+          <span
+            className={`font-medium text-sm ${inverted ? "text-white/90" : "text-slate-700"}`}
+          >
+            {currentUser.name}
+          </span>
+        )}
+        <button
+          className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
+            inverted
+              ? "bg-white/20 hover:bg-white/30"
+              : "bg-rose-600 hover:bg-rose-700"
+          }`}
+          onClick={handleSignOut}
+          type="button"
+        >
+          Sign out
+        </button>
+      </div>
+    </div>
   );
 }
