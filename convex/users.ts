@@ -19,6 +19,48 @@ export const getCurrentUser = query({
   },
 });
 
+export const ensureCurrentUserProfile = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const authUserId = await getAuthUserId(ctx);
+    if (!authUserId) {
+      throw new Error("Not authenticated");
+    }
+
+    const existingProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
+      .first();
+
+    const authUser = await ctx.db.get(authUserId);
+    if (!authUser) {
+      throw new Error("Auth user not found");
+    }
+
+    const email = (authUser as { email?: string }).email as string;
+    const name = (authUser as { name?: string }).name as string;
+
+    const isAdmin = email.trim().toLowerCase() === "etaylo28@calpoly.edu";
+    const role = isAdmin ? "board" : "member";
+
+    if (existingProfile) {
+      if (isAdmin && existingProfile.role !== "board") {
+        await ctx.db.patch(existingProfile._id, { role: "board" });
+      }
+      return existingProfile._id;
+    }
+
+    const profileId = await ctx.db.insert("userProfiles", {
+      name,
+      email,
+      role,
+      userId: authUserId,
+    });
+
+    return profileId;
+  },
+});
+
 export const createUserProfile = mutation({
   args: {
     name: v.string(),

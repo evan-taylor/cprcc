@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -91,6 +91,30 @@ function AuthButton({ inverted }: { inverted: boolean }) {
   const { signOut } = useAuthActions();
   const currentUser = useQuery(api.users.getCurrentUser);
   const router = useRouter();
+  const ensureCurrentUserProfile = useMutation(
+    api.users.ensureCurrentUserProfile
+  );
+  const [profileEnsured, setProfileEnsured] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+    if (currentUser === undefined) {
+      return;
+    }
+    if (profileEnsured) {
+      return;
+    }
+
+    ensureCurrentUserProfile()
+      .then(() => {
+        setProfileEnsured(true);
+      })
+      .catch(() => {
+        // Silently ignore profile creation errors (important-comment)
+      });
+  }, [isAuthenticated, currentUser, profileEnsured, ensureCurrentUserProfile]);
 
   if (!isAuthenticated) {
     return (

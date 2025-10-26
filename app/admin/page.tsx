@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -11,9 +11,33 @@ export default function AdminPage() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const allUsers = useQuery(api.users.listAllUsers);
   const promoteToBoard = useMutation(api.users.promoteToBoard);
+  const ensureCurrentUserProfile = useMutation(
+    api.users.ensureCurrentUserProfile
+  );
   const [promoting, setPromoting] = useState<Id<"userProfiles"> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [profileEnsured, setProfileEnsured] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (currentUser === undefined) {
+      return;
+    }
+    if (currentUser === null) {
+      return;
+    }
+    if (profileEnsured) {
+      return;
+    }
+
+    ensureCurrentUserProfile()
+      .then(() => {
+        setProfileEnsured(true);
+      })
+      .catch(() => {
+        // Silently ignore profile creation errors
+      });
+  }, [currentUser, profileEnsured, ensureCurrentUserProfile]);
 
   if (currentUser === undefined || allUsers === undefined) {
     return (

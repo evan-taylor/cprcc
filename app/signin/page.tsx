@@ -9,23 +9,22 @@ import { api } from "@/convex/_generated/api";
 export default function SignIn() {
   const { signIn } = useAuthActions();
   const { isAuthenticated } = useConvexAuth();
-  const createUserProfile = useMutation(api.users.createUserProfile);
+  const ensureCurrentUserProfile = useMutation(
+    api.users.ensureCurrentUserProfile
+  );
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [pendingProfile, setPendingProfile] = useState<{
-    name: string;
-    email: string;
-  } | null>(null);
+  const [shouldEnsureProfile, setShouldEnsureProfile] = useState(false);
   const createdRef = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated && pendingProfile && !createdRef.current) {
+    if (isAuthenticated && shouldEnsureProfile && !createdRef.current) {
       createdRef.current = true;
-      createUserProfile(pendingProfile)
+      ensureCurrentUserProfile()
         .then(() => {
-          setPendingProfile(null);
+          setShouldEnsureProfile(false);
           router.push("/");
         })
         .catch((e) => {
@@ -36,7 +35,7 @@ export default function SignIn() {
           setLoading(false);
         });
     }
-  }, [isAuthenticated, pendingProfile, createUserProfile, router]);
+  }, [isAuthenticated, shouldEnsureProfile, ensureCurrentUserProfile, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,7 +44,7 @@ export default function SignIn() {
 
     try {
       const formData = new FormData(e.target as HTMLFormElement);
-      const email = formData.get("email") as string;
+      const _email = formData.get("email") as string;
       const name = formData.get("name") as string;
 
       if (flow === "signUp") {
@@ -55,7 +54,7 @@ export default function SignIn() {
           return;
         }
         formData.set("flow", "signUp");
-        setPendingProfile({ name, email });
+        setShouldEnsureProfile(true);
         await signIn("password", formData);
       } else {
         formData.set("flow", "signIn");
@@ -70,7 +69,7 @@ export default function SignIn() {
         setError("Something went wrong. Please try again.");
       }
       setLoading(false);
-      setPendingProfile(null);
+      setShouldEnsureProfile(false);
     }
   };
 
