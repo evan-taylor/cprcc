@@ -27,6 +27,7 @@ body {
 
 @layer base {
   /* Form inputs with proper contrast and readability */
+  /* Forms are intentionally locked to light theme (white bg, dark text) per product requirement */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -52,6 +53,7 @@ body {
     line-height: 1.25rem;
     color: rgb(15 23 42);
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    color-scheme: light;
   }
 
   input[type="text"]::placeholder,
@@ -122,73 +124,5 @@ body {
   /* Labels */
   label {
     color: rgb(30 41 59);
-  }
-
-  /* Dark mode overrides for form inputs */
-  @media (prefers-color-scheme: dark) {
-    input[type="text"],
-    input[type="email"],
-    input[type="password"],
-    input[type="tel"],
-    input[type="number"],
-    input[type="search"],
-    input[type="url"],
-    input[type="date"],
-    input[type="time"],
-    input[type="datetime-local"],
-    select,
-    textarea {
-      border-color: rgb(71 85 105);
-      background-color: rgb(30 41 59);
-      color: rgb(241 245 249);
-    }
-
-    input[type="text"]::placeholder,
-    input[type="email"]::placeholder,
-    input[type="password"]::placeholder,
-    input[type="tel"]::placeholder,
-    input[type="number"]::placeholder,
-    input[type="search"]::placeholder,
-    input[type="url"]::placeholder,
-    select::placeholder,
-    textarea::placeholder {
-      color: rgb(148 163 184);
-    }
-
-    input[type="text"]:focus,
-    input[type="email"]:focus,
-    input[type="password"]:focus,
-    input[type="tel"]:focus,
-    input[type="number"]:focus,
-    input[type="search"]:focus,
-    input[type="url"]:focus,
-    input[type="date"]:focus,
-    input[type="time"]:focus,
-    input[type="datetime-local"]:focus,
-    select:focus,
-    textarea:focus {
-      border-color: rgb(96 165 250);
-      box-shadow: 0 0 0 3px rgb(96 165 250 / 0.2);
-    }
-
-    input[type="text"]:disabled,
-    input[type="email"]:disabled,
-    input[type="password"]:disabled,
-    input[type="tel"]:disabled,
-    input[type="number"]:disabled,
-    input[type="search"]:disabled,
-    input[type="url"]:disabled,
-    input[type="date"]:disabled,
-    input[type="time"]:disabled,
-    input[type="datetime-local"]:disabled,
-    select:disabled,
-    textarea:disabled {
-      background-color: rgb(51 65 85);
-      color: rgb(148 163 184);
-    }
-
-    label {
-      color: rgb(226 232 240);
-    }
   }
 }
