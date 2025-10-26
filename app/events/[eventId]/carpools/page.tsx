@@ -30,11 +30,11 @@ export default function CarpoolManagementPage() {
 
   const eventById = useQuery(
     api.events.getEvent,
-    isSlug ? undefined : { eventId: eventIdOrSlug as Id<"events"> }
+    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
   );
   const eventBySlug = useQuery(
     api.events.getEventBySlug,
-    isSlug ? { slug: eventIdOrSlug } : undefined
+    isSlug ? { slug: eventIdOrSlug } : "skip"
   );
 
   const event = isSlug ? eventBySlug : eventById;
@@ -43,7 +43,7 @@ export default function CarpoolManagementPage() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const carpools = useQuery(
     api.events.getCarpools,
-    eventId ? { eventId } : undefined
+    eventId ? { eventId } : "skip"
   );
   const generateCarpools = useMutation(api.events.generateCarpools);
   const finalizeCarpools = useMutation(api.events.finalizeCarpools);
@@ -142,6 +142,8 @@ export default function CarpoolManagementPage() {
   }
 
   const handleGenerateCarpools = async () => {
+    if (!eventId) return;
+    
     setError(null);
     setSuccess(null);
     setIsGenerating(true);
@@ -161,6 +163,8 @@ export default function CarpoolManagementPage() {
   };
 
   const handleFinalizeCarpools = async () => {
+    if (!eventId) return;
+    
     setError(null);
     setSuccess(null);
     setIsFinalizing(true);
@@ -178,6 +182,8 @@ export default function CarpoolManagementPage() {
   };
 
   const handleSendEmails = async () => {
+    if (!eventId) return;
+    
     setError(null);
     setSuccess(null);
     setIsSendingEmails(true);
@@ -223,6 +229,8 @@ export default function CarpoolManagementPage() {
   };
 
   const performReassignment = async (riderId: string, targetId: string) => {
+    if (!eventId) return;
+    
     const fromCarpool = carpools.find((c) =>
       c.riders.some((r) => r.rsvpId === riderId)
     );

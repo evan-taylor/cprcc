@@ -19,14 +19,15 @@ export default function EventDetailPage() {
 
   const eventById = useQuery(
     api.events.getEvent,
-    isSlug ? undefined : { eventId: eventIdOrSlug as Id<"events"> }
+    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
   );
   const eventBySlug = useQuery(
     api.events.getEventBySlug,
-    isSlug ? { slug: eventIdOrSlug } : undefined
+    isSlug ? { slug: eventIdOrSlug } : "skip"
   );
 
   const event = isSlug ? eventBySlug : eventById;
+  const eventId = event?._id;
   const currentUser = useQuery(api.users.getCurrentUser);
   const createRsvp = useMutation(api.events.createRsvp);
   const deleteRsvp = useMutation(api.events.deleteRsvp);
@@ -130,6 +131,12 @@ export default function EventDetailPage() {
     try {
       if (!currentUser) {
         setError("You must be signed in to RSVP");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!eventId) {
+        setError("Event not found");
         setIsSubmitting(false);
         return;
       }

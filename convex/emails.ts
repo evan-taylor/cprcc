@@ -1,6 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { Resend } from "resend";
 import { v } from "convex/values";
+import { Resend } from "resend";
 import { api } from "./_generated/api";
 import { action } from "./_generated/server";
 import {
@@ -16,7 +16,10 @@ export const sendCarpoolEmails = action({
   args: {
     eventId: v.id("events"),
   },
-  handler: async (ctx, args): Promise<{
+  handler: async (
+    ctx,
+    args
+  ): Promise<{
     emailsSent: number;
     emailsFailed: number;
     carpoolsProcessed: number;
@@ -81,8 +84,8 @@ export const sendCarpoolEmails = action({
         carColor: carpool.driver.carColor,
         carType: carpool.driver.carType,
         capacity: carpool.driver.capacity,
-        riders: carpool.riders.map((r) => ({ 
-          name: r.name, 
+        riders: carpool.riders.map((r) => ({
+          name: r.name,
           email: r.email,
           phoneNumber: r.phoneNumber,
         })),

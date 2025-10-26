@@ -35,7 +35,7 @@ export default function CreateEventPage() {
 
   const suggestedSlug = useQuery(
     api.events.generateSlugSuggestion,
-    title ? { title } : undefined
+    title ? { title } : "skip"
   );
 
   if (currentUser === undefined) {

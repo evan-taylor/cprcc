@@ -35,7 +35,7 @@ export default function EditEventPage() {
 
   const suggestedSlug = useQuery(
     api.events.generateSlugSuggestion,
-    title && slugTouched ? { title, excludeEventId: eventId } : undefined
+    title && slugTouched ? { title, excludeEventId: eventId } : "skip"
   );
 
   useEffect(() => {
