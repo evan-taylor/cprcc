@@ -10,4 +10,12 @@ export default defineSchema({
   numbers: defineTable({
     value: v.number(),
   }),
+  userProfiles: defineTable({
+    name: v.string(),
+    email: v.string(),
+    role: v.union(v.literal("member"), v.literal("board")),
+    userId: v.id("users"),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_email", ["email"]),
 });
