@@ -1013,3 +1013,53 @@ export const finalizeCarpools = mutation({
     return { carpoolsFinalized: carpools.length };
   },
 });
+
+/**
+ * Backfill migration to add slugs to existing events that don't have them.
+ * This should be run once after deploying the optional slug schema change.
+ * Run this from the Convex dashboard or via a temporary admin page.
+ */
+export const backfillEventSlugs = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!userProfile || userProfile.role !== "board") {
+      throw new Error("Only board members can run migrations");
+    }
+
+    const allEvents = await ctx.db.query("events").collect();
+    const eventsWithoutSlugs = allEvents.filter((event) => !event.slug);
+
+    let updated = 0;
+    let skipped = 0;
+
+    for (const event of eventsWithoutSlugs) {
+      try {
+        const baseSlug = generateSlugFromTitle(event.title);
+        const uniqueSlug = await generateUniqueSlug(ctx, baseSlug, event._id);
+        
+        await ctx.db.patch(event._id, { slug: uniqueSlug });
+        updated++;
+      } catch (err) {
+        console.error(`Failed to generate slug for event ${event._id}:`, err);
+        skipped++;
+      }
+    }
+
+    return {
+      totalEvents: allEvents.length,
+      eventsWithoutSlugs: eventsWithoutSlugs.length,
+      updated,
+      skipped,
+    };
+  },
+});

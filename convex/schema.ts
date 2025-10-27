@@ -27,7 +27,7 @@ export default defineSchema({
     endTime: v.number(),
     eventType: v.union(v.literal("regular"), v.literal("boothing")),
     isOffsite: v.boolean(),
-    slug: v.string(),
+    slug: v.optional(v.string()),
     createdBy: v.id("userProfiles"),
     createdAt: v.number(),
   })
