@@ -58,7 +58,7 @@ export default function EditEventPage() {
       setTitle(event.title);
       setDescription(event.description);
       setLocation(event.location);
-      setSlug(event.slug);
+      setSlug(event.slug ?? "");
 
       const startDateTime = new Date(event.startTime);
       const endDateTime = new Date(event.endTime);
