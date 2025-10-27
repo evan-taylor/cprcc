@@ -25,10 +25,9 @@ export default function SignIn() {
         return;
       }
       createdRef.current = true;
-      ensureCurrentUserProfile({})
-        .catch(() => {
-          // Silently ignore profile creation errors for existing users
-        });
+      ensureCurrentUserProfile({}).catch(() => {
+        // Silently ignore profile creation errors for existing users
+      });
     }
   }, [isAuthenticated, ensureCurrentUserProfile]);
 
@@ -49,17 +48,18 @@ export default function SignIn() {
           setLoading(false);
           return;
         }
-        
-        const localPhone = phoneNumber && phoneNumber.trim().length > 0 
-          ? phoneNumber.trim() 
-          : undefined;
-        
+
+        const localPhone =
+          phoneNumber && phoneNumber.trim().length > 0
+            ? phoneNumber.trim()
+            : undefined;
+
         formData.set("flow", "signUp");
-        
+
         await signIn("password", formData);
-        
+
         await ensureCurrentUserProfile({ phoneNumber: localPhone });
-        
+
         router.push("/");
         setLoading(false);
       } else {

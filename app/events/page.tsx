@@ -78,7 +78,7 @@ export default function EventsPage() {
               return (
                 <Link
                   className="block rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:border-rose-300 hover:shadow-md"
-                  href={`/events/${event._id}`}
+                  href={`/events/${event.slug ?? event._id}`}
                   key={event._id}
                 >
                   <div className="flex items-start justify-between gap-4">

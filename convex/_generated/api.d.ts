@@ -9,6 +9,8 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as emails_carpoolDriverEmail from "../emails/carpoolDriverEmail.js";
+import type * as emails_carpoolRiderEmail from "../emails/carpoolRiderEmail.js";
 import type * as emails from "../emails.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
@@ -31,6 +33,8 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  "emails/carpoolDriverEmail": typeof emails_carpoolDriverEmail;
+  "emails/carpoolRiderEmail": typeof emails_carpoolRiderEmail;
   emails: typeof emails;
   events: typeof events;
   http: typeof http;

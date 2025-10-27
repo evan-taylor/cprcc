@@ -1,13 +1,13 @@
 "use client";
 
 import {
+  closestCenter,
   DndContext,
-  DragEndEvent,
+  type DragEndEvent,
   DragOverlay,
-  DragStartEvent,
+  type DragStartEvent,
   MouseSensor,
   TouchSensor,
-  closestCenter,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -18,14 +18,33 @@ import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
+const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
+
 export default function CarpoolManagementPage() {
   const params = useParams();
   const router = useRouter();
-  const eventId = params.eventId as Id<"events">;
+  const eventIdOrSlug = params.eventId as string;
 
-  const event = useQuery(api.events.getEvent, { eventId });
+  const isSlug =
+    eventIdOrSlug.includes("-") || !eventIdOrSlug.match(CONVEX_ID_PATTERN);
+
+  const eventById = useQuery(
+    api.events.getEvent,
+    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
+  );
+  const eventBySlug = useQuery(
+    api.events.getEventBySlug,
+    isSlug ? { slug: eventIdOrSlug } : "skip"
+  );
+
+  const event = isSlug ? eventBySlug : eventById;
+  const eventId = event?._id as Id<"events"> | undefined;
+
   const currentUser = useQuery(api.users.getCurrentUser);
-  const carpools = useQuery(api.events.getCarpools, { eventId });
+  const carpools = useQuery(
+    api.events.getCarpools,
+    eventId ? { eventId } : "skip"
+  );
   const generateCarpools = useMutation(api.events.generateCarpools);
   const finalizeCarpools = useMutation(api.events.finalizeCarpools);
   const sendCarpoolEmails = useAction(api.emails.sendCarpoolEmails);
@@ -123,6 +142,8 @@ export default function CarpoolManagementPage() {
   }
 
   const handleGenerateCarpools = async () => {
+    if (!eventId) return;
+    
     setError(null);
     setSuccess(null);
     setIsGenerating(true);
@@ -142,6 +163,8 @@ export default function CarpoolManagementPage() {
   };
 
   const handleFinalizeCarpools = async () => {
+    if (!eventId) return;
+    
     setError(null);
     setSuccess(null);
     setIsFinalizing(true);
@@ -159,6 +182,8 @@ export default function CarpoolManagementPage() {
   };
 
   const handleSendEmails = async () => {
+    if (!eventId) return;
+    
     setError(null);
     setSuccess(null);
     setIsSendingEmails(true);
@@ -204,6 +229,8 @@ export default function CarpoolManagementPage() {
   };
 
   const performReassignment = async (riderId: string, targetId: string) => {
+    if (!eventId) return;
+    
     const fromCarpool = carpools.find((c) =>
       c.riders.some((r) => r.rsvpId === riderId)
     );
@@ -212,7 +239,7 @@ export default function CarpoolManagementPage() {
     if (targetId !== "unassigned") {
       toCarpoolId = targetId.replace("carpool:", "") as Id<"carpools">;
       const toCarpool = carpools.find((c) => c.carpoolId === toCarpoolId);
-      
+
       if (toCarpool && toCarpool.riders.length >= toCarpool.driver.capacity) {
         setError("Target carpool is at capacity");
         return;
@@ -238,7 +265,7 @@ export default function CarpoolManagementPage() {
   const allFinalized =
     carpools.length > 0 && carpools.every((c) => c.status === "finalized");
   const anyDraft = carpools.some((c) => c.status === "draft");
-  
+
   const assignedRiderIds = new Set(
     carpools.flatMap((c) => c.riders.map((r) => r.rsvpId))
   );
@@ -253,7 +280,7 @@ export default function CarpoolManagementPage() {
         <div className="mb-6">
           <button
             className="text-rose-600 text-sm hover:text-rose-700"
-            onClick={() => router.push(`/events/${eventId}`)}
+            onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
           >
             ← Back to Event
           </button>
@@ -361,7 +388,7 @@ export default function CarpoolManagementPage() {
 
               {unassignedRiders.length > 0 && (
                 <div
-                  className="rounded-3xl border-2 border-dashed border-orange-300 bg-orange-50 p-8 shadow-sm"
+                  className="rounded-3xl border-2 border-orange-300 border-dashed bg-orange-50 p-8 shadow-sm"
                   data-droppable-id="unassigned"
                 >
                   <div className="mb-4 flex items-center justify-between">
@@ -380,13 +407,18 @@ export default function CarpoolManagementPage() {
                         key={rsvp._id}
                         onDragStart={(e) => {
                           e.dataTransfer.effectAllowed = "move";
-                          e.dataTransfer.setData("text/plain", `rider:${rsvp._id}`);
+                          e.dataTransfer.setData(
+                            "text/plain",
+                            `rider:${rsvp._id}`
+                          );
                         }}
                       >
                         <p className="font-semibold text-slate-900 text-sm">
                           {rsvp.userName}
                         </p>
-                        <p className="text-slate-600 text-xs">{rsvp.userEmail}</p>
+                        <p className="text-slate-600 text-xs">
+                          {rsvp.userEmail}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -396,7 +428,7 @@ export default function CarpoolManagementPage() {
               {carpools.map((carpool, index) => {
                 const isFull = carpool.riders.length >= carpool.driver.capacity;
                 const isDraft = carpool.status === "draft";
-                
+
                 return (
                   <div
                     className={`rounded-3xl border-2 bg-white p-8 shadow-sm transition ${
@@ -408,23 +440,37 @@ export default function CarpoolManagementPage() {
                     }`}
                     data-droppable-id={`carpool:${carpool.carpoolId}`}
                     key={carpool.carpoolId}
+                    onDragLeave={(e) => {
+                      e.currentTarget.classList.remove(
+                        "ring-2",
+                        "ring-blue-400"
+                      );
+                    }}
                     onDragOver={(e) => {
                       if (isDraft && !isFull) {
                         e.preventDefault();
-                        e.currentTarget.classList.add("ring-2", "ring-blue-400");
+                        e.currentTarget.classList.add(
+                          "ring-2",
+                          "ring-blue-400"
+                        );
                       }
-                    }}
-                    onDragLeave={(e) => {
-                      e.currentTarget.classList.remove("ring-2", "ring-blue-400");
                     }}
                     onDrop={(e) => {
                       e.preventDefault();
-                      e.currentTarget.classList.remove("ring-2", "ring-blue-400");
-                      
+                      e.currentTarget.classList.remove(
+                        "ring-2",
+                        "ring-blue-400"
+                      );
+
                       if (!isDraft || isFull) return;
-                      
-                      const riderId = e.dataTransfer.getData("text/plain").replace("rider:", "");
-                      performReassignment(riderId, `carpool:${carpool.carpoolId}`);
+
+                      const riderId = e.dataTransfer
+                        .getData("text/plain")
+                        .replace("rider:", "");
+                      performReassignment(
+                        riderId,
+                        `carpool:${carpool.carpoolId}`
+                      );
                     }}
                   >
                     <div className="mb-4 flex items-center justify-between">
@@ -439,7 +485,8 @@ export default function CarpoolManagementPage() {
                               : "bg-blue-100 text-blue-700"
                           }`}
                         >
-                          {carpool.riders.length}/{carpool.driver.capacity} seats
+                          {carpool.riders.length}/{carpool.driver.capacity}{" "}
+                          seats
                         </span>
                         <span
                           className={`rounded-full px-3 py-1 font-semibold text-xs uppercase tracking-wide ${
@@ -464,7 +511,8 @@ export default function CarpoolManagementPage() {
                         {carpool.driver.email}
                       </p>
                       <p className="mt-2 text-blue-700 text-sm">
-                        Vehicle: {carpool.driver.carColor} {carpool.driver.carType}
+                        Vehicle: {carpool.driver.carColor}{" "}
+                        {carpool.driver.carType}
                       </p>
                     </div>
 
@@ -491,7 +539,10 @@ export default function CarpoolManagementPage() {
                                   return;
                                 }
                                 e.dataTransfer.effectAllowed = "move";
-                                e.dataTransfer.setData("text/plain", `rider:${rider.rsvpId}`);
+                                e.dataTransfer.setData(
+                                  "text/plain",
+                                  `rider:${rider.rsvpId}`
+                                );
                               }}
                             >
                               <p className="font-semibold text-slate-900 text-sm">
