@@ -156,7 +156,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
         }`}
         href="/signin"
       >
-        Sign in
+        Sign In
       </Link>
     );
   }
@@ -197,7 +197,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
           onClick={handleSignOut}
           type="button"
         >
-          Sign out
+          Sign Out
         </button>
       </div>
     </div>
