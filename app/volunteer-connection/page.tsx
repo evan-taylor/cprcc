@@ -1,5 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/site-header";
+
+export const metadata: Metadata = {
+  title: "Volunteer Connection Signup",
+  description:
+    "Step-by-step guide to join Cal Poly Red Cross Club through Volunteer Connection. Complete your Red Cross ID, background check, and get approved to volunteer in 8 easy steps.",
+  openGraph: {
+    title: "Volunteer Connection Signup | Cal Poly Red Cross Club",
+    description:
+      "Step-by-step guide to join Cal Poly Red Cross Club through Volunteer Connection. Complete your Red Cross ID, background check, and get approved to volunteer.",
+    url: "https://calpolyredcross.org/volunteer-connection",
+  },
+  alternates: {
+    canonical: "/volunteer-connection",
+  },
+};
 
 const webSignupUrl =
   "https://www.redcross.org/local/california/central-california/volunteer/red-cross-clubs.html";

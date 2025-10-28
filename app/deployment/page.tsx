@@ -1,6 +1,22 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import SiteHeader from "@/components/site-header";
+
+export const metadata: Metadata = {
+  title: "Deployment & Training",
+  description:
+    "Learn about Red Cross deployment opportunities and GAP training for Cal Poly students. Join disaster relief efforts nationwide through Disaster Cycle Services. Complete GAP training to deploy.",
+  openGraph: {
+    title: "Deployment & Training | Cal Poly Red Cross Club",
+    description:
+      "Learn about Red Cross deployment opportunities and GAP training for Cal Poly students. Join disaster relief efforts nationwide through Disaster Cycle Services.",
+    url: "https://calpolyredcross.org/deployment",
+  },
+  alternates: {
+    canonical: "/deployment",
+  },
+};
 
 const overview = [
   "To join Disaster Cycle Services you will complete online GAP (Group, Activity, Position) training. Sheltering and Feeding GAPs are the best starting point because they teach how Red Cross shelters operate and how every team collaborates.",

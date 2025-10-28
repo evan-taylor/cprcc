@@ -2,10 +2,21 @@
 
 import { useQuery } from "convex/react";
 import Link from "next/link";
+import { useEffect } from "react";
 import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
 
 export default function EventsPage() {
+  useEffect(() => {
+    document.title = "Events & RSVP | Cal Poly Red Cross Club";
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute(
+        "content",
+        "Browse upcoming Cal Poly Red Cross Club volunteer opportunities and events. RSVP to blood drives, disaster relief training, and community service events at Cal Poly SLO."
+      );
+    }
+  }, []);
   const events = useQuery(api.events.listUpcomingEvents);
   const currentUser = useQuery(api.users.getCurrentUser);
 
