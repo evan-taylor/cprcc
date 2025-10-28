@@ -10,19 +10,19 @@ import { mutation, query } from "./_generated/server";
  */
 export function normalizePhoneNumber(phone: string): string {
   const digits = phone.replace(/\D/g, "");
-  
+
   if (digits.length < 7 || digits.length > 15) {
     throw new Error("Phone number must be between 7 and 15 digits");
   }
-  
+
   if (digits.length === 10) {
     return `+1${digits}`;
   }
-  
+
   if (digits.length === 11 && digits.startsWith("1")) {
     return `+${digits}`;
   }
-  
+
   return digits.startsWith("+") ? digits : `+${digits}`;
 }
 
@@ -32,21 +32,21 @@ export function normalizePhoneNumber(phone: string): string {
  */
 export function formatPhoneNumber(phone: string): string {
   const digits = phone.replace(/\D/g, "");
-  
+
   if (digits.length === 11 && digits.startsWith("1")) {
     const areaCode = digits.slice(1, 4);
     const prefix = digits.slice(4, 7);
     const lineNumber = digits.slice(7, 11);
     return `(${areaCode}) ${prefix}-${lineNumber}`;
   }
-  
+
   if (digits.length === 10) {
     const areaCode = digits.slice(0, 3);
     const prefix = digits.slice(3, 6);
     const lineNumber = digits.slice(6, 10);
     return `(${areaCode}) ${prefix}-${lineNumber}`;
   }
-  
+
   return phone.startsWith("+") ? phone : `+${phone}`;
 }
 

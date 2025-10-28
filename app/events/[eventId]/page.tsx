@@ -7,21 +7,36 @@ import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
+const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
+
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const eventId = params.eventId as Id<"events">;
+  const eventIdOrSlug = params.eventId as string;
 
-  const event = useQuery(api.events.getEvent, { eventId });
+  const isSlug =
+    eventIdOrSlug.includes("-") || !eventIdOrSlug.match(CONVEX_ID_PATTERN);
+
+  const eventById = useQuery(
+    api.events.getEvent,
+    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
+  );
+  const eventBySlug = useQuery(
+    api.events.getEventBySlug,
+    isSlug ? { slug: eventIdOrSlug } : "skip"
+  );
+
+  const event = isSlug ? eventBySlug : eventById;
+  const eventId = event?._id;
   const currentUser = useQuery(api.users.getCurrentUser);
   const createRsvp = useMutation(api.events.createRsvp);
   const deleteRsvp = useMutation(api.events.deleteRsvp);
   const updatePhoneNumber = useMutation(api.users.updatePhoneNumber);
 
   const [showRsvpForm, setShowRsvpForm] = useState(false);
-  const [selectedShiftIds, setSelectedShiftIds] = useState<
-    Set<Id<"shifts">>
-  >(new Set());
+  const [selectedShiftIds, setSelectedShiftIds] = useState<Set<Id<"shifts">>>(
+    new Set()
+  );
   const [needsRide, setNeedsRide] = useState(false);
   const [canDrive, setCanDrive] = useState(false);
   const [carType, setCarType] = useState("");
@@ -83,16 +98,16 @@ export default function EventDetailPage() {
 
   const selectAllAvailableShifts = () => {
     if (event.eventType !== "boothing") return;
-    
+
     const availableShiftIds = event.shifts
       .filter((shift) => {
         const shiftRsvps = event.rsvps.filter((r) => r.shiftId === shift._id);
         const isFull = shiftRsvps.length >= shift.requiredPeople;
         const userHasThisShift = userRsvps.some((r) => r.shiftId === shift._id);
-        return !isFull && !userHasThisShift;
+        return !(isFull || userHasThisShift);
       })
       .map((shift) => shift._id);
-    
+
     setSelectedShiftIds(new Set(availableShiftIds));
   };
 
@@ -120,6 +135,12 @@ export default function EventDetailPage() {
         return;
       }
 
+      if (!eventId) {
+        setError("Event not found");
+        setIsSubmitting(false);
+        return;
+      }
+
       if (event.eventType === "boothing" && selectedShiftIds.size === 0) {
         setError("Please select at least one shift above before confirming");
         setIsSubmitting(false);
@@ -140,11 +161,16 @@ export default function EventDetailPage() {
         return;
       }
 
-      const shiftsToRsvp = event.eventType === "boothing" 
-        ? Array.from(selectedShiftIds)
-        : [undefined];
+      const shiftsToRsvp =
+        event.eventType === "boothing"
+          ? Array.from(selectedShiftIds)
+          : [undefined];
 
-      const results: Array<{ shiftId?: Id<"shifts">; success: boolean; error?: string }> = [];
+      const results: Array<{
+        shiftId?: Id<"shifts">;
+        success: boolean;
+        error?: string;
+      }> = [];
 
       for (const shiftId of shiftsToRsvp) {
         try {
@@ -226,7 +252,9 @@ export default function EventDetailPage() {
       await updatePhoneNumber({ phoneNumber: phoneNumber.trim() });
       setPhoneNumber("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update phone number");
+      setError(
+        err instanceof Error ? err.message : "Failed to update phone number"
+      );
     } finally {
       setIsUpdatingPhone(false);
     }
@@ -237,9 +265,10 @@ export default function EventDetailPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-4xl px-4 pt-10 pb-16 sm:px-8">
         <div className="mb-6">
-          <button type="button"
+          <button
             className="text-rose-600 text-sm hover:text-rose-700"
             onClick={() => router.push("/events")}
+            type="button"
           >
             ← Back to Events
           </button>
@@ -266,13 +295,27 @@ export default function EventDetailPage() {
                 </div>
                 <p className="mt-4 text-slate-600">{event.description}</p>
               </div>
-              {currentUser?.role === "board" && event.isOffsite && (
-                <button type="button"
-                  className="rounded-full bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700"
-                  onClick={() => router.push(`/events/${eventId}/carpools`)}
-                >
-                  Manage Carpools
-                </button>
+              {currentUser?.role === "board" && (
+                <div className="flex flex-col gap-2">
+                  <button
+                    className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
+                    onClick={() => router.push(`/events/${event.slug ?? event._id}/edit`)}
+                    type="button"
+                  >
+                    Edit Event
+                  </button>
+                  {event.isOffsite && (
+                    <button
+                      className="rounded-full bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700"
+                      onClick={() =>
+                        router.push(`/events/${event.slug ?? event._id}/carpools`)
+                      }
+                      type="button"
+                    >
+                      Manage Carpools
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -439,62 +482,67 @@ export default function EventDetailPage() {
 
               {showRsvpForm ? (
                 <form className="space-y-4" onSubmit={handleRsvpSubmit}>
-                  {event.eventType === "boothing" && selectedShiftIds.size > 0 && (
-                    <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
-                      <p className="mb-2 font-semibold text-rose-900 text-sm">
-                        Selected Shifts ({selectedShiftIds.size})
-                      </p>
-                      <div className="space-y-2">
-                        {Array.from(selectedShiftIds).map((shiftId) => {
-                          const shift = event.shifts.find((s) => s._id === shiftId);
-                          if (!shift) return null;
-                          return (
-                            <div
-                              className="flex items-center justify-between rounded-md bg-white px-3 py-2"
-                              key={shiftId}
-                            >
-                              <p className="text-rose-700 text-sm">
-                                {new Date(shift.startTime).toLocaleTimeString(
-                                  "en-US",
-                                  {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                  }
-                                )}{" "}
-                                -{" "}
-                                {new Date(shift.endTime).toLocaleTimeString(
-                                  "en-US",
-                                  {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                  }
-                                )}
-                              </p>
-                              <button
-                                className="text-rose-600 hover:text-rose-800"
-                                onClick={() => removeShiftFromSelection(shiftId)}
-                                type="button"
+                  {event.eventType === "boothing" &&
+                    selectedShiftIds.size > 0 && (
+                      <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
+                        <p className="mb-2 font-semibold text-rose-900 text-sm">
+                          Selected Shifts ({selectedShiftIds.size})
+                        </p>
+                        <div className="space-y-2">
+                          {Array.from(selectedShiftIds).map((shiftId) => {
+                            const shift = event.shifts.find(
+                              (s) => s._id === shiftId
+                            );
+                            if (!shift) return null;
+                            return (
+                              <div
+                                className="flex items-center justify-between rounded-md bg-white px-3 py-2"
+                                key={shiftId}
                               >
-                                <svg
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                                <p className="text-rose-700 text-sm">
+                                  {new Date(shift.startTime).toLocaleTimeString(
+                                    "en-US",
+                                    {
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                    }
+                                  )}{" "}
+                                  -{" "}
+                                  {new Date(shift.endTime).toLocaleTimeString(
+                                    "en-US",
+                                    {
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </p>
+                                <button
+                                  className="text-rose-600 hover:text-rose-800"
+                                  onClick={() =>
+                                    removeShiftFromSelection(shiftId)
+                                  }
+                                  type="button"
                                 >
-                                  <path
-                                    d="M6 18L18 6M6 6l12 12"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          );
-                        })}
+                                  <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      d="M6 18L18 6M6 6l12 12"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   {event.isOffsite && !currentUser?.phoneNumber && (
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -502,7 +550,8 @@ export default function EventDetailPage() {
                         Phone Number Required for Carpools
                       </p>
                       <p className="mb-3 text-blue-800 text-xs">
-                        Please add your phone number to coordinate with drivers and riders.
+                        Please add your phone number to coordinate with drivers
+                        and riders.
                       </p>
                       <div className="flex gap-2">
                         <div className="flex-1">
@@ -511,7 +560,7 @@ export default function EventDetailPage() {
                           </label>
                           <input
                             autoComplete="tel"
-                            className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             id="phoneNumber"
                             inputMode="tel"
                             onChange={(e) => setPhoneNumber(e.target.value)}
@@ -522,7 +571,11 @@ export default function EventDetailPage() {
                         </div>
                         <button
                           className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700 disabled:bg-slate-400"
-                          disabled={isUpdatingPhone || !phoneNumber || phoneNumber.trim().length === 0}
+                          disabled={
+                            isUpdatingPhone ||
+                            !phoneNumber ||
+                            phoneNumber.trim().length === 0
+                          }
                           onClick={handleUpdatePhoneNumber}
                           type="button"
                         >
@@ -662,7 +715,11 @@ export default function EventDetailPage() {
                     </button>
                     <button
                       className="flex-1 rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700 disabled:bg-slate-400"
-                      disabled={isSubmitting || (event.eventType === "boothing" && selectedShiftIds.size === 0)}
+                      disabled={
+                        isSubmitting ||
+                        (event.eventType === "boothing" &&
+                          selectedShiftIds.size === 0)
+                      }
                       type="submit"
                     >
                       {isSubmitting ? "Submitting..." : "Confirm RSVP"}
@@ -680,23 +737,24 @@ export default function EventDetailPage() {
                         <p className="font-semibold text-green-900">
                           You&apos;re signed up!
                         </p>
-                        {rsvp.shiftId && (() => {
-                          const shift = event.shifts.find(
-                            (s) => s._id === rsvp.shiftId
-                          );
-                          return shift ? (
-                            <p className="mt-1 text-green-700 text-sm">
-                              Shift:{" "}
-                              {new Date(shift.startTime).toLocaleTimeString(
-                                "en-US",
-                                {
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </p>
-                          ) : null;
-                        })()}
+                        {rsvp.shiftId &&
+                          (() => {
+                            const shift = event.shifts.find(
+                              (s) => s._id === rsvp.shiftId
+                            );
+                            return shift ? (
+                              <p className="mt-1 text-green-700 text-sm">
+                                Shift:{" "}
+                                {new Date(shift.startTime).toLocaleTimeString(
+                                  "en-US",
+                                  {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </p>
+                            ) : null;
+                          })()}
                         {rsvp.canDrive && (
                           <p className="mt-1 text-green-700 text-sm">
                             Driving: {rsvp.driverInfo?.carColor}{" "}
@@ -780,7 +838,7 @@ export default function EventDetailPage() {
                         </p>
                         {rsvp.userPhoneNumber && (
                           <p className="text-slate-600 text-xs">
-                            <a 
+                            <a
                               className="hover:text-rose-600"
                               href={`tel:${rsvp.userPhoneNumber}`}
                             >
@@ -800,18 +858,24 @@ export default function EventDetailPage() {
                           </p>
                         )}
                       </div>
-                      {rsvp.shiftId && (() => {
-                        const shift = event.shifts.find((s) => s._id === rsvp.shiftId);
-                        return shift ? (
-                          <p className="text-slate-600 text-xs">
-                            Shift:{" "}
-                            {new Date(shift.startTime).toLocaleTimeString("en-US", {
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })}
-                          </p>
-                        ) : null;
-                      })()}
+                      {rsvp.shiftId &&
+                        (() => {
+                          const shift = event.shifts.find(
+                            (s) => s._id === rsvp.shiftId
+                          );
+                          return shift ? (
+                            <p className="text-slate-600 text-xs">
+                              Shift:{" "}
+                              {new Date(shift.startTime).toLocaleTimeString(
+                                "en-US",
+                                {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </p>
+                          ) : null;
+                        })()}
                     </div>
                   ))}
                 </div>

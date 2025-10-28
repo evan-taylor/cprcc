@@ -1,6 +1,38 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+
+function generateSlugFromTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+async function generateUniqueSlug(
+  ctx: QueryCtx,
+  baseSlug: string,
+  excludeEventId?: string
+): Promise<string> {
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existing = await ctx.db
+      .query("events")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .first();
+
+    if (!existing || existing._id === excludeEventId) {
+      return slug;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+}
 
 export const createEvent = mutation({
   args: {
@@ -11,6 +43,7 @@ export const createEvent = mutation({
     endTime: v.number(),
     eventType: v.union(v.literal("regular"), v.literal("boothing")),
     isOffsite: v.boolean(),
+    slug: v.optional(v.string()),
     shifts: v.optional(
       v.array(
         v.object({
@@ -36,6 +69,9 @@ export const createEvent = mutation({
       throw new Error("Only board members can create events");
     }
 
+    const baseSlug = args.slug || generateSlugFromTitle(args.title);
+    const uniqueSlug = await generateUniqueSlug(ctx, baseSlug);
+
     const eventId = await ctx.db.insert("events", {
       title: args.title,
       description: args.description,
@@ -44,6 +80,7 @@ export const createEvent = mutation({
       endTime: args.endTime,
       eventType: args.eventType,
       isOffsite: args.isOffsite,
+      slug: uniqueSlug,
       createdBy: userProfile._id,
       createdAt: Date.now(),
     });
@@ -72,6 +109,7 @@ export const updateEvent = mutation({
     startTime: v.optional(v.number()),
     endTime: v.optional(v.number()),
     isOffsite: v.optional(v.boolean()),
+    slug: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const authUserId = await getAuthUserId(ctx);
@@ -111,6 +149,12 @@ export const updateEvent = mutation({
     }
     if (args.isOffsite !== undefined) {
       updates.isOffsite = args.isOffsite;
+    }
+    if (args.slug !== undefined) {
+      const baseSlug =
+        args.slug || generateSlugFromTitle(args.title || event.title);
+      const uniqueSlug = await generateUniqueSlug(ctx, baseSlug, args.eventId);
+      updates.slug = uniqueSlug;
     }
 
     await ctx.db.patch(args.eventId, updates);
@@ -244,6 +288,66 @@ export const getEvent = query({
   },
 });
 
+export const getEventBySlug = query({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .first();
+
+    if (!event) {
+      return null;
+    }
+
+    const shifts = await ctx.db
+      .query("shifts")
+      .withIndex("by_event", (q) => q.eq("eventId", event._id))
+      .collect();
+
+    const rsvps = await ctx.db
+      .query("rsvps")
+      .withIndex("by_event", (q) => q.eq("eventId", event._id))
+      .collect();
+
+    const rsvpDetails = await Promise.all(
+      rsvps.map(async (rsvp) => {
+        const userProfile = await ctx.db.get(rsvp.userProfileId);
+        return {
+          ...rsvp,
+          userName: userProfile?.name ?? "Unknown",
+          userEmail: userProfile?.email ?? "",
+          userPhoneNumber: userProfile?.phoneNumber,
+        };
+      })
+    );
+
+    return {
+      ...event,
+      shifts: shifts.sort((a, b) => a.startTime - b.startTime),
+      rsvps: rsvpDetails,
+    };
+  },
+});
+
+export const generateSlugSuggestion = query({
+  args: {
+    title: v.string(),
+    excludeEventId: v.optional(v.id("events")),
+  },
+  handler: async (ctx, args) => {
+    const baseSlug = generateSlugFromTitle(args.title);
+    const uniqueSlug = await generateUniqueSlug(
+      ctx,
+      baseSlug,
+      args.excludeEventId
+    );
+    return uniqueSlug;
+  },
+});
+
 export const createRsvp = mutation({
   args: {
     eventId: v.id("events"),
@@ -306,7 +410,10 @@ export const createRsvp = mutation({
 
       const isUserAlreadyInShift = existingRsvp?.shiftId === args.shiftId;
 
-      if (!isUserAlreadyInShift && existingShiftRsvps.length >= shift.requiredPeople) {
+      if (
+        !isUserAlreadyInShift &&
+        existingShiftRsvps.length >= shift.requiredPeople
+      ) {
         throw new Error("This shift is already full");
       }
     }
@@ -904,5 +1011,55 @@ export const finalizeCarpools = mutation({
     }
 
     return { carpoolsFinalized: carpools.length };
+  },
+});
+
+/**
+ * Backfill migration to add slugs to existing events that don't have them.
+ * This should be run once after deploying the optional slug schema change.
+ * Run this from the Convex dashboard or via a temporary admin page.
+ */
+export const backfillEventSlugs = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!userProfile || userProfile.role !== "board") {
+      throw new Error("Only board members can run migrations");
+    }
+
+    const allEvents = await ctx.db.query("events").collect();
+    const eventsWithoutSlugs = allEvents.filter((event) => !event.slug);
+
+    let updated = 0;
+    let skipped = 0;
+
+    for (const event of eventsWithoutSlugs) {
+      try {
+        const baseSlug = generateSlugFromTitle(event.title);
+        const uniqueSlug = await generateUniqueSlug(ctx, baseSlug, event._id);
+        
+        await ctx.db.patch(event._id, { slug: uniqueSlug });
+        updated++;
+      } catch (err) {
+        console.error(`Failed to generate slug for event ${event._id}:`, err);
+        skipped++;
+      }
+    }
+
+    return {
+      totalEvents: allEvents.length,
+      eventsWithoutSlugs: eventsWithoutSlugs.length,
+      updated,
+      skipped,
+    };
   },
 });

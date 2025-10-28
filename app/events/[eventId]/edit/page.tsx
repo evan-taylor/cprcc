@@ -1,15 +1,36 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
-export default function CreateEventPage() {
+const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
+
+export default function EditEventPage() {
+  const params = useParams();
   const router = useRouter();
+  const eventIdOrSlug = params.eventId as string;
+
+  const isSlug =
+    eventIdOrSlug.includes("-") || !eventIdOrSlug.match(CONVEX_ID_PATTERN);
+
+  const eventById = useQuery(
+    api.events.getEvent,
+    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
+  );
+  const eventBySlug = useQuery(
+    api.events.getEventBySlug,
+    isSlug ? { slug: eventIdOrSlug } : "skip"
+  );
+
+  const event = isSlug ? eventBySlug : eventById;
+  const eventId = event?._id;
   const currentUser = useQuery(api.users.getCurrentUser);
-  const createEvent = useMutation(api.events.createEvent);
+  const updateEvent = useMutation(api.events.updateEvent);
+  const deleteEvent = useMutation(api.events.deleteEvent);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -18,32 +39,76 @@ export default function CreateEventPage() {
   const [startTime, setStartTime] = useState("");
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [eventType, setEventType] = useState<"regular" | "boothing">("regular");
   const [isOffsite, setIsOffsite] = useState(false);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
-  const [shifts, setShifts] = useState<
-    Array<{
-      id: string;
-      startTime: string;
-      endTime: string;
-      requiredPeople: number;
-    }>
-  >([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const suggestedSlug = useQuery(
     api.events.generateSlugSuggestion,
-    title ? { title } : "skip"
+    title && slugTouched && eventId ? { title, excludeEventId: eventId } : "skip"
   );
 
-  if (currentUser === undefined) {
+  useEffect(() => {
+    if (event && !isLoaded) {
+      setTitle(event.title);
+      setDescription(event.description);
+      setLocation(event.location);
+      setSlug(event.slug ?? "");
+
+      const startDateTime = new Date(event.startTime);
+      const endDateTime = new Date(event.endTime);
+
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      const formatTime = (date: Date) => {
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${hours}:${minutes}`;
+      };
+
+      setStartDate(formatDate(startDateTime));
+      setStartTime(formatTime(startDateTime));
+      setEndDate(formatDate(endDateTime));
+      setEndTime(formatTime(endDateTime));
+      setIsOffsite(event.isOffsite);
+      setIsLoaded(true);
+    }
+  }, [event, isLoaded]);
+
+  if (event === undefined || currentUser === undefined) {
     return (
       <div className="min-h-screen bg-slate-50">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <SiteHeader />
+        <div className="flex items-center justify-center pt-20">
+          <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
+            <h1 className="font-semibold text-2xl text-slate-900">
+              Event Not Found
+            </h1>
+            <p className="mt-3 text-slate-600">
+              This event does not exist or has been deleted.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -59,7 +124,7 @@ export default function CreateEventPage() {
               Access Denied
             </h1>
             <p className="mt-3 text-slate-600">
-              Only board members can create events.
+              Only board members can edit events.
             </p>
           </div>
         </div>
@@ -67,38 +132,18 @@ export default function CreateEventPage() {
     );
   }
 
-  const addShift = () => {
-    setShifts([
-      ...shifts,
-      {
-        id: `shift-${Date.now()}-${Math.random()}`,
-        startTime: "",
-        endTime: "",
-        requiredPeople: 3,
-      },
-    ]);
-  };
-
-  const removeShift = (index: number) => {
-    setShifts(shifts.filter((_, i) => i !== index));
-  };
-
-  const updateShift = (
-    index: number,
-    field: string,
-    value: string | number
-  ) => {
-    const newShifts = [...shifts];
-    newShifts[index] = { ...newShifts[index], [field]: value };
-    setShifts(newShifts);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
+      if (!eventId) {
+        setError("Event not found");
+        setIsSubmitting(false);
+        return;
+      }
+
       const startDateTime = new Date(`${startDate}T${startTime}`).getTime();
       const endDateTime = new Date(`${endDate}T${endTime}`).getTime();
 
@@ -108,31 +153,37 @@ export default function CreateEventPage() {
         return;
       }
 
-      const eventShifts =
-        eventType === "boothing"
-          ? shifts.map((shift) => ({
-              startTime: new Date(`${startDate}T${shift.startTime}`).getTime(),
-              endTime: new Date(`${startDate}T${shift.endTime}`).getTime(),
-              requiredPeople: shift.requiredPeople,
-            }))
-          : undefined;
-
-      const eventId = await createEvent({
+      await updateEvent({
+        eventId,
         title,
         description,
         location,
         startTime: startDateTime,
         endTime: endDateTime,
-        eventType,
         isOffsite,
         slug: slugTouched ? slug : undefined,
-        shifts: eventShifts,
       });
 
+      router.push(`/events/${slugTouched ? slug : (event.slug ?? event._id)}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update event");
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!eventId) return;
+    
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      await deleteEvent({ eventId });
       router.push("/events");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create event");
-      setIsSubmitting(false);
+      setError(err instanceof Error ? err.message : "Failed to delete event");
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -140,12 +191,21 @@ export default function CreateEventPage() {
     <div className="min-h-screen bg-slate-50">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-4 pt-10 pb-16 sm:px-8">
+        <div className="mb-6">
+          <button
+            className="text-rose-600 text-sm hover:text-rose-700"
+            onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
+            type="button"
+          >
+            ← Back to Event
+          </button>
+        </div>
+
         <header className="mb-8">
-          <h1 className="font-semibold text-4xl text-slate-900">
-            Create Event
-          </h1>
+          <h1 className="font-semibold text-4xl text-slate-900">Edit Event</h1>
           <p className="mt-2 text-slate-600">
-            Create a new volunteer opportunity for members to RSVP to.
+            Update event details. Note: Event type and shifts cannot be changed
+            after creation.
           </p>
         </header>
 
@@ -204,7 +264,7 @@ export default function CreateEventPage() {
                     setSlug(e.target.value);
                     setSlugTouched(true);
                   }}
-                  placeholder={suggestedSlug || "auto-generated-from-title"}
+                  placeholder={suggestedSlug || slug}
                   type="text"
                   value={slug}
                 />
@@ -302,23 +362,19 @@ export default function CreateEventPage() {
               </div>
 
               <div>
-                <label
-                  className="block font-semibold text-slate-700 text-sm"
-                  htmlFor="eventType"
-                >
+                <p className="mb-2 block font-semibold text-slate-700 text-sm">
                   Event Type
-                </label>
-                <select
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  id="eventType"
-                  onChange={(e) =>
-                    setEventType(e.target.value as "regular" | "boothing")
-                  }
-                  value={eventType}
-                >
-                  <option value="regular">Regular Event</option>
-                  <option value="boothing">Boothing (with shifts)</option>
-                </select>
+                </p>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-slate-600 text-sm">
+                    {event.eventType === "boothing"
+                      ? "Boothing (with shifts)"
+                      : "Regular Event"}
+                  </p>
+                  <p className="mt-1 text-slate-500 text-xs">
+                    Event type cannot be changed after creation
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -339,108 +395,43 @@ export default function CreateEventPage() {
             </div>
           </div>
 
-          {eventType === "boothing" && (
+          {event.eventType === "boothing" && event.shifts.length > 0 && (
             <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="font-semibold text-slate-900 text-xl">Shifts</h2>
-                <button
-                  className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
-                  onClick={addShift}
-                  type="button"
-                >
-                  Add Shift
-                </button>
-              </div>
-
-              {shifts.length === 0 ? (
-                <p className="text-center text-slate-600 text-sm">
-                  No shifts added yet. Click &quot;Add Shift&quot; to create
-                  time slots.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {shifts.map((shift, index) => (
+              <h2 className="mb-4 font-semibold text-slate-900 text-xl">
+                Shifts
+              </h2>
+              <p className="mb-4 text-slate-600 text-sm">
+                Shifts cannot be edited from this page. To manage shifts, please
+                contact a system administrator or delete and recreate the event.
+              </p>
+              <div className="space-y-3">
+                {event.shifts.map((shift, index) => {
+                  const shiftStart = new Date(shift.startTime);
+                  const shiftEnd = new Date(shift.endTime);
+                  return (
                     <div
                       className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-                      key={shift.id}
+                      key={shift._id}
                     >
-                      <div className="mb-3 flex items-center justify-between">
-                        <h3 className="font-semibold text-slate-900">
-                          Shift {index + 1}
-                        </h3>
-                        <button
-                          className="text-rose-600 text-sm hover:text-rose-700"
-                          onClick={() => removeShift(index)}
-                          type="button"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div>
-                          <label
-                            className="block text-slate-700 text-sm"
-                            htmlFor={`shift-${shift.id}-start`}
-                          >
-                            Start Time
-                          </label>
-                          <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                            id={`shift-${shift.id}-start`}
-                            onChange={(e) =>
-                              updateShift(index, "startTime", e.target.value)
-                            }
-                            required
-                            type="time"
-                            value={shift.startTime}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            className="block text-slate-700 text-sm"
-                            htmlFor={`shift-${shift.id}-end`}
-                          >
-                            End Time
-                          </label>
-                          <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                            id={`shift-${shift.id}-end`}
-                            onChange={(e) =>
-                              updateShift(index, "endTime", e.target.value)
-                            }
-                            required
-                            type="time"
-                            value={shift.endTime}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            className="block text-slate-700 text-sm"
-                            htmlFor={`shift-${shift.id}-people`}
-                          >
-                            People Needed
-                          </label>
-                          <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                            id={`shift-${shift.id}-people`}
-                            min="1"
-                            onChange={(e) =>
-                              updateShift(
-                                index,
-                                "requiredPeople",
-                                Number.parseInt(e.target.value, 10)
-                              )
-                            }
-                            required
-                            type="number"
-                            value={shift.requiredPeople}
-                          />
-                        </div>
-                      </div>
+                      <h3 className="font-semibold text-slate-900">
+                        Shift {index + 1}
+                      </h3>
+                      <p className="mt-1 text-slate-600 text-sm">
+                        {shiftStart.toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}{" "}
+                        -{" "}
+                        {shiftEnd.toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}{" "}
+                        ({shift.requiredPeople} people needed)
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -453,7 +444,7 @@ export default function CreateEventPage() {
           <div className="flex gap-4">
             <button
               className="flex-1 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-              onClick={() => router.push("/events")}
+              onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
               type="button"
             >
               Cancel
@@ -463,10 +454,59 @@ export default function CreateEventPage() {
               disabled={isSubmitting}
               type="submit"
             >
-              {isSubmitting ? "Creating..." : "Create Event"}
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>
+
+        <div className="mt-8 rounded-3xl border border-rose-300 bg-white p-8 shadow-sm">
+          <h2 className="mb-4 font-semibold text-rose-900 text-xl">
+            Danger Zone
+          </h2>
+          <p className="mb-4 text-slate-600 text-sm">
+            Deleting this event will permanently remove it along with all RSVPs,
+            shifts, and carpool assignments. This action cannot be undone.
+          </p>
+
+          {showDeleteConfirm ? (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-rose-300 bg-rose-50 p-4">
+                <p className="font-semibold text-rose-900 text-sm">
+                  Are you sure you want to delete this event?
+                </p>
+                <p className="mt-2 text-rose-800 text-xs">
+                  This will delete {event.rsvps.length} RSVP(s) and cannot be
+                  undone.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  className="flex-1 rounded-full border border-slate-300 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  className="flex-1 rounded-full bg-rose-600 px-4 py-2 font-semibold text-white transition hover:bg-rose-700 disabled:bg-rose-400"
+                  disabled={isDeleting}
+                  onClick={handleDelete}
+                  type="button"
+                >
+                  {isDeleting ? "Deleting..." : "Yes, Delete Event"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="rounded-full border-2 border-rose-600 px-6 py-3 font-semibold text-rose-600 transition hover:bg-rose-50"
+              onClick={() => setShowDeleteConfirm(true)}
+              type="button"
+            >
+              Delete Event
+            </button>
+          )}
+        </div>
       </main>
     </div>
   );

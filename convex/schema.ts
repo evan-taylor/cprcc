@@ -27,11 +27,13 @@ export default defineSchema({
     endTime: v.number(),
     eventType: v.union(v.literal("regular"), v.literal("boothing")),
     isOffsite: v.boolean(),
+    slug: v.optional(v.string()),
     createdBy: v.id("userProfiles"),
     createdAt: v.number(),
   })
     .index("by_start_time", ["startTime"])
-    .index("by_created_by", ["createdBy"]),
+    .index("by_created_by", ["createdBy"])
+    .index("by_slug", ["slug"]),
   shifts: defineTable({
     eventId: v.id("events"),
     startTime: v.number(),
