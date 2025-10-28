@@ -180,26 +180,17 @@ function AuthButton({ inverted }: { inverted: boolean }) {
           Admin
         </Link>
       )}
-      <div className="flex items-center gap-2">
-        {currentUser && (
-          <span
-            className={`font-medium text-sm ${inverted ? "text-white/90" : "text-slate-700"}`}
-          >
-            {currentUser.name}
-          </span>
-        )}
-        <button
-          className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
-            inverted
-              ? "bg-white/20 hover:bg-white/30"
-              : "bg-rose-600 hover:bg-rose-700"
-          }`}
-          onClick={handleSignOut}
-          type="button"
-        >
-          Sign Out
-        </button>
-      </div>
+      <button
+        className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
+          inverted
+            ? "bg-white/20 hover:bg-white/30"
+            : "bg-rose-600 hover:bg-rose-700"
+        }`}
+        onClick={handleSignOut}
+        type="button"
+      >
+        Sign Out
+      </button>
     </div>
   );
 }
