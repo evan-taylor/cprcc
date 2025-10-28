@@ -13,7 +13,6 @@ const navItems = [
   { href: "/volunteer-connection", label: "Volunteer Connection" },
   { href: "/deployment", label: "Deployment" },
   { href: "/contact", label: "Contact" },
-  { href: "/sitemap", label: "Sitemap" },
 ];
 
 const scrollThreshold = 80;
