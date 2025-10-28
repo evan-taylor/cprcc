@@ -139,17 +139,17 @@ export default function AdminPage() {
                 {boardMembers.length === 1 ? "member" : "members"}
               </span>
             </div>
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-              <table className="w-full">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+              <table className="w-full min-w-[600px]">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-6 py-3 text-left font-semibold text-slate-700 text-sm">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
                       Name
                     </th>
-                    <th className="px-6 py-3 text-left font-semibold text-slate-700 text-sm">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left font-semibold text-slate-700 text-sm">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
                       Role
                     </th>
                   </tr>
@@ -158,7 +158,7 @@ export default function AdminPage() {
                   {boardMembers.length === 0 ? (
                     <tr>
                       <td
-                        className="px-6 py-8 text-center text-slate-500"
+                        className="px-4 py-8 text-center text-slate-500 sm:px-6"
                         colSpan={3}
                       >
                         No board members found
@@ -167,7 +167,7 @@ export default function AdminPage() {
                   ) : (
                     boardMembers.map((user) => (
                       <tr key={user._id}>
-                        <td className="px-6 py-4 text-slate-900">
+                        <td className="px-4 py-4 text-slate-900 sm:px-6">
                           {user.name}
                           {user._id === currentUser._id && (
                             <span className="ml-2 text-slate-500 text-xs">
@@ -175,10 +175,10 @@ export default function AdminPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-slate-600">
+                        <td className="px-4 py-4 text-slate-600 sm:px-6">
                           {user.email}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-4 sm:px-6">
                           <span className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 font-medium text-rose-700 text-xs">
                             Board
                           </span>
@@ -198,20 +198,20 @@ export default function AdminPage() {
                 {members.length} {members.length === 1 ? "member" : "members"}
               </span>
             </div>
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-              <table className="w-full">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+              <table className="w-full min-w-[700px]">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-6 py-3 text-left font-semibold text-slate-700 text-sm">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
                       Name
                     </th>
-                    <th className="px-6 py-3 text-left font-semibold text-slate-700 text-sm">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left font-semibold text-slate-700 text-sm">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
                       Role
                     </th>
-                    <th className="px-6 py-3 text-right font-semibold text-slate-700 text-sm">
+                    <th className="px-4 py-3 text-right font-semibold text-slate-700 text-sm sm:px-6">
                       Actions
                     </th>
                   </tr>
@@ -220,7 +220,7 @@ export default function AdminPage() {
                   {members.length === 0 ? (
                     <tr>
                       <td
-                        className="px-6 py-8 text-center text-slate-500"
+                        className="px-4 py-8 text-center text-slate-500 sm:px-6"
                         colSpan={4}
                       >
                         No members found
@@ -229,18 +229,18 @@ export default function AdminPage() {
                   ) : (
                     members.map((user) => (
                       <tr key={user._id}>
-                        <td className="px-6 py-4 text-slate-900">
+                        <td className="px-4 py-4 text-slate-900 sm:px-6">
                           {user.name}
                         </td>
-                        <td className="px-6 py-4 text-slate-600">
+                        <td className="px-4 py-4 text-slate-600 sm:px-6">
                           {user.email}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-4 sm:px-6">
                           <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-700 text-xs">
                             Member
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-4 py-4 text-right sm:px-6">
                           <button
                             className="rounded-lg bg-rose-600 px-4 py-2 font-medium text-sm text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={promoting === user._id}

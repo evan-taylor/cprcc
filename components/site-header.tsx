@@ -147,16 +147,19 @@ function AuthButton({ inverted }: { inverted: boolean }) {
   }, [isAuthenticated, currentUser, profileEnsured, ensureCurrentUserProfile]);
 
   if (!isAuthenticated) {
+    const baseClasses =
+      "inline-flex h-9 items-center rounded-full px-4 font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2";
+    const solidClasses =
+      "bg-rose-600 text-white shadow-sm hover:bg-rose-700 focus-visible:ring-rose-500";
+    const glassClasses =
+      "text-white bg-white/15 ring-1 ring-white/25 hover:bg-white/25 backdrop-blur-sm focus-visible:ring-white/60";
+
     return (
       <Link
-        className={`rounded-full border px-4 py-2 font-semibold text-sm transition ${
-          inverted
-            ? "border-white/70 text-white hover:border-white hover:text-white"
-            : "border-slate-300 text-slate-700 hover:border-rose-400 hover:text-rose-700"
-        }`}
+        className={`${baseClasses} ${inverted ? glassClasses : solidClasses}`}
         href="/signin"
       >
-        Sign in
+        Sign In
       </Link>
     );
   }
@@ -180,26 +183,17 @@ function AuthButton({ inverted }: { inverted: boolean }) {
           Admin
         </Link>
       )}
-      <div className="flex items-center gap-2">
-        {currentUser && (
-          <span
-            className={`font-medium text-sm ${inverted ? "text-white/90" : "text-slate-700"}`}
-          >
-            {currentUser.name}
-          </span>
-        )}
-        <button
-          className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
-            inverted
-              ? "bg-white/20 hover:bg-white/30"
-              : "bg-rose-600 hover:bg-rose-700"
-          }`}
-          onClick={handleSignOut}
-          type="button"
-        >
-          Sign out
-        </button>
-      </div>
+      <button
+        className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
+          inverted
+            ? "bg-white/20 hover:bg-white/30"
+            : "bg-rose-600 hover:bg-rose-700"
+        }`}
+        onClick={handleSignOut}
+        type="button"
+      >
+        Sign Out
+      </button>
     </div>
   );
 }
