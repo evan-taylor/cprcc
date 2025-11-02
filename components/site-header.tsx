@@ -72,6 +72,14 @@ export default function SiteHeader({
                 {item.label}
               </Link>
             ))}
+            {isAuthenticated && currentUser?.role === "board" && (
+              <Link
+                className={`transition-colors ${navLinkClasses}`}
+                href="/admin"
+              >
+                Admin
+              </Link>
+            )}
           </nav>
           <button
             aria-expanded={mobileMenuOpen}
