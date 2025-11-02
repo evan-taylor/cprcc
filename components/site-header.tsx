@@ -26,6 +26,8 @@ export default function SiteHeader({
 } = {}) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useConvexAuth();
+  const currentUser = useQuery(api.users.getCurrentUser);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -110,6 +112,15 @@ export default function SiteHeader({
               {item.label}
             </Link>
           ))}
+          {isAuthenticated && currentUser?.role === "board" && (
+            <Link
+              className={`py-2 transition-colors ${navLinkClasses}`}
+              href="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Admin
+            </Link>
+          )}
         </nav>
       )}
     </header>
@@ -170,30 +181,16 @@ function AuthButton({ inverted }: { inverted: boolean }) {
   };
 
   return (
-    <div className="flex items-center gap-3">
-      {currentUser?.role === "board" && (
-        <Link
-          className={`rounded-lg px-3 py-1.5 font-medium text-sm transition ${
-            inverted
-              ? "text-white/90 hover:bg-white/10 hover:text-white"
-              : "text-slate-700 hover:bg-slate-100 hover:text-rose-700"
-          }`}
-          href="/admin"
-        >
-          Admin
-        </Link>
-      )}
-      <button
-        className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
-          inverted
-            ? "bg-white/20 hover:bg-white/30"
-            : "bg-rose-600 hover:bg-rose-700"
-        }`}
-        onClick={handleSignOut}
-        type="button"
-      >
-        Sign Out
-      </button>
-    </div>
+    <button
+      className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
+        inverted
+          ? "bg-white/20 hover:bg-white/30"
+          : "bg-rose-600 hover:bg-rose-700"
+      }`}
+      onClick={handleSignOut}
+      type="button"
+    >
+      Sign Out
+    </button>
   );
 }
