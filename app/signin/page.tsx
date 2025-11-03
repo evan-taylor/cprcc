@@ -70,7 +70,9 @@ export default function SignIn() {
       }
     } catch (authError) {
       if (authError instanceof Error) {
-        setError(authError.message);
+        setError(
+          "Invalid email or password. If you don't have an account, please sign up."
+        );
       } else {
         setError("Something went wrong. Please try again.");
       }
