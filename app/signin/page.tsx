@@ -70,21 +70,9 @@ export default function SignIn() {
       }
     } catch (authError) {
       if (authError instanceof Error) {
-        const errorMessage = authError.message.toLowerCase();
-        if (
-          flow === "signIn" &&
-          (errorMessage.includes("invalid") ||
-            errorMessage.includes("not found") ||
-            errorMessage.includes("no user") ||
-            errorMessage.includes("does not exist") ||
-            errorMessage.includes("incorrect"))
-        ) {
-          setError(
-            "Account not found. Please sign up to create a new account."
-          );
-        } else {
-          setError(authError.message);
-        }
+        setError(
+          "Invalid email or password. If you don't have an account, please sign up."
+        );
       } else {
         setError("Something went wrong. Please try again.");
       }
