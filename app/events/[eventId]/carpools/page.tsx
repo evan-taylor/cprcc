@@ -316,18 +316,36 @@ export default function CarpoolManagementPage() {
       .filter((rsvp) => rsvp.canDrive)
       .map((rsvp) => rsvp.userProfileId)
   );
+  const uniqueRiderUserIds = new Set(
+    event.rsvps
+      .filter((rsvp) => rsvp.needsRide)
+      .map((rsvp) => rsvp.userProfileId)
+  );
   const drivers = event.rsvps.filter((rsvp) => rsvp.canDrive);
-  const riders = event.rsvps.filter((rsvp) => rsvp.needsRide);
   const allFinalized =
     carpools.length > 0 && carpools.every((c) => c.status === "finalized");
   const anyDraft = carpools.some((c) => c.status === "draft");
 
-  const assignedRiderIds = new Set(
-    carpools.flatMap((c) => c.riders.map((r) => r.rsvpId))
+  const assignedRiderUserIds = new Set(
+    carpools
+      .flatMap((c) => c.riders.map((r) => r.rsvpId))
+      .map(
+        (rsvpId) =>
+          event.rsvps.find((rsvp) => rsvp._id === rsvpId)?.userProfileId
+      )
+      .filter((id): id is string => id !== undefined)
   );
-  const unassignedRiders = event.rsvps.filter(
-    (rsvp) => rsvp.needsRide && !assignedRiderIds.has(rsvp._id)
-  );
+
+  const unassignedRidersByUser = new Map<string, (typeof event.rsvps)[0]>();
+  for (const rsvp of event.rsvps) {
+    if (rsvp.needsRide && !assignedRiderUserIds.has(rsvp.userProfileId)) {
+      const existing = unassignedRidersByUser.get(rsvp.userProfileId);
+      if (!existing || rsvp.createdAt > existing.createdAt) {
+        unassignedRidersByUser.set(rsvp.userProfileId, rsvp);
+      }
+    }
+  }
+  const unassignedRiders = Array.from(unassignedRidersByUser.values());
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -335,9 +353,9 @@ export default function CarpoolManagementPage() {
       <main className="mx-auto w-full max-w-5xl px-4 pt-10 pb-16 sm:px-8">
         <div className="mb-6">
           <button
-            type="button"
             className="text-rose-600 text-sm hover:text-rose-700"
             onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
+            type="button"
           >
             ← Back to Event
           </button>
@@ -378,7 +396,7 @@ export default function CarpoolManagementPage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="font-semibold text-slate-700 text-sm">Need Rides</p>
             <p className="mt-2 font-bold text-3xl text-orange-600">
-              {riders.length}
+              {uniqueRiderUserIds.size}
             </p>
           </div>
         </div>
@@ -389,26 +407,26 @@ export default function CarpoolManagementPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             <button
-              type="button"
               className="rounded-full bg-rose-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-rose-700 disabled:bg-slate-400"
               disabled={isGenerating || drivers.length === 0}
               onClick={handleGenerateCarpools}
+              type="button"
             >
               {isGenerating ? "Generating..." : "Generate Carpools"}
             </button>
             <button
-              type="button"
               className="rounded-full bg-green-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-green-700 disabled:bg-slate-400"
               disabled={isFinalizing || carpools.length === 0 || allFinalized}
               onClick={handleFinalizeCarpools}
+              type="button"
             >
               {isFinalizing ? "Finalizing..." : "Finalize Carpools"}
             </button>
             <button
-              type="button"
               className="rounded-full bg-blue-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-blue-700 disabled:bg-slate-400"
               disabled={isSendingEmails || !allFinalized}
               onClick={handleSendEmails}
+              type="button"
             >
               {isSendingEmails ? "Sending..." : "Send Email Notifications"}
             </button>
@@ -673,12 +691,13 @@ export default function CarpoolManagementPage() {
           </DndContext>
         )}
 
-        {drivers.length === 0 && riders.length > 0 && (
+        {drivers.length === 0 && uniqueRiderUserIds.size > 0 && (
           <div className="mt-6 rounded-lg border border-orange-300 bg-orange-50 p-4 text-orange-700">
             <p className="font-semibold">Warning:</p>
             <p className="mt-1 text-sm">
-              There are {riders.length} people who need rides but no drivers
-              available. Please encourage some attendees to offer to drive.
+              There are {uniqueRiderUserIds.size} people who need rides but no
+              drivers available. Please encourage some attendees to offer to
+              drive.
             </p>
           </div>
         )}
