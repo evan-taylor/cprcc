@@ -735,23 +735,40 @@ export const generateCarpools = mutation({
       .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
       .collect();
 
-    const driverRsvps = rsvps.filter((rsvp) => rsvp.canDrive && rsvp.driverInfo);
-    const riders = rsvps.filter((rsvp) => rsvp.needsRide);
+    const driverRsvps = rsvps.filter(
+      (rsvp) => rsvp.canDrive && rsvp.driverInfo
+    );
+    const allRiders = rsvps.filter((rsvp) => rsvp.needsRide);
 
-    const driversByUser = new Map<string, typeof driverRsvps[0]>();
+    const driversByUser = new Map<string, (typeof driverRsvps)[0]>();
     for (const rsvp of driverRsvps) {
       const userProfileId = rsvp.userProfileId;
-      if (!driversByUser.has(userProfileId)) {
-        driversByUser.set(userProfileId, rsvp);
-      } else {
+      if (driversByUser.has(userProfileId)) {
         const existing = driversByUser.get(userProfileId);
         if (existing && rsvp.createdAt > existing.createdAt) {
           driversByUser.set(userProfileId, rsvp);
         }
+      } else {
+        driversByUser.set(userProfileId, rsvp);
       }
     }
 
     const drivers = Array.from(driversByUser.values());
+
+    const ridersByUser = new Map<string, (typeof allRiders)[0]>();
+    for (const rsvp of allRiders) {
+      const userProfileId = rsvp.userProfileId;
+      if (ridersByUser.has(userProfileId)) {
+        const existing = ridersByUser.get(userProfileId);
+        if (existing && rsvp.createdAt > existing.createdAt) {
+          ridersByUser.set(userProfileId, rsvp);
+        }
+      } else {
+        ridersByUser.set(userProfileId, rsvp);
+      }
+    }
+
+    const riders = Array.from(ridersByUser.values());
 
     if (riders.length > 0 && drivers.length === 0) {
       throw new Error("No drivers available for riders");
@@ -827,18 +844,53 @@ export const getCarpools = query({
           .withIndex("by_carpool", (q) => q.eq("carpoolId", carpool._id))
           .collect();
 
-        const riderDetails = await Promise.all(
+        const allRiderDetails = await Promise.all(
           members.map(async (member) => {
             const rsvp = await ctx.db.get(member.rsvpId);
             const profile = rsvp ? await ctx.db.get(rsvp.userProfileId) : null;
             return {
               rsvpId: member.rsvpId,
+              userProfileId: rsvp?.userProfileId,
+              createdAt: rsvp?.createdAt ?? 0,
               name: profile?.name ?? "Unknown",
               email: profile?.email ?? "",
               phoneNumber: profile?.phoneNumber,
             };
           })
         );
+
+        const ridersByUser = new Map<
+          string,
+          {
+            rsvpId: string;
+            name: string;
+            email: string;
+            phoneNumber?: string;
+            createdAt: number;
+          }
+        >();
+        for (const rider of allRiderDetails) {
+          if (!rider.userProfileId) {
+            continue;
+          }
+          const existing = ridersByUser.get(rider.userProfileId);
+          if (!existing || rider.createdAt > existing.createdAt) {
+            ridersByUser.set(rider.userProfileId, {
+              rsvpId: rider.rsvpId,
+              name: rider.name,
+              email: rider.email,
+              phoneNumber: rider.phoneNumber,
+              createdAt: rider.createdAt,
+            });
+          }
+        }
+
+        const riderDetails = Array.from(ridersByUser.values()).map((rider) => ({
+          rsvpId: rider.rsvpId,
+          name: rider.name,
+          email: rider.email,
+          phoneNumber: rider.phoneNumber,
+        }));
 
         return {
           carpoolId: carpool._id,
@@ -1062,7 +1114,7 @@ export const backfillEventSlugs = mutation({
       try {
         const baseSlug = generateSlugFromTitle(event.title);
         const uniqueSlug = await generateUniqueSlug(ctx, baseSlug, event._id);
-        
+
         await ctx.db.patch(event._id, { slug: uniqueSlug });
         updated++;
       } catch (err) {
