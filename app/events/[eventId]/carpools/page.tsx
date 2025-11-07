@@ -142,8 +142,10 @@ export default function CarpoolManagementPage() {
   }
 
   const handleGenerateCarpools = async () => {
-    if (!eventId) return;
-    
+    if (!eventId) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
     setIsGenerating(true);
@@ -163,8 +165,10 @@ export default function CarpoolManagementPage() {
   };
 
   const handleFinalizeCarpools = async () => {
-    if (!eventId) return;
-    
+    if (!eventId) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
     setIsFinalizing(true);
@@ -182,8 +186,10 @@ export default function CarpoolManagementPage() {
   };
 
   const handleSendEmails = async () => {
-    if (!eventId) return;
-    
+    if (!eventId) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
     setIsSendingEmails(true);
@@ -229,8 +235,10 @@ export default function CarpoolManagementPage() {
   };
 
   const performReassignment = async (riderId: string, targetId: string) => {
-    if (!eventId) return;
-    
+    if (!eventId) {
+      return;
+    }
+
     const fromCarpool = carpools.find((c) =>
       c.riders.some((r) => r.rsvpId === riderId)
     );
@@ -253,13 +261,61 @@ export default function CarpoolManagementPage() {
         fromCarpoolId: fromCarpool?.carpoolId,
         toCarpoolId,
       });
+      const SUCCESS_TIMEOUT_MS = 3000;
       setSuccess("Rider reassigned successfully");
-      setTimeout(() => setSuccess(null), 3000);
+      setTimeout(() => setSuccess(null), SUCCESS_TIMEOUT_MS);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reassign rider");
     }
   };
 
+  const getShiftTimesForUser = (userProfileId: string) => {
+    const userRsvps = event.rsvps.filter(
+      (rsvp) => rsvp.userProfileId === userProfileId && rsvp.shiftId
+    );
+    const shiftTimes = userRsvps
+      .map((rsvp) => {
+        const shift = event.shifts.find((s) => s._id === rsvp.shiftId);
+        return shift;
+      })
+      .filter(
+        (shift): shift is NonNullable<typeof shift> =>
+          shift !== null && shift !== undefined
+      )
+      .sort((a, b) => a.startTime - b.startTime);
+
+    if (shiftTimes.length === 0) {
+      return null;
+    }
+
+    return shiftTimes
+      .map((shift) => {
+        const start = new Date(shift.startTime).toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+        const end = new Date(shift.endTime).toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+        return `${start}–${end}`;
+      })
+      .join(", ");
+  };
+
+  const getShiftTimesForRsvpId = (rsvpId: string) => {
+    const rsvp = event.rsvps.find((r) => r._id === rsvpId);
+    if (!rsvp) {
+      return null;
+    }
+    return getShiftTimesForUser(rsvp.userProfileId);
+  };
+
+  const uniqueDriverUserIds = new Set(
+    event.rsvps
+      .filter((rsvp) => rsvp.canDrive)
+      .map((rsvp) => rsvp.userProfileId)
+  );
   const drivers = event.rsvps.filter((rsvp) => rsvp.canDrive);
   const riders = event.rsvps.filter((rsvp) => rsvp.needsRide);
   const allFinalized =
@@ -279,6 +335,7 @@ export default function CarpoolManagementPage() {
       <main className="mx-auto w-full max-w-5xl px-4 pt-10 pb-16 sm:px-8">
         <div className="mb-6">
           <button
+            type="button"
             className="text-rose-600 text-sm hover:text-rose-700"
             onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
           >
@@ -315,7 +372,7 @@ export default function CarpoolManagementPage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="font-semibold text-slate-700 text-sm">Drivers</p>
             <p className="mt-2 font-bold text-3xl text-blue-600">
-              {drivers.length}
+              {uniqueDriverUserIds.size}
             </p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -332,6 +389,7 @@ export default function CarpoolManagementPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             <button
+              type="button"
               className="rounded-full bg-rose-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-rose-700 disabled:bg-slate-400"
               disabled={isGenerating || drivers.length === 0}
               onClick={handleGenerateCarpools}
@@ -339,6 +397,7 @@ export default function CarpoolManagementPage() {
               {isGenerating ? "Generating..." : "Generate Carpools"}
             </button>
             <button
+              type="button"
               className="rounded-full bg-green-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-green-700 disabled:bg-slate-400"
               disabled={isFinalizing || carpools.length === 0 || allFinalized}
               onClick={handleFinalizeCarpools}
@@ -346,6 +405,7 @@ export default function CarpoolManagementPage() {
               {isFinalizing ? "Finalizing..." : "Finalize Carpools"}
             </button>
             <button
+              type="button"
               className="rounded-full bg-blue-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-blue-700 disabled:bg-slate-400"
               disabled={isSendingEmails || !allFinalized}
               onClick={handleSendEmails}
@@ -400,27 +460,39 @@ export default function CarpoolManagementPage() {
                     </span>
                   </div>
                   <div className="space-y-2">
-                    {unassignedRiders.map((rsvp) => (
-                      <div
-                        className="cursor-move rounded-lg border border-orange-300 bg-white p-3 shadow-sm transition hover:shadow-md"
-                        draggable={anyDraft}
-                        key={rsvp._id}
-                        onDragStart={(e) => {
-                          e.dataTransfer.effectAllowed = "move";
-                          e.dataTransfer.setData(
-                            "text/plain",
-                            `rider:${rsvp._id}`
-                          );
-                        }}
-                      >
-                        <p className="font-semibold text-slate-900 text-sm">
-                          {rsvp.userName}
-                        </p>
-                        <p className="text-slate-600 text-xs">
-                          {rsvp.userEmail}
-                        </p>
-                      </div>
-                    ))}
+                    {unassignedRiders.map((rsvp) => {
+                      const shiftTimes = getShiftTimesForUser(
+                        rsvp.userProfileId
+                      );
+                      return (
+                        <div
+                          className="cursor-move rounded-lg border border-orange-300 bg-white p-3 shadow-sm transition hover:shadow-md"
+                          draggable={anyDraft}
+                          key={rsvp._id}
+                          onDragStart={(e) => {
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData(
+                              "text/plain",
+                              `rider:${rsvp._id}`
+                            );
+                          }}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <p className="font-semibold text-slate-900 text-sm">
+                            {rsvp.userName}
+                          </p>
+                          <p className="text-slate-600 text-xs">
+                            {rsvp.userEmail}
+                          </p>
+                          {shiftTimes && (
+                            <p className="mt-1 text-slate-600 text-xs">
+                              Shifts: {shiftTimes}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -431,6 +503,7 @@ export default function CarpoolManagementPage() {
 
                 return (
                   <div
+                    aria-label={`Carpool ${index + 1}`}
                     className={`rounded-3xl border-2 bg-white p-8 shadow-sm transition ${
                       isDraft && !isFull
                         ? "border-slate-200 hover:border-blue-300"
@@ -472,6 +545,7 @@ export default function CarpoolManagementPage() {
                         `carpool:${carpool.carpoolId}`
                       );
                     }}
+                    role="region"
                   >
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-semibold text-slate-900 text-xl">
@@ -514,6 +588,19 @@ export default function CarpoolManagementPage() {
                         Vehicle: {carpool.driver.carColor}{" "}
                         {carpool.driver.carType}
                       </p>
+                      {(() => {
+                        const driverRsvp = event.rsvps.find(
+                          (r) => r._id === carpool.driver.rsvpId
+                        );
+                        const shiftTimes = driverRsvp
+                          ? getShiftTimesForUser(driverRsvp.userProfileId)
+                          : null;
+                        return shiftTimes ? (
+                          <p className="mt-2 text-blue-700 text-sm">
+                            Shifts: {shiftTimes}
+                          </p>
+                        ) : null;
+                      })()}
                     </div>
 
                     <div>
@@ -526,33 +613,45 @@ export default function CarpoolManagementPage() {
                         </p>
                       ) : (
                         <div className="space-y-2">
-                          {carpool.riders.map((rider) => (
-                            <div
-                              className={`rounded-lg border border-slate-200 bg-slate-50 p-3 ${
-                                isDraft ? "cursor-move hover:bg-slate-100" : ""
-                              }`}
-                              draggable={isDraft}
-                              key={rider.rsvpId}
-                              onDragStart={(e) => {
-                                if (!isDraft) {
-                                  e.preventDefault();
-                                  return;
-                                }
-                                e.dataTransfer.effectAllowed = "move";
-                                e.dataTransfer.setData(
-                                  "text/plain",
-                                  `rider:${rider.rsvpId}`
-                                );
-                              }}
-                            >
-                              <p className="font-semibold text-slate-900 text-sm">
-                                {rider.name}
-                              </p>
-                              <p className="text-slate-600 text-xs">
-                                {rider.email}
-                              </p>
-                            </div>
-                          ))}
+                          {carpool.riders.map((rider) => {
+                            const shiftTimes = getShiftTimesForRsvpId(
+                              rider.rsvpId
+                            );
+                            return (
+                              <div
+                                className={`rounded-lg border border-slate-200 bg-slate-50 p-3 ${
+                                  isDraft
+                                    ? "cursor-move hover:bg-slate-100"
+                                    : ""
+                                }`}
+                                draggable={isDraft}
+                                key={rider.rsvpId}
+                                onDragStart={(e) => {
+                                  if (!isDraft) {
+                                    e.preventDefault();
+                                    return;
+                                  }
+                                  e.dataTransfer.effectAllowed = "move";
+                                  e.dataTransfer.setData(
+                                    "text/plain",
+                                    `rider:${rider.rsvpId}`
+                                  );
+                                }}
+                              >
+                                <p className="font-semibold text-slate-900 text-sm">
+                                  {rider.name}
+                                </p>
+                                <p className="text-slate-600 text-xs">
+                                  {rider.email}
+                                </p>
+                                {shiftTimes && (
+                                  <p className="mt-1 text-slate-600 text-xs">
+                                    Shifts: {shiftTimes}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

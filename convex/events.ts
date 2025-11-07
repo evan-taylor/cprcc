@@ -735,8 +735,23 @@ export const generateCarpools = mutation({
       .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
       .collect();
 
-    const drivers = rsvps.filter((rsvp) => rsvp.canDrive && rsvp.driverInfo);
+    const driverRsvps = rsvps.filter((rsvp) => rsvp.canDrive && rsvp.driverInfo);
     const riders = rsvps.filter((rsvp) => rsvp.needsRide);
+
+    const driversByUser = new Map<string, typeof driverRsvps[0]>();
+    for (const rsvp of driverRsvps) {
+      const userProfileId = rsvp.userProfileId;
+      if (!driversByUser.has(userProfileId)) {
+        driversByUser.set(userProfileId, rsvp);
+      } else {
+        const existing = driversByUser.get(userProfileId);
+        if (existing && rsvp.createdAt > existing.createdAt) {
+          driversByUser.set(userProfileId, rsvp);
+        }
+      }
+    }
+
+    const drivers = Array.from(driversByUser.values());
 
     if (riders.length > 0 && drivers.length === 0) {
       throw new Error("No drivers available for riders");
@@ -829,6 +844,7 @@ export const getCarpools = query({
           carpoolId: carpool._id,
           status: carpool.status,
           driver: {
+            rsvpId: carpool.driverRsvpId,
             name: driverProfile?.name ?? "Unknown",
             email: driverProfile?.email ?? "",
             phoneNumber: driverProfile?.phoneNumber,
