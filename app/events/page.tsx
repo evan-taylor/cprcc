@@ -24,7 +24,7 @@ export default function EventsPage() {
   const currentUser = useQuery(api.users.getCurrentUser);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
       <SiteHeader />
       <main className="mx-auto w-full max-w-7xl px-4 pt-24 pb-20 sm:px-6 lg:px-8">
         <header className="mb-12 space-y-4">
