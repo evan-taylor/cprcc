@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import { Suspense } from "react";
 import ConvexClientProvider from "@/components/convex-client-provider";
 
 const geistSans = Geist({
@@ -125,22 +126,30 @@ export default function RootLayout({
   };
 
   return (
-    <ConvexAuthNextjsServerProvider>
-      <html lang="en">
-        <head>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(organizationSchema),
-            }}
-            type="application/ld+json"
-          />
-        </head>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+          type="application/ld+json"
+        />
+        <Suspense
+          fallback={
+            <div className="flex min-h-screen items-center justify-center bg-white text-slate-600">
+              <p aria-live="polite" role="status">
+                Preparing your session…
+              </p>
+            </div>
+          }
         >
-          <ConvexClientProvider>{children}</ConvexClientProvider>
-        </body>
-      </html>
-    </ConvexAuthNextjsServerProvider>
+          <ConvexAuthNextjsServerProvider>
+            <ConvexClientProvider>{children}</ConvexClientProvider>
+          </ConvexAuthNextjsServerProvider>
+        </Suspense>
+      </body>
+    </html>
   );
 }
