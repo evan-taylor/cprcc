@@ -311,6 +311,9 @@ export default function CarpoolManagementPage() {
     return getShiftTimesForUser(rsvp.userProfileId);
   };
 
+  const uniqueRsvpUserIds = new Set<Id<"userProfiles">>(
+    event.rsvps.map((rsvp) => rsvp.userProfileId)
+  );
   const uniqueDriverUserIds = new Set<Id<"userProfiles">>(
     event.rsvps
       .filter((rsvp) => rsvp.canDrive)
@@ -387,7 +390,7 @@ export default function CarpoolManagementPage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="font-semibold text-slate-700 text-sm">Total RSVPs</p>
             <p className="mt-2 font-bold text-3xl text-slate-900">
-              {event.rsvps.length}
+              {uniqueRsvpUserIds.size}
             </p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

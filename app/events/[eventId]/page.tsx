@@ -83,6 +83,9 @@ export default function EventDetailPage() {
     (rsvp) => rsvp.userProfileId === currentUser?._id
   );
   const hasRsvped = userRsvps.length > 0;
+  const uniqueRsvpUserIds = new Set<Id<"userProfiles">>(
+    event.rsvps.map((rsvp) => rsvp.userProfileId)
+  );
 
   const toggleShiftSelection = (shiftId: Id<"shifts">) => {
     setSelectedShiftIds((prev) => {
@@ -352,7 +355,7 @@ export default function EventDetailPage() {
               <div>
                 <p className="font-semibold text-slate-700 text-sm">RSVPs</p>
                 <p className="mt-1 text-slate-900">
-                  {event.rsvps.length} people
+                  {uniqueRsvpUserIds.size} people
                 </p>
               </div>
             </div>
@@ -816,7 +819,7 @@ export default function EventDetailPage() {
           {currentUser?.role === "board" && (
             <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <h2 className="mb-4 font-semibold text-slate-900 text-xl">
-                Attendees ({event.rsvps.length})
+                Attendees ({uniqueRsvpUserIds.size})
               </h2>
               {event.rsvps.length === 0 ? (
                 <p className="text-center text-slate-600 text-sm">
