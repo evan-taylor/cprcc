@@ -117,7 +117,7 @@ export default function CreateEventPage() {
             }))
           : undefined;
 
-      const eventId = await createEvent({
+      await createEvent({
         title,
         description,
         location,

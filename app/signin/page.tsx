@@ -38,7 +38,6 @@ export default function SignIn() {
 
     try {
       const formData = new FormData(e.target as HTMLFormElement);
-      const _email = formData.get("email") as string;
       const name = formData.get("name") as string;
       const phoneNumber = formData.get("phoneNumber") as string;
 

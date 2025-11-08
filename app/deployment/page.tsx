@@ -76,7 +76,7 @@ const gapLegend = [
 const reminderItems = [
   "Access EDGE through Volunteer Connection so coursework logs to your profile automatically.",
   "Manually log contacts, interviews, club events, and deployments in Volunteer Connection to keep your experience current.",
-  "Update the “My Profile” tab with accurate contact info, skills, and availability before deployment season.",
+  "Update the &quot;My Profile&quot; tab with accurate contact info, skills, and availability before deployment season.",
   "Club-specific questions: redcrossclub@calpoly.edu. ARC program questions: christin.newlon@redcross.org.",
 ];
 
@@ -143,7 +143,7 @@ function DeploymentSnapshot() {
       <div className="grid gap-6 md:grid-cols-2">
         <article>
           <h2 className="font-display font-semibold text-2xl text-slate-900">
-            What "deployment" means
+            What &quot;deployment&quot; means
           </h2>
           <p className="mt-3 text-base text-slate-700 leading-relaxed">
             Deployments are two-week assignments in another county, region, or
