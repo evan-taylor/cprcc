@@ -19,7 +19,8 @@ const focusAreas = [
   },
 ];
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  "use cache";
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <SiteHeader />

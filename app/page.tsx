@@ -15,7 +15,8 @@ const whoWeAreCopy = [
 
 const contentKeyPrefixLength = 12;
 
-export default function HomePage() {
+export default async function HomePage() {
+  "use cache";
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <SiteHeader variant="inverted" />

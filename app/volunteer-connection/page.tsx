@@ -55,7 +55,8 @@ const steps: {
   },
 ];
 
-export default function VolunteerConnectionPage() {
+export default async function VolunteerConnectionPage() {
+  "use cache";
   return (
     <div className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 text-slate-900">
       <SiteHeader />
