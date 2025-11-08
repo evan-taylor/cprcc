@@ -94,9 +94,9 @@ function HeroCard() {
           Get fully approved in eight steps
         </h1>
         <p className="text-lg text-slate-900">
-          This quick walkthrough mirrors what you'll see inside Volunteer
+          This quick walkthrough mirrors what you&apos;ll see inside Volunteer
           Connection. Grab your ID, a good internet connection, and 10 minutes.
-          Once you're done, the Red Cross will verify your profile, and you'll
+          Once you&apos;re done, the Red Cross will verify your profile, and you&apos;ll
           be cleared to sign up for Red Cross volunteer oppurtunities and log
           your hours!
         </p>
@@ -122,7 +122,7 @@ function HeroCard() {
             Have these items
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-900 text-sm">
-            <li>Driver's license or other government ID</li>
+            <li>Driver&apos;s license or other government ID</li>
             <li>Social Security Number</li>
             <li>Your Cal Poly email address</li>
           </ul>

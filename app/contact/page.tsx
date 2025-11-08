@@ -55,7 +55,7 @@ function HeroSection() {
         Get in touch with Red Cross Club
       </h1>
       <p className="mt-4 text-lg text-slate-900">
-        We're here to help. Reach out to us anytime!
+        We&apos;re here to help. Reach out to us anytime!
       </p>
     </section>
   );
