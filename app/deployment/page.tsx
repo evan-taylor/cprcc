@@ -142,7 +142,7 @@ function DeploymentSnapshot() {
     <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <div className="grid gap-6 md:grid-cols-2">
         <article>
-          <h2 className="font-semibold font-display text-2xl text-slate-900">
+          <h2 className="font-display font-semibold text-2xl text-slate-900">
             What "deployment" means
           </h2>
           <p className="mt-3 text-base text-slate-700 leading-relaxed">
@@ -171,7 +171,7 @@ function StepsSection() {
   return (
     <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <header className="mb-6 space-y-1">
-        <h2 className="font-semibold font-display text-2xl text-slate-900">
+        <h2 className="font-display font-semibold text-2xl text-slate-900">
           General steps to deploy
         </h2>
         <p className="text-slate-600 text-sm">
@@ -194,7 +194,7 @@ function StepsSection() {
               </p>
               {step.link ? (
                 <Link
-                  className="inline-flex font-semibold text-red-600 text-sm underline-offset-4 hover:underline transition-colors"
+                  className="inline-flex font-semibold text-red-600 text-sm underline-offset-4 transition-colors hover:underline"
                   href={step.link.href}
                   rel="noopener noreferrer"
                   target="_blank"
@@ -217,7 +217,7 @@ function GapSection() {
         <p className="font-semibold text-slate-500 text-xs uppercase tracking-wider">
           Figure 1
         </p>
-        <h2 className="font-semibold font-display text-2xl text-slate-900">
+        <h2 className="font-display font-semibold text-2xl text-slate-900">
           Understanding the GAP chart
         </h2>
         <p className="text-slate-700 text-sm">
@@ -258,7 +258,7 @@ function GapSection() {
 function RemindersSection() {
   return (
     <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
-      <h2 className="font-semibold font-display text-2xl text-slate-900">
+      <h2 className="font-display font-semibold text-2xl text-slate-900">
         General reminders
       </h2>
       <ul className="mt-4 space-y-3 text-slate-700 text-sm">

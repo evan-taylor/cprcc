@@ -60,15 +60,17 @@ export default function EventsPage() {
           </div>
         )}
 
-        {events === undefined ? (
+        {events === undefined && (
           <Card className="p-12 text-center">
             <div className="flex items-center justify-center gap-3">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-red-600" />
               <p className="text-slate-600">Loading events...</p>
             </div>
           </Card>
-        ) : events.length === 0 ? (
-          <Card className="border-2 border-dashed border-red-200 bg-red-50/30 p-12 text-center">
+        )}
+        
+        {events !== undefined && events.length === 0 && (
+          <Card className="border-2 border-red-200 border-dashed bg-red-50/30 p-12 text-center">
             <div className="mx-auto max-w-md space-y-4">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
                 <svg
@@ -114,7 +116,9 @@ export default function EventsPage() {
               </div>
             </div>
           </Card>
-        ) : (
+        )}
+        
+        {events !== undefined && events.length > 0 && (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => {
               const eventDate = new Date(event.startTime);
