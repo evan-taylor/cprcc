@@ -1,5 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/site-header";
+
+export const metadata: Metadata = {
+  title: "Contact Us",
+  description:
+    "Get in touch with Cal Poly Red Cross Club. Contact us via email at redcrossclub@calpoly.edu, join our GroupMe, or follow us on Instagram. We're here to help!",
+  openGraph: {
+    title: "Contact Us | Cal Poly Red Cross Club",
+    description:
+      "Get in touch with Cal Poly Red Cross Club. Contact us via email, GroupMe, or Instagram. We're here to help you get involved!",
+    url: "https://calpolyredcross.org/contact",
+  },
+  alternates: {
+    canonical: "/contact",
+  },
+};
 
 const contacts = [
   {

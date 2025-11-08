@@ -1,46 +1,129 @@
-# Welcome to your Convex + Next.js + Convex Auth app
+# Cal Poly Red Cross Club Website
 
-This is a [Convex](https://convex.dev/) project created with [`npm create convex`](https://www.npmjs.com/package/create-convex).
+The official website for the Cal Poly San Luis Obispo Red Cross Club, serving as the primary digital hub for students interested in volunteering with the American Red Cross chapter on campus.
 
-After the initial setup (<2 minutes) you'll have a working full-stack app using:
+## About
 
-- Convex as your backend (database, server logic)
-- [React](https://react.dev/) as your frontend (web page interactivity)
-- [Next.js](https://nextjs.org/) for optimized web hosting and page routing
-- [Tailwind](https://tailwindcss.com/) for building great looking accessible UI
-- [Convex Auth](https://labs.convex.dev/auth) for authentication
+This website provides information about the Cal Poly Red Cross Club, including:
 
-## Get started
+- **Mission and Organization**: Learn about the American Red Cross mission and the Cal Poly chapter
+- **Volunteer Opportunities**: Information about blood drives, disaster relief, health and safety training
+- **Getting Started**: Step-by-step guides for becoming an approved Red Cross volunteer
+- **Deployment Information**: Details about GAP training and disaster response opportunities
+- **Contact**: Multiple ways to connect with the club (email, GroupMe, Instagram)
 
-If you just cloned this codebase and didn't use `npm create convex`, run:
+## Technology Stack
+
+- **Frontend**: Next.js 15 with App Router, React 19, Tailwind CSS 4
+- **Backend**: Convex (backend-as-a-service)
+- **Authentication**: Convex Auth with password strategy
+- **Package Manager**: pnpm
+- **Code Quality**: Biome, ESLint, Ultracite presets
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20 or later
+- pnpm package manager
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+
+3. Set up environment variables:
+   Create a `.env.local` file with:
+   ```
+   NEXT_PUBLIC_CONVEX_URL=your_convex_url
+   OPENAI_API_KEY=your_openai_key (optional, for chat demo)
+   ```
+
+4. Set up Convex authentication:
+   ```bash
+   npx convex dev
+   ```
+   Follow the setup prompts to configure your Convex backend.
+
+5. Run the development server:
+   ```bash
+   pnpm dev
+   ```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+## Project Structure
 
 ```
-npm install
-npm run dev
+├── app/                          # Next.js App Router pages
+│   ├── page.tsx                  # Home page (mission, who we are)
+│   ├── contact/                  # Contact information
+│   ├── events/                   # Events and volunteer opportunities
+│   ├── deployment/               # Deployment and GAP training info
+│   ├── volunteer-connection/     # Red Cross signup guide
+│   ├── signin/                   # Authentication page
+│   └── admin/                    # Admin dashboard
+├── components/                   # Shared React components
+│   ├── site-header.tsx           # Main navigation
+│   └── convex-client-provider.tsx
+├── convex/                       # Convex backend functions
+│   ├── schema.ts                 # Database schema
+│   └── index.ts                  # API functions
+└── biome.jsonc                   # Code formatting config
 ```
 
-If you're reading this README on GitHub and want to use this template, run:
+## Development
 
-```
-npm create convex@latest -- -t nextjs-convexauth
-```
+### Code Quality
 
-## Learn more
+This project uses strict code quality standards:
 
-To learn more about developing your project with Convex, check out:
+- **Linting**: Run `npx ultracite check` to check code quality
+- **Formatting**: Biome auto-formats on save (if configured in your editor)
+- **Standards**: See `AGENTS.md` and `.rules` for detailed coding guidelines
 
-- The [Tour of Convex](https://docs.convex.dev/get-started) for a thorough introduction to Convex principles.
-- The rest of [Convex docs](https://docs.convex.dev/) to learn about all Convex features.
-- [Stack](https://stack.convex.dev/) for in-depth articles on advanced topics.
-- [Convex Auth docs](https://labs.convex.dev/auth) for documentation on the Convex Auth library.
+### Available Scripts
 
-## Configuring other authentication methods
+- `pnpm dev` - Start development server (runs both Next.js and Convex)
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
 
-To configure different authentication methods, see [Configuration](https://labs.convex.dev/auth/config) in the Convex Auth docs.
+## Features
 
-## Join the community
+### Current Features
 
-Join thousands of developers building full-stack apps with Convex:
+- Informational pages about the Red Cross Club and volunteer opportunities
+- Step-by-step volunteer onboarding guides
+- Contact information and social media links
+- Authentication system for future member features
+- Responsive design with Tailwind CSS
 
-- Join the [Convex Discord community](https://convex.dev/community) to get help in real-time.
-- Follow [Convex on GitHub](https://github.com/get-convex/), star and contribute to the open-source implementation of Convex.
+### Planned Features
+
+- Internal event management system
+- Member RSVP functionality
+- Volunteer hour tracking
+- Officer dashboard for event creation and analytics
+
+## Contributing
+
+This is a student organization project. If you're a Cal Poly student interested in contributing, please reach out to the club officers.
+
+## Contact
+
+- **Email**: redcrossclub@calpoly.edu
+- **Instagram**: [@calpolyredcross](https://www.instagram.com/calpolyredcross/)
+- **GroupMe**: Join via the contact page
+
+## Learn More
+
+To learn more about the technologies used in this project:
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Convex Documentation](https://docs.convex.dev/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [American Red Cross](https://www.redcross.org/)
