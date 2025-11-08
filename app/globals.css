@@ -6,27 +6,27 @@
   --color-bg-subtle: #f8fafc;
   --color-surface: #ffffff;
   --color-surface-hover: #f1f5f9;
-  
+
   /* Border colors */
   --color-border: #e2e8f0;
   --color-border-hover: #cbd5e1;
-  
+
   /* Text colors */
   --color-text: #0f172a;
   --color-text-muted: #64748b;
   --color-text-subtle: #94a3b8;
-  
+
   /* Brand colors - Red Cross red */
   --color-primary: #dc2626;
   --color-primary-hover: #b91c1c;
   --color-primary-light: #fee2e2;
   --color-primary-dark: #991b1b;
-  
+
   /* Accent colors */
   --color-accent: #3b82f6;
   --color-accent-hover: #2563eb;
   --color-accent-light: #dbeafe;
-  
+
   /* Semantic colors */
   --color-success: #16a34a;
   --color-success-light: #dcfce7;
@@ -34,13 +34,15 @@
   --color-warning-light: #ffedd5;
   --color-danger: #dc2626;
   --color-danger-light: #fee2e2;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
   /* Spacing scale */
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75rem;
@@ -48,7 +50,7 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   /* Border radius */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -56,10 +58,11 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
-  
+
   /* Typography */
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-red-hat-display), var(--font-inter), system-ui, sans-serif;
+  --font-display:
+    var(--font-red-hat-display), var(--font-inter), system-ui, sans-serif;
 }
 
 @theme inline {
@@ -105,7 +108,12 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.2;
@@ -177,7 +185,9 @@ a:hover {
     color: var(--color-text);
     box-shadow: var(--shadow-sm);
     color-scheme: light;
-    transition: border-color 150ms ease, box-shadow 150ms ease;
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
     font-family: var(--font-sans);
   }
 
@@ -269,16 +279,23 @@ a:hover {
     display: block;
     margin-bottom: 0.375rem;
   }
-  
+
   /* Smooth transitions for interactive elements */
-  button, a, input, select, textarea {
-    transition-property: color, background-color, border-color, box-shadow, transform;
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition-property:
+      color, background-color, border-color, box-shadow, transform;
     transition-duration: 150ms;
     transition-timing-function: ease;
   }
-  
+
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;

@@ -106,7 +106,7 @@ function HeroCard() {
           Take your service nationwide
         </h1>
         {overview.map((paragraph) => (
-          <p className="text-lg text-slate-700 leading-relaxed" key={paragraph}>
+          <p className="text-lg text-slate-900 leading-relaxed" key={paragraph}>
             {paragraph}
           </p>
         ))}
@@ -145,14 +145,14 @@ function DeploymentSnapshot() {
           <h2 className="font-display font-semibold text-2xl text-slate-900">
             What &quot;deployment&quot; means
           </h2>
-          <p className="mt-3 text-base text-slate-700 leading-relaxed">
+          <p className="mt-3 text-base text-slate-900 leading-relaxed">
             Deployments are two-week assignments in another county, region, or
             state once local needs outpace local responders. You will keep
             working within the GAP you trained for, whether that is sheltering,
             feeding, logistics, or client care.
           </p>
         </article>
-        <ul className="space-y-4 text-slate-700 text-sm">
+        <ul className="space-y-4 text-slate-900 text-sm">
           {deploymentNotes.map((note) => (
             <li
               className="rounded-2xl border border-slate-100 bg-slate-50 p-4 leading-relaxed"
@@ -189,7 +189,7 @@ function StepsSection() {
               <h3 className="font-semibold text-base text-slate-900">
                 {step.title}
               </h3>
-              <p className="text-slate-700 text-sm leading-relaxed">
+              <p className="text-slate-900 text-sm leading-relaxed">
                 {step.body}
               </p>
               {step.link ? (
@@ -220,7 +220,7 @@ function GapSection() {
         <h2 className="font-display font-semibold text-2xl text-slate-900">
           Understanding the GAP chart
         </h2>
-        <p className="text-slate-700 text-sm">
+        <p className="text-slate-900 text-sm">
           Align your interests with the right Group, Activity, and Position
           before you request training.
         </p>
@@ -243,11 +243,11 @@ function GapSection() {
             <h3 className="font-semibold text-base text-slate-900">
               {item.title}
             </h3>
-            <p className="mt-2 text-slate-700 text-sm">{item.description}</p>
+            <p className="mt-2 text-slate-900 text-sm">{item.description}</p>
           </article>
         ))}
       </div>
-      <p className="mt-4 text-slate-700 text-sm leading-relaxed">
+      <p className="mt-4 text-slate-900 text-sm leading-relaxed">
         Light blue = client-facing, yellow = first-time volunteer priorities,
         green = best for volunteers with health licenses.
       </p>
@@ -261,7 +261,7 @@ function RemindersSection() {
       <h2 className="font-display font-semibold text-2xl text-slate-900">
         General reminders
       </h2>
-      <ul className="mt-4 space-y-3 text-slate-700 text-sm">
+      <ul className="mt-4 space-y-3 text-slate-900 text-sm">
         {reminderItems.map((item) => (
           <li
             className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"

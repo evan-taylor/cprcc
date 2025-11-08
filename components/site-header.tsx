@@ -46,7 +46,7 @@ export default function SiteHeader({
     : "bg-white/80 text-slate-900 border-slate-200/60 shadow-sm backdrop-blur-xl";
   const navLinkClasses = transparent
     ? "text-white/90 hover:text-white font-medium"
-    : "text-slate-700 hover:text-red-600 font-medium";
+    : "text-slate-900 hover:text-red-600 font-medium";
   const brandClasses = transparent ? "text-white" : "text-red-600";
   const iconColor = transparent ? "white" : "#334155";
 
@@ -56,7 +56,7 @@ export default function SiteHeader({
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
         <Link
-          className={`font-display font-bold text-lg tracking-tight transition-colors ${brandClasses}`}
+          className={`font-bold font-display text-lg tracking-tight transition-colors ${brandClasses}`}
           href="/"
         >
           Cal Poly Red Cross Club
@@ -109,10 +109,10 @@ export default function SiteHeader({
         </div>
       </div>
       {mobileMenuOpen && (
-        <nav className="flex flex-col gap-1 border-inherit border-t bg-white/95 backdrop-blur-xl px-4 py-3 text-sm md:hidden">
+        <nav className="flex flex-col gap-1 border-inherit border-t bg-white/95 px-4 py-3 text-sm backdrop-blur-xl md:hidden">
           {navItems.map((item) => (
             <Link
-              className="rounded-lg px-3 py-2.5 font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-red-600"
+              className="rounded-lg px-3 py-2.5 font-medium text-slate-900 transition-colors hover:bg-slate-100 hover:text-red-600"
               href={item.href}
               key={`mobile-${item.href}`}
               onClick={() => setMobileMenuOpen(false)}
@@ -122,7 +122,7 @@ export default function SiteHeader({
           ))}
           {isAuthenticated && currentUser?.role === "board" && (
             <Link
-              className="rounded-lg px-3 py-2.5 font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-red-600"
+              className="rounded-lg px-3 py-2.5 font-medium text-slate-900 transition-colors hover:bg-slate-100 hover:text-red-600"
               href="/admin"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -192,7 +192,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
     <button
       className={`inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
         inverted
-          ? "bg-white/20 text-white ring-1 ring-inset ring-white/30 hover:bg-white/30 backdrop-blur-sm focus-visible:ring-white/60"
+          ? "bg-white/20 text-white ring-1 ring-white/30 ring-inset backdrop-blur-sm hover:bg-white/30 focus-visible:ring-white/60"
           : "bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500"
       }`}
       onClick={handleSignOut}
