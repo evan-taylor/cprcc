@@ -53,7 +53,7 @@ export default function EventDetailPage() {
       <div className="min-h-screen bg-slate-50">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <p className="text-slate-600">Loading...</p>
+          <p className="text-slate-900">Loading...</p>
         </div>
       </div>
     );
@@ -68,7 +68,7 @@ export default function EventDetailPage() {
             <h1 className="font-semibold text-2xl text-slate-900">
               Event Not Found
             </h1>
-            <p className="mt-3 text-slate-600">
+            <p className="mt-3 text-slate-900">
               This event does not exist or has been deleted.
             </p>
           </div>
@@ -296,7 +296,7 @@ export default function EventDetailPage() {
                     </span>
                   )}
                 </div>
-                <p className="mt-4 text-slate-600">{event.description}</p>
+                <p className="mt-4 text-slate-900">{event.description}</p>
               </div>
               {currentUser?.role === "board" && (
                 <div className="flex flex-col gap-2">
@@ -324,7 +324,7 @@ export default function EventDetailPage() {
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="font-semibold text-slate-700 text-sm">Date</p>
+                <p className="font-semibold text-slate-900 text-sm">Date</p>
                 <p className="mt-1 text-slate-900">
                   {eventDate.toLocaleDateString("en-US", {
                     weekday: "long",
@@ -335,7 +335,7 @@ export default function EventDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-slate-700 text-sm">Time</p>
+                <p className="font-semibold text-slate-900 text-sm">Time</p>
                 <p className="mt-1 text-slate-900">
                   {eventDate.toLocaleTimeString("en-US", {
                     hour: "numeric",
@@ -349,11 +349,11 @@ export default function EventDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-slate-700 text-sm">Location</p>
+                <p className="font-semibold text-slate-900 text-sm">Location</p>
                 <p className="mt-1 text-slate-900">{event.location}</p>
               </div>
               <div>
-                <p className="font-semibold text-slate-700 text-sm">RSVPs</p>
+                <p className="font-semibold text-slate-900 text-sm">RSVPs</p>
                 <p className="mt-1 text-slate-900">
                   {uniqueRsvpUserIds.size} people
                 </p>
@@ -375,14 +375,14 @@ export default function EventDetailPage() {
                 {currentUser && (
                   <div className="flex gap-2">
                     <button
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 text-sm transition hover:bg-slate-50"
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
                       onClick={selectAllAvailableShifts}
                       type="button"
                     >
                       Select All
                     </button>
                     <button
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 text-sm transition hover:bg-slate-50"
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
                       onClick={clearShiftSelection}
                       type="button"
                     >
@@ -450,7 +450,7 @@ export default function EventDetailPage() {
                               minute: "2-digit",
                             })}
                           </p>
-                          <p className="mt-1 text-slate-600 text-sm">
+                          <p className="mt-1 text-slate-900 text-sm">
                             {shiftRsvps.length} / {shift.requiredPeople}{" "}
                             volunteers
                             {isFull && " (Full)"}
@@ -463,7 +463,7 @@ export default function EventDetailPage() {
                         </span>
                       )}
                       {currentUser && isFull && !userHasThisShift && (
-                        <span className="rounded-full bg-slate-100 px-3 py-1.5 font-semibold text-slate-600 text-xs">
+                        <span className="rounded-full bg-slate-100 px-3 py-1.5 font-semibold text-slate-900 text-xs">
                           Full
                         </span>
                       )}
@@ -563,7 +563,7 @@ export default function EventDetailPage() {
                           </label>
                           <input
                             autoComplete="tel"
-                            className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm placeholder:text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             id="phoneNumber"
                             inputMode="tel"
                             onChange={(e) => setPhoneNumber(e.target.value)}
@@ -590,7 +590,7 @@ export default function EventDetailPage() {
 
                   {event.isOffsite && (
                     <div className="space-y-3">
-                      <p className="font-semibold text-slate-700 text-sm">
+                      <p className="font-semibold text-slate-900 text-sm">
                         Transportation
                       </p>
                       <div className="flex items-center gap-2">
@@ -607,7 +607,7 @@ export default function EventDetailPage() {
                           type="checkbox"
                         />
                         <label
-                          className="text-slate-700 text-sm"
+                          className="text-slate-900 text-sm"
                           htmlFor="needsRide"
                         >
                           I need a ride
@@ -627,7 +627,7 @@ export default function EventDetailPage() {
                           type="checkbox"
                         />
                         <label
-                          className="text-slate-700 text-sm"
+                          className="text-slate-900 text-sm"
                           htmlFor="canDrive"
                         >
                           I can drive
@@ -636,12 +636,12 @@ export default function EventDetailPage() {
 
                       {canDrive && (
                         <div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                          <p className="font-semibold text-slate-700 text-sm">
+                          <p className="font-semibold text-slate-900 text-sm">
                             Driver Information
                           </p>
                           <div>
                             <label
-                              className="block text-slate-700 text-sm"
+                              className="block text-slate-900 text-sm"
                               htmlFor="carType"
                             >
                               Car Type
@@ -658,7 +658,7 @@ export default function EventDetailPage() {
                           </div>
                           <div>
                             <label
-                              className="block text-slate-700 text-sm"
+                              className="block text-slate-900 text-sm"
                               htmlFor="carColor"
                             >
                               Car Color
@@ -675,7 +675,7 @@ export default function EventDetailPage() {
                           </div>
                           <div>
                             <label
-                              className="block text-slate-700 text-sm"
+                              className="block text-slate-900 text-sm"
                               htmlFor="capacity"
                             >
                               Passenger Capacity
@@ -706,7 +706,7 @@ export default function EventDetailPage() {
 
                   <div className="flex gap-3">
                     <button
-                      className="flex-1 rounded-full border border-slate-300 px-4 py-2 font-semibold text-slate-700 text-sm transition hover:bg-slate-50"
+                      className="flex-1 rounded-full border border-slate-300 px-4 py-2 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
                       onClick={() => {
                         setShowRsvpForm(false);
                         setSelectedShiftIds(new Set());
@@ -803,7 +803,7 @@ export default function EventDetailPage() {
 
           {!currentUser && (
             <div className="rounded-3xl border border-rose-300 bg-white p-8 text-center shadow-sm">
-              <p className="text-slate-600">
+              <p className="text-slate-900">
                 Please{" "}
                 <button
                   className="font-semibold text-rose-600 hover:text-rose-700"
@@ -822,7 +822,7 @@ export default function EventDetailPage() {
                 Attendees ({uniqueRsvpUserIds.size})
               </h2>
               {event.rsvps.length === 0 ? (
-                <p className="text-center text-slate-600 text-sm">
+                <p className="text-center text-slate-900 text-sm">
                   No RSVPs yet
                 </p>
               ) : (
@@ -836,11 +836,11 @@ export default function EventDetailPage() {
                         <p className="font-semibold text-slate-900 text-sm">
                           {rsvp.userName}
                         </p>
-                        <p className="text-slate-600 text-xs">
+                        <p className="text-slate-900 text-xs">
                           {rsvp.userEmail}
                         </p>
                         {rsvp.userPhoneNumber && (
-                          <p className="text-slate-600 text-xs">
+                          <p className="text-slate-900 text-xs">
                             <a
                               className="hover:text-rose-600"
                               href={`tel:${rsvp.userPhoneNumber}`}
@@ -867,7 +867,7 @@ export default function EventDetailPage() {
                             (s) => s._id === rsvp.shiftId
                           );
                           return shift ? (
-                            <p className="text-slate-600 text-xs">
+                            <p className="text-slate-900 text-xs">
                               Shift:{" "}
                               {new Date(shift.startTime).toLocaleTimeString(
                                 "en-US",

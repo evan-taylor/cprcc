@@ -24,7 +24,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={inputId}
-          className={`w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-900 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 ${
             error ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""
           } ${className}`}
           {...props}
@@ -33,7 +33,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <p className="mt-1.5 text-sm text-red-600">{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm text-slate-500">{helperText}</p>
+          <p className="mt-1.5 text-sm text-slate-900">{helperText}</p>
         )}
       </div>
     );
@@ -66,7 +66,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           id={textareaId}
-          className={`w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 min-h-[6rem] resize-vertical ${
+          className={`w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-900 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 min-h-[6rem] resize-vertical ${
             error ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""
           } ${className}`}
           {...props}
@@ -75,7 +75,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           <p className="mt-1.5 text-sm text-red-600">{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm text-slate-500">{helperText}</p>
+          <p className="mt-1.5 text-sm text-slate-900">{helperText}</p>
         )}
       </div>
     );

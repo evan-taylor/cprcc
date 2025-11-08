@@ -138,7 +138,7 @@ export default function RootLayout({
           />
         </head>
         <body
-          className={`${inter.variable} ${redHatDisplay.variable} antialiased`}
+          className={`${inter.variable} ${redHatDisplay.variable} bg-white text-slate-900 antialiased`}
         >
           <ConvexClientProvider>{children}</ConvexClientProvider>
         </body>

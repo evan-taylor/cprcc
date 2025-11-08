@@ -55,7 +55,7 @@ function HeroCard() {
         <h1 className="font-semibold text-4xl text-slate-900">
           Explore our website
         </h1>
-        <p className="text-lg text-slate-700">
+        <p className="text-lg text-slate-900">
           Find all the pages and resources available on the Cal Poly Red Cross
           Club website. Navigate to any section to learn more about our mission,
           events, and volunteer opportunities.
@@ -79,7 +79,7 @@ function PagesSection() {
             <h3 className="font-semibold text-lg text-slate-900">
               {page.title}
             </h3>
-            <p className="mt-2 text-slate-600 text-sm">{page.description}</p>
+            <p className="mt-2 text-slate-900 text-sm">{page.description}</p>
             <span className="mt-3 font-medium text-rose-700 text-sm">
               Visit page →
             </span>

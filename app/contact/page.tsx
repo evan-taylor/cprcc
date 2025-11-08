@@ -75,7 +75,7 @@ function ContactTiles() {
               rel={isExternal ? "noopener noreferrer" : undefined}
               target={isExternal ? "_blank" : undefined}
             >
-              <span className="text-slate-500 text-sm uppercase tracking-wide">
+              <span className="text-slate-900 text-sm uppercase tracking-wide">
                 {contact.label}
               </span>
               <span className="mt-2 break-all font-semibold text-slate-900">

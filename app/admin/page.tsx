@@ -60,7 +60,7 @@ export default function AdminPage() {
   ) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-slate-600">Loading...</div>
+        <div className="text-slate-900">Loading...</div>
       </div>
     );
   }
@@ -76,7 +76,7 @@ export default function AdminPage() {
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4">
           <div className="text-center">
             <h1 className="font-bold text-2xl text-slate-900">Access Denied</h1>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2 text-slate-900">
               Only board members can access this page.
             </p>
             <button
@@ -117,7 +117,7 @@ export default function AdminPage() {
       <main className="mx-auto max-w-6xl px-4 py-24">
         <div className="mb-8">
           <h1 className="font-bold text-3xl text-slate-900">User Management</h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-slate-900">
             Manage user roles and permissions for the Cal Poly Red Cross Club
           </p>
         </div>
@@ -143,13 +143,13 @@ export default function AdminPage() {
               <table className="w-full min-w-[600px]">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm sm:px-6">
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm sm:px-6">
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm sm:px-6">
                       Role
                     </th>
                   </tr>
@@ -158,7 +158,7 @@ export default function AdminPage() {
                   {boardMembers.length === 0 ? (
                     <tr>
                       <td
-                        className="px-4 py-8 text-center text-slate-500 sm:px-6"
+                        className="px-4 py-8 text-center text-slate-900 sm:px-6"
                         colSpan={3}
                       >
                         No board members found
@@ -170,12 +170,12 @@ export default function AdminPage() {
                         <td className="px-4 py-4 text-slate-900 sm:px-6">
                           {user.name}
                           {user._id === currentUser._id && (
-                            <span className="ml-2 text-slate-500 text-xs">
+                            <span className="ml-2 text-slate-900 text-xs">
                               (You)
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-4 text-slate-600 sm:px-6">
+                        <td className="px-4 py-4 text-slate-900 sm:px-6">
                           {user.email}
                         </td>
                         <td className="px-4 py-4 sm:px-6">
@@ -194,7 +194,7 @@ export default function AdminPage() {
           <section>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-semibold text-slate-900 text-xl">Members</h2>
-              <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700 text-sm">
+              <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-900 text-sm">
                 {members.length} {members.length === 1 ? "member" : "members"}
               </span>
             </div>
@@ -202,16 +202,16 @@ export default function AdminPage() {
               <table className="w-full min-w-[700px]">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm sm:px-6">
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm sm:px-6">
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700 text-sm sm:px-6">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm sm:px-6">
                       Role
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-700 text-sm sm:px-6">
+                    <th className="px-4 py-3 text-right font-semibold text-slate-900 text-sm sm:px-6">
                       Actions
                     </th>
                   </tr>
@@ -220,7 +220,7 @@ export default function AdminPage() {
                   {members.length === 0 ? (
                     <tr>
                       <td
-                        className="px-4 py-8 text-center text-slate-500 sm:px-6"
+                        className="px-4 py-8 text-center text-slate-900 sm:px-6"
                         colSpan={4}
                       >
                         No members found
@@ -232,11 +232,11 @@ export default function AdminPage() {
                         <td className="px-4 py-4 text-slate-900 sm:px-6">
                           {user.name}
                         </td>
-                        <td className="px-4 py-4 text-slate-600 sm:px-6">
+                        <td className="px-4 py-4 text-slate-900 sm:px-6">
                           {user.email}
                         </td>
                         <td className="px-4 py-4 sm:px-6">
-                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-700 text-xs">
+                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-900 text-xs">
                             Member
                           </span>
                         </td>

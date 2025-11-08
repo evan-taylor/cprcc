@@ -76,6 +76,7 @@
   --font-display: var(--font-display);
 }
 
+/* Dark mode disabled until full dark theme is implemented
 @media (prefers-color-scheme: dark) {
   :root {
     --color-bg: #0a0a0a;
@@ -89,6 +90,7 @@
     --color-text-subtle: #64748b;
   }
 }
+*/
 
 body {
   color: var(--color-text);

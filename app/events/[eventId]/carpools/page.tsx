@@ -84,7 +84,7 @@ export default function CarpoolManagementPage() {
       <div className="min-h-screen bg-slate-50">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <p className="text-slate-600">Loading...</p>
+          <p className="text-slate-900">Loading...</p>
         </div>
       </div>
     );
@@ -99,7 +99,7 @@ export default function CarpoolManagementPage() {
             <h1 className="font-semibold text-2xl text-slate-900">
               Access Denied
             </h1>
-            <p className="mt-3 text-slate-600">
+            <p className="mt-3 text-slate-900">
               Only board members can manage carpools.
             </p>
           </div>
@@ -132,7 +132,7 @@ export default function CarpoolManagementPage() {
             <h1 className="font-semibold text-2xl text-slate-900">
               Not an Offsite Event
             </h1>
-            <p className="mt-3 text-slate-600">
+            <p className="mt-3 text-slate-900">
               Carpools are only available for offsite events.
             </p>
           </div>
@@ -371,7 +371,7 @@ export default function CarpoolManagementPage() {
           <h1 className="font-semibold text-4xl text-slate-900">
             Carpool Management
           </h1>
-          <p className="mt-2 text-slate-600">{event.title}</p>
+          <p className="mt-2 text-slate-900">{event.title}</p>
         </header>
 
         {error && (
@@ -388,19 +388,19 @@ export default function CarpoolManagementPage() {
 
         <div className="mb-8 grid gap-6 sm:grid-cols-3">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="font-semibold text-slate-700 text-sm">Total RSVPs</p>
+            <p className="font-semibold text-slate-900 text-sm">Total RSVPs</p>
             <p className="mt-2 font-bold text-3xl text-slate-900">
               {uniqueRsvpUserIds.size}
             </p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="font-semibold text-slate-700 text-sm">Drivers</p>
+            <p className="font-semibold text-slate-900 text-sm">Drivers</p>
             <p className="mt-2 font-bold text-3xl text-blue-600">
               {uniqueDriverUserIds.size}
             </p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="font-semibold text-slate-700 text-sm">Need Rides</p>
+            <p className="font-semibold text-slate-900 text-sm">Need Rides</p>
             <p className="mt-2 font-bold text-3xl text-orange-600">
               {uniqueRiderUserIds.size}
             </p>
@@ -437,7 +437,7 @@ export default function CarpoolManagementPage() {
               {isSendingEmails ? "Sending..." : "Send Email Notifications"}
             </button>
           </div>
-          <p className="mt-4 text-slate-600 text-sm">
+          <p className="mt-4 text-slate-900 text-sm">
             Generate carpools to automatically assign riders to drivers.
             Finalize when you&apos;re happy with the assignments, then send
             email notifications to all participants.
@@ -446,7 +446,7 @@ export default function CarpoolManagementPage() {
 
         {carpools.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-            <p className="text-slate-600">
+            <p className="text-slate-900">
               No carpools generated yet. Click &quot;Generate Carpools&quot; to
               create assignments.
             </p>
@@ -464,7 +464,7 @@ export default function CarpoolManagementPage() {
                   Carpool Assignments ({carpools.length})
                 </h2>
                 {anyDraft && (
-                  <p className="text-slate-600 text-sm">
+                  <p className="text-slate-900 text-sm">
                     💡 Drag passengers between carpools to reassign
                   </p>
                 )}
@@ -506,11 +506,11 @@ export default function CarpoolManagementPage() {
                           <p className="font-semibold text-slate-900 text-sm">
                             {rsvp.userName}
                           </p>
-                          <p className="text-slate-600 text-xs">
+                          <p className="text-slate-900 text-xs">
                             {rsvp.userEmail}
                           </p>
                           {shiftTimes && (
-                            <p className="mt-1 text-slate-600 text-xs">
+                            <p className="mt-1 text-slate-900 text-xs">
                               Shifts: {shiftTimes}
                             </p>
                           )}
@@ -632,7 +632,7 @@ export default function CarpoolManagementPage() {
                         Passengers ({carpool.riders.length})
                       </p>
                       {carpool.riders.length === 0 ? (
-                        <p className="text-center text-slate-600 text-sm">
+                        <p className="text-center text-slate-900 text-sm">
                           No passengers assigned
                         </p>
                       ) : (
@@ -665,11 +665,11 @@ export default function CarpoolManagementPage() {
                                 <p className="font-semibold text-slate-900 text-sm">
                                   {rider.name}
                                 </p>
-                                <p className="text-slate-600 text-xs">
+                                <p className="text-slate-900 text-xs">
                                   {rider.email}
                                 </p>
                                 {shiftTimes && (
-                                  <p className="mt-1 text-slate-600 text-xs">
+                                  <p className="mt-1 text-slate-900 text-xs">
                                     Shifts: {shiftTimes}
                                   </p>
                                 )}
@@ -690,7 +690,7 @@ export default function CarpoolManagementPage() {
                   <p className="font-semibold text-slate-900 text-sm">
                     {activeRider.name}
                   </p>
-                  <p className="text-slate-600 text-xs">{activeRider.email}</p>
+                  <p className="text-slate-900 text-xs">{activeRider.email}</p>
                 </div>
               )}
             </DragOverlay>

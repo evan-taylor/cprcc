@@ -43,7 +43,7 @@ export default function CreateEventPage() {
       <div className="min-h-screen bg-slate-50">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <p className="text-slate-600">Loading...</p>
+          <p className="text-slate-900">Loading...</p>
         </div>
       </div>
     );
@@ -58,7 +58,7 @@ export default function CreateEventPage() {
             <h1 className="font-semibold text-2xl text-slate-900">
               Access Denied
             </h1>
-            <p className="mt-3 text-slate-600">
+            <p className="mt-3 text-slate-900">
               Only board members can create events.
             </p>
           </div>
@@ -144,7 +144,7 @@ export default function CreateEventPage() {
           <h1 className="font-semibold text-4xl text-slate-900">
             Create Event
           </h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-slate-900">
             Create a new volunteer opportunity for members to RSVP to.
           </p>
         </header>
@@ -158,13 +158,13 @@ export default function CreateEventPage() {
             <div className="space-y-4">
               <div>
                 <label
-                  className="block font-semibold text-slate-700 text-sm"
+                  className="block font-semibold text-slate-900 text-sm"
                   htmlFor="title"
                 >
                   Event Title
                 </label>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="title"
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -175,13 +175,13 @@ export default function CreateEventPage() {
 
               <div>
                 <label
-                  className="block font-semibold text-slate-700 text-sm"
+                  className="block font-semibold text-slate-900 text-sm"
                   htmlFor="description"
                 >
                   Description
                 </label>
                 <textarea
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="description"
                   onChange={(e) => setDescription(e.target.value)}
                   required
@@ -192,13 +192,13 @@ export default function CreateEventPage() {
 
               <div>
                 <label
-                  className="block font-semibold text-slate-700 text-sm"
+                  className="block font-semibold text-slate-900 text-sm"
                   htmlFor="slug"
                 >
                   URL Slug
                 </label>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="slug"
                   onChange={(e) => {
                     setSlug(e.target.value);
@@ -208,7 +208,7 @@ export default function CreateEventPage() {
                   type="text"
                   value={slug}
                 />
-                <p className="mt-1 text-slate-500 text-xs">
+                <p className="mt-1 text-slate-900 text-xs">
                   The URL will be: /events/
                   {slug || suggestedSlug || "your-event-slug"}
                 </p>
@@ -216,13 +216,13 @@ export default function CreateEventPage() {
 
               <div>
                 <label
-                  className="block font-semibold text-slate-700 text-sm"
+                  className="block font-semibold text-slate-900 text-sm"
                   htmlFor="location"
                 >
                   Location
                 </label>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="location"
                   onChange={(e) => setLocation(e.target.value)}
                   required
@@ -234,13 +234,13 @@ export default function CreateEventPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label
-                    className="block font-semibold text-slate-700 text-sm"
+                    className="block font-semibold text-slate-900 text-sm"
                     htmlFor="startDate"
                   >
                     Start Date
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="startDate"
                     onChange={(e) => setStartDate(e.target.value)}
                     required
@@ -251,13 +251,13 @@ export default function CreateEventPage() {
 
                 <div>
                   <label
-                    className="block font-semibold text-slate-700 text-sm"
+                    className="block font-semibold text-slate-900 text-sm"
                     htmlFor="startTime"
                   >
                     Start Time
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="startTime"
                     onChange={(e) => setStartTime(e.target.value)}
                     required
@@ -268,13 +268,13 @@ export default function CreateEventPage() {
 
                 <div>
                   <label
-                    className="block font-semibold text-slate-700 text-sm"
+                    className="block font-semibold text-slate-900 text-sm"
                     htmlFor="endDate"
                   >
                     End Date
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="endDate"
                     onChange={(e) => setEndDate(e.target.value)}
                     required
@@ -285,13 +285,13 @@ export default function CreateEventPage() {
 
                 <div>
                   <label
-                    className="block font-semibold text-slate-700 text-sm"
+                    className="block font-semibold text-slate-900 text-sm"
                     htmlFor="endTime"
                   >
                     End Time
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="endTime"
                     onChange={(e) => setEndTime(e.target.value)}
                     required
@@ -303,7 +303,7 @@ export default function CreateEventPage() {
 
               <div>
                 <label
-                  className="block font-semibold text-slate-700 text-sm"
+                  className="block font-semibold text-slate-900 text-sm"
                   htmlFor="eventType"
                 >
                   Event Type
@@ -330,7 +330,7 @@ export default function CreateEventPage() {
                   type="checkbox"
                 />
                 <label
-                  className="font-semibold text-slate-700 text-sm"
+                  className="font-semibold text-slate-900 text-sm"
                   htmlFor="isOffsite"
                 >
                   Offsite event (requires carpools)
@@ -353,7 +353,7 @@ export default function CreateEventPage() {
               </div>
 
               {shifts.length === 0 ? (
-                <p className="text-center text-slate-600 text-sm">
+                <p className="text-center text-slate-900 text-sm">
                   No shifts added yet. Click &quot;Add Shift&quot; to create
                   time slots.
                 </p>
@@ -379,13 +379,13 @@ export default function CreateEventPage() {
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
                           <label
-                            className="block text-slate-700 text-sm"
+                            className="block text-slate-900 text-sm"
                             htmlFor={`shift-${shift.id}-start`}
                           >
                             Start Time
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-start`}
                             onChange={(e) =>
                               updateShift(index, "startTime", e.target.value)
@@ -397,13 +397,13 @@ export default function CreateEventPage() {
                         </div>
                         <div>
                           <label
-                            className="block text-slate-700 text-sm"
+                            className="block text-slate-900 text-sm"
                             htmlFor={`shift-${shift.id}-end`}
                           >
                             End Time
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-end`}
                             onChange={(e) =>
                               updateShift(index, "endTime", e.target.value)
@@ -415,13 +415,13 @@ export default function CreateEventPage() {
                         </div>
                         <div>
                           <label
-                            className="block text-slate-700 text-sm"
+                            className="block text-slate-900 text-sm"
                             htmlFor={`shift-${shift.id}-people`}
                           >
                             People Needed
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-people`}
                             min="1"
                             onChange={(e) =>
@@ -452,7 +452,7 @@ export default function CreateEventPage() {
 
           <div className="flex gap-4">
             <button
-              className="flex-1 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="flex-1 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-900 transition hover:bg-slate-50"
               onClick={() => router.push("/events")}
               type="button"
             >

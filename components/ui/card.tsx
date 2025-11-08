@@ -97,7 +97,7 @@ export function CardDescription({
   ...props
 }: CardDescriptionProps) {
   return (
-    <p className={`text-sm text-slate-600 mt-1.5 ${className}`} {...props}>
+    <p className={`text-sm text-slate-900 mt-1.5 ${className}`} {...props}>
       {children}
     </p>
   );

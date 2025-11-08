@@ -113,7 +113,7 @@ function HeroCard() {
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <article className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-          <p className="text-slate-500 text-sm uppercase tracking-wide">
+          <p className="text-slate-900 text-sm uppercase tracking-wide">
             Start with shelter + feeding
           </p>
           <p className="mt-2 text-slate-900 text-sm leading-relaxed">
@@ -123,7 +123,7 @@ function HeroCard() {
           </p>
         </article>
         <article className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-          <p className="text-slate-500 text-sm uppercase tracking-wide">
+          <p className="text-slate-900 text-sm uppercase tracking-wide">
             Have credentials already?
           </p>
           <p className="mt-2 text-slate-900 text-sm leading-relaxed">
@@ -174,7 +174,7 @@ function StepsSection() {
         <h2 className="font-display font-semibold text-2xl text-slate-900">
           General steps to deploy
         </h2>
-        <p className="text-slate-600 text-sm">
+        <p className="text-slate-900 text-sm">
           Follow this path to move from club member to deployable volunteer.
         </p>
       </header>
@@ -214,7 +214,7 @@ function GapSection() {
   return (
     <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <header className="space-y-2">
-        <p className="font-semibold text-slate-500 text-xs uppercase tracking-wider">
+        <p className="font-semibold text-slate-900 text-xs uppercase tracking-wider">
           Figure 1
         </p>
         <h2 className="font-display font-semibold text-2xl text-slate-900">

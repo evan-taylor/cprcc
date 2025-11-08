@@ -93,7 +93,7 @@ export default function SignIn() {
           <h1 className="font-bold font-display text-3xl text-slate-900">
             Cal Poly Red Cross Club
           </h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-slate-900">
             {flow === "signIn"
               ? "Welcome back! Sign in to your account"
               : "Join our community of volunteers"}
@@ -106,7 +106,7 @@ export default function SignIn() {
               className={`flex-1 rounded-md px-4 py-2 font-medium text-sm transition-all ${
                 flow === "signIn"
                   ? "bg-white text-rose-600 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-900 hover:text-slate-900"
               }`}
               onClick={() => {
                 setFlow("signIn");
@@ -120,7 +120,7 @@ export default function SignIn() {
               className={`flex-1 rounded-md px-4 py-2 font-medium text-sm transition-all ${
                 flow === "signUp"
                   ? "bg-white text-rose-600 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-900 hover:text-slate-900"
               }`}
               onClick={() => {
                 setFlow("signUp");
@@ -137,7 +137,7 @@ export default function SignIn() {
               <>
                 <div>
                   <label
-                    className="mb-1.5 block font-medium text-slate-700 text-sm"
+                    className="mb-1.5 block font-medium text-slate-900 text-sm"
                     htmlFor="name"
                   >
                     Full Name
@@ -153,7 +153,7 @@ export default function SignIn() {
                 </div>
                 <div>
                   <label
-                    className="mb-1.5 block font-medium text-slate-700 text-sm"
+                    className="mb-1.5 block font-medium text-slate-900 text-sm"
                     htmlFor="phoneNumber"
                   >
                     Phone Number
@@ -165,7 +165,7 @@ export default function SignIn() {
                     placeholder="(555) 123-4567"
                     type="tel"
                   />
-                  <p className="mt-1.5 text-slate-500 text-xs">
+                  <p className="mt-1.5 text-slate-900 text-xs">
                     Optional but recommended for carpool coordination
                   </p>
                 </div>
@@ -174,7 +174,7 @@ export default function SignIn() {
 
             <div>
               <label
-                className="mb-1.5 block font-medium text-slate-700 text-sm"
+                className="mb-1.5 block font-medium text-slate-900 text-sm"
                 htmlFor="email"
               >
                 Email Address
@@ -191,7 +191,7 @@ export default function SignIn() {
 
             <div>
               <label
-                className="mb-1.5 block font-medium text-slate-700 text-sm"
+                className="mb-1.5 block font-medium text-slate-900 text-sm"
                 htmlFor="password"
               >
                 Password
@@ -206,7 +206,7 @@ export default function SignIn() {
                 type="password"
               />
               {flow === "signUp" && (
-                <p className="mt-1.5 text-slate-500 text-xs">
+                <p className="mt-1.5 text-slate-900 text-xs">
                   Must be at least 8 characters
                 </p>
               )}
@@ -234,7 +234,7 @@ export default function SignIn() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-slate-600 text-sm">
+          <div className="mt-6 text-center text-slate-900 text-sm">
             {flow === "signIn" ? (
               <p>
                 New to Red Cross?{" "}
@@ -267,7 +267,7 @@ export default function SignIn() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-slate-500 text-xs">
+        <p className="mt-6 text-center text-slate-900 text-xs">
           By signing up, you agree to help make a difference in our community
         </p>
       </div>

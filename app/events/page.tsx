@@ -34,7 +34,7 @@ export default function EventsPage() {
           <h1 className="font-bold font-display text-4xl text-slate-900 tracking-tight sm:text-5xl">
             See where we&apos;re serving next
           </h1>
-          <p className="max-w-2xl text-lg text-slate-600 leading-relaxed">
+          <p className="max-w-2xl text-lg text-slate-900 leading-relaxed">
             Browse upcoming volunteer opportunities, RSVP to events, and manage
             your participation in Red Cross activities.
           </p>
@@ -68,7 +68,7 @@ export default function EventsPage() {
           <Card className="p-12 text-center">
             <div className="flex items-center justify-center gap-3">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-red-600" />
-              <p className="text-slate-600">Loading events...</p>
+              <p className="text-slate-900">Loading events...</p>
             </div>
           </Card>
         )}
@@ -94,7 +94,7 @@ export default function EventsPage() {
               <h2 className="font-display font-semibold text-2xl text-slate-900">
                 No upcoming events
               </h2>
-              <p className="text-slate-600">
+              <p className="text-slate-900">
                 Check back soon for new volunteer opportunities, or follow us on
                 Instagram and GroupMe for updates.
               </p>
@@ -171,13 +171,13 @@ export default function EventsPage() {
                       <h2 className="mb-2 font-display font-semibold text-slate-900 text-xl leading-tight transition-colors group-hover:text-red-600">
                         {event.title}
                       </h2>
-                      <p className="mb-4 line-clamp-2 text-slate-600 text-sm leading-relaxed">
+                      <p className="mb-4 line-clamp-2 text-slate-900 text-sm leading-relaxed">
                         {event.description}
                       </p>
                       <div className="space-y-2 border-slate-100 border-t pt-4 text-sm">
-                        <div className="flex items-center gap-2 text-slate-700">
+                        <div className="flex items-center gap-2 text-slate-900">
                           <svg
-                            className="h-4 w-4 flex-shrink-0 text-slate-400"
+                            className="h-4 w-4 flex-shrink-0 text-slate-900"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth={2}
@@ -201,9 +201,9 @@ export default function EventsPage() {
                             })}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-700">
+                        <div className="flex items-center gap-2 text-slate-900">
                           <svg
-                            className="h-4 w-4 flex-shrink-0 text-slate-400"
+                            className="h-4 w-4 flex-shrink-0 text-slate-900"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth={2}

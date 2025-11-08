@@ -103,7 +103,7 @@ function HeroCard() {
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <article className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-          <p className="text-slate-500 text-sm uppercase tracking-wide">
+          <p className="text-slate-900 text-sm uppercase tracking-wide">
             Need help?
           </p>
           <p className="mt-2 text-slate-900">
@@ -118,7 +118,7 @@ function HeroCard() {
           </p>
         </article>
         <article className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-          <p className="text-slate-500 text-sm uppercase tracking-wide">
+          <p className="text-slate-900 text-sm uppercase tracking-wide">
             Have these items
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-900 text-sm">

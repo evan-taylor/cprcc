@@ -24,11 +24,11 @@ export function Button({
     secondary:
       "bg-slate-100 text-slate-900 shadow-sm hover:bg-slate-200 focus-visible:ring-slate-500 active:scale-[0.98]",
     ghost:
-      "text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-500",
+      "text-slate-900 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-500",
     destructive:
       "bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500 active:scale-[0.98]",
     outline:
-      "border-2 border-slate-200 bg-transparent text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-slate-500",
+      "border-2 border-slate-200 bg-transparent text-slate-900 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-slate-500",
   };
 
   const sizes = {
