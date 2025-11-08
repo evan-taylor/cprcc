@@ -311,12 +311,12 @@ export default function CarpoolManagementPage() {
     return getShiftTimesForUser(rsvp.userProfileId);
   };
 
-  const uniqueDriverUserIds = new Set(
+  const uniqueDriverUserIds = new Set<Id<"userProfiles">>(
     event.rsvps
       .filter((rsvp) => rsvp.canDrive)
       .map((rsvp) => rsvp.userProfileId)
   );
-  const uniqueRiderUserIds = new Set(
+  const uniqueRiderUserIds = new Set<Id<"userProfiles">>(
     event.rsvps
       .filter((rsvp) => rsvp.needsRide)
       .map((rsvp) => rsvp.userProfileId)
@@ -326,17 +326,20 @@ export default function CarpoolManagementPage() {
     carpools.length > 0 && carpools.every((c) => c.status === "finalized");
   const anyDraft = carpools.some((c) => c.status === "draft");
 
-  const assignedRiderUserIds = new Set(
+  const assignedRiderUserIds = new Set<Id<"userProfiles">>(
     carpools
       .flatMap((c) => c.riders.map((r) => r.rsvpId))
       .map(
         (rsvpId) =>
           event.rsvps.find((rsvp) => rsvp._id === rsvpId)?.userProfileId
       )
-      .filter((id): id is string => id !== undefined)
+      .filter((id): id is Id<"userProfiles"> => id !== undefined)
   );
 
-  const unassignedRidersByUser = new Map<string, (typeof event.rsvps)[0]>();
+  const unassignedRidersByUser = new Map<
+    Id<"userProfiles">,
+    (typeof event.rsvps)[0]
+  >();
   for (const rsvp of event.rsvps) {
     if (rsvp.needsRide && !assignedRiderUserIds.has(rsvp.userProfileId)) {
       const existing = unassignedRidersByUser.get(rsvp.userProfileId);
