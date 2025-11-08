@@ -93,7 +93,7 @@ function ContentSection({
   return (
     <section className="px-4" id={id}>
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 text-center">
-        <h2 className="font-semibold text-3xl text-red-600">{title}</h2>
+        <h2 className="font-semibold text-3xl text-slate-900">{title}</h2>
         <div className="h-0.5 w-16 bg-slate-200" />
         <div className="space-y-4 text-lg text-slate-900 leading-relaxed">
           {paragraphs.map((paragraph) => (

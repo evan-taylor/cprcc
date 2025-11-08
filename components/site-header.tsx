@@ -169,9 +169,9 @@ function AuthButton({ inverted }: { inverted: boolean }) {
     const baseClasses =
       "inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95";
     const solidClasses =
-      "bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500";
+      "bg-red-600 !text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500";
     const glassClasses =
-      "text-white bg-white/20 ring-1 ring-inset ring-white/30 hover:bg-white/30 backdrop-blur-sm focus-visible:ring-white/60";
+      "!text-white bg-white/20 ring-1 ring-inset ring-white/30 hover:bg-white/30 backdrop-blur-sm focus-visible:ring-white/60";
 
     return (
       <Link
@@ -192,8 +192,8 @@ function AuthButton({ inverted }: { inverted: boolean }) {
     <button
       className={`inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
         inverted
-          ? "bg-white/20 text-white ring-1 ring-white/30 ring-inset backdrop-blur-sm hover:bg-white/30 focus-visible:ring-white/60"
-          : "bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500"
+          ? "bg-white/20 !text-white ring-1 ring-white/30 ring-inset backdrop-blur-sm hover:bg-white/30 focus-visible:ring-white/60"
+          : "bg-red-600 !text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500"
       }`}
       onClick={handleSignOut}
       type="button"
