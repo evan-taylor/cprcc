@@ -139,7 +139,7 @@ export default function CreateEventPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl px-4 pt-10 pb-16 sm:px-8">
+      <main className="mx-auto w-full max-w-3xl px-4 pt-24 pb-16 sm:px-8">
         <header className="mb-8">
           <h1 className="font-semibold text-4xl text-slate-900">
             Create Event
