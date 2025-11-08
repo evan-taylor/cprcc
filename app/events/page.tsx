@@ -4,6 +4,9 @@ import { useQuery } from "convex/react";
 import Link from "next/link";
 import { useEffect } from "react";
 import SiteHeader from "@/components/site-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 
 export default function EventsPage() {
@@ -21,133 +24,184 @@ export default function EventsPage() {
   const currentUser = useQuery(api.users.getCurrentUser);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <SiteHeader />
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-16 px-4 pt-10 pb-16 sm:px-8 md:px-12">
-        <header className="space-y-6">
-          <p className="text-rose-700 text-sm uppercase tracking-[0.2em]">
+      <main className="mx-auto w-full max-w-7xl px-4 pt-24 pb-20 sm:px-6 lg:px-8">
+        <header className="mb-12 space-y-4">
+          <p className="font-display font-semibold text-red-600 text-sm uppercase tracking-wider">
             Events & RSVP
           </p>
-          <h1 className="font-semibold text-4xl text-slate-900">
+          <h1 className="font-bold font-display text-4xl text-slate-900 tracking-tight sm:text-5xl">
             See where we&apos;re serving next
           </h1>
-          <p className="text-lg text-slate-700">
+          <p className="max-w-2xl text-lg text-slate-600 leading-relaxed">
             Browse upcoming volunteer opportunities, RSVP to events, and manage
             your participation in Red Cross activities.
           </p>
         </header>
 
         {currentUser?.role === "board" && (
-          <div className="flex justify-end">
-            <Link
-              className="rounded-full bg-rose-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-rose-700"
-              href="/events/create"
-            >
-              Create Event
+          <div className="mb-8 flex justify-end">
+            <Link href="/events/create">
+              <Button size="lg">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <title>Plus icon</title>
+                  <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Create Event
+              </Button>
             </Link>
           </div>
         )}
 
         {events === undefined ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-            <p className="text-slate-600">Loading events...</p>
-          </div>
-        ) : events.length === 0 ? (
-          <section className="rounded-3xl border border-rose-300 border-dashed bg-white p-10 text-center shadow-sm">
-            <h2 className="font-semibold text-2xl text-slate-900">
-              No upcoming events
-            </h2>
-            <p className="mt-3 text-slate-600 text-sm">
-              Check back soon for new volunteer opportunities, or follow us on
-              Instagram and GroupMe for updates.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3 font-semibold text-sm">
-              <a
-                className="rounded-full border border-rose-200 px-5 py-2 text-rose-700 transition hover:border-rose-400"
-                href="https://www.instagram.com/calpolyredcrossclub"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Instagram updates
-              </a>
-              <a
-                className="rounded-full border border-rose-200 px-5 py-2 text-rose-700 transition hover:border-rose-400"
-                href="https://groupme.com/join_group/103395902/FeigA9Y5"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Join the GroupMe
-              </a>
+          <Card className="p-12 text-center">
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-red-600" />
+              <p className="text-slate-600">Loading events...</p>
             </div>
-          </section>
+          </Card>
+        ) : events.length === 0 ? (
+          <Card className="border-2 border-dashed border-red-200 bg-red-50/30 p-12 text-center">
+            <div className="mx-auto max-w-md space-y-4">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                <svg
+                  className="h-8 w-8 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h2 className="font-display font-semibold text-2xl text-slate-900">
+                No upcoming events
+              </h2>
+              <p className="text-slate-600">
+                Check back soon for new volunteer opportunities, or follow us on
+                Instagram and GroupMe for updates.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3 pt-2">
+                <a
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-red-200 bg-white px-5 py-2.5 font-semibold text-red-700 text-sm transition hover:border-red-300 hover:bg-red-50"
+                  href="https://www.instagram.com/calpolyredcrossclub"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                  </svg>
+                  Instagram
+                </a>
+                <a
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-red-200 bg-white px-5 py-2.5 font-semibold text-red-700 text-sm transition hover:border-red-300 hover:bg-red-50"
+                  href="https://groupme.com/join_group/103395902/FeigA9Y5"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10zm1-17h-2v8h2V5zm0 10h-2v2h2v-2z" />
+                  </svg>
+                  GroupMe
+                </a>
+              </div>
+            </div>
+          </Card>
         ) : (
-          <section className="space-y-6">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => {
               const eventDate = new Date(event.startTime);
               const endDate = new Date(event.endTime);
 
               return (
                 <Link
-                  className="block rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:border-rose-300 hover:shadow-md"
+                  className="group block transition-transform hover:scale-[1.02]"
                   href={`/events/${event.slug ?? event._id}`}
                   key={event._id}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h2 className="font-semibold text-2xl text-slate-900">
-                          {event.title}
-                        </h2>
-                        {event.eventType === "boothing" && (
-                          <span className="rounded-full bg-rose-100 px-3 py-1 font-semibold text-rose-700 text-xs uppercase tracking-wide">
-                            Shifts
-                          </span>
-                        )}
-                        {event.isOffsite && (
-                          <span className="rounded-full bg-blue-100 px-3 py-1 font-semibold text-blue-700 text-xs uppercase tracking-wide">
-                            Offsite
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-3 text-slate-600">{event.description}</p>
-                      <div className="mt-4 flex flex-wrap gap-4 text-slate-700 text-sm">
-                        <div>
-                          <span className="font-semibold">Date:</span>{" "}
-                          {eventDate.toLocaleDateString("en-US", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
+                  <Card className="h-full overflow-hidden transition-all group-hover:border-red-300 group-hover:shadow-lg">
+                    <CardContent className="p-6">
+                      <div className="mb-3 flex items-start justify-between gap-2">
+                        <div className="flex flex-wrap gap-2">
+                          {event.eventType === "boothing" && (
+                            <Badge variant="primary">Shifts</Badge>
+                          )}
+                          {event.isOffsite && (
+                            <Badge variant="secondary">Offsite</Badge>
+                          )}
                         </div>
-                        <div>
-                          <span className="font-semibold">Time:</span>{" "}
-                          {eventDate.toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}{" "}
-                          -{" "}
-                          {endDate.toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Location:</span>{" "}
-                          {event.location}
+                        <div className="flex-shrink-0 rounded-lg bg-red-50 px-3 py-1.5 text-center">
+                          <div className="font-display font-bold text-2xl text-red-600 leading-none">
+                            {eventDate.getDate()}
+                          </div>
+                          <div className="font-semibold text-red-600 text-xs uppercase">
+                            {eventDate.toLocaleDateString("en-US", {
+                              month: "short",
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <span className="inline-block rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white">
-                        View Details
-                      </span>
-                    </div>
-                  </div>
+                      <h2 className="mb-2 font-display font-semibold text-xl text-slate-900 leading-tight group-hover:text-red-600 transition-colors">
+                        {event.title}
+                      </h2>
+                      <p className="mb-4 line-clamp-2 text-slate-600 text-sm leading-relaxed">
+                        {event.description}
+                      </p>
+                      <div className="space-y-2 border-t border-slate-100 pt-4 text-sm">
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <svg
+                            className="h-4 w-4 flex-shrink-0 text-slate-400"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span>
+                            {eventDate.toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}{" "}
+                            -{" "}
+                            {endDate.toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <svg
+                            className="h-4 w-4 flex-shrink-0 text-slate-400"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span className="line-clamp-1">{event.location}</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+                        <span className="font-semibold text-red-600 text-sm group-hover:underline">
+                          View Details →
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </Link>
               );
             })}
-          </section>
+          </div>
         )}
       </main>
     </div>

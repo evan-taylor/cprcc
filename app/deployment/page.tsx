@@ -82,9 +82,9 @@ const reminderItems = [
 
 export default function DeploymentPage() {
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900">
       <SiteHeader />
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 pt-32 pb-20 sm:px-8 lg:px-12">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 pt-24 pb-20 sm:px-6 lg:px-8">
         <HeroCard />
         <DeploymentSnapshot />
         <StepsSection />
@@ -97,12 +97,12 @@ export default function DeploymentPage() {
 
 function HeroCard() {
   return (
-    <section className="rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200">
+    <section className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <div className="space-y-4">
-        <p className="text-rose-700 text-sm uppercase tracking-[0.3em]">
+        <p className="font-display font-semibold text-red-600 text-sm uppercase tracking-wider">
           Deployments
         </p>
-        <h1 className="font-semibold text-4xl text-slate-900 sm:text-5xl">
+        <h1 className="font-bold font-display text-4xl text-slate-900 tracking-tight sm:text-5xl">
           Take your service nationwide
         </h1>
         {overview.map((paragraph) => (
@@ -139,11 +139,11 @@ function HeroCard() {
 
 function DeploymentSnapshot() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <div className="grid gap-6 md:grid-cols-2">
         <article>
-          <h2 className="font-semibold text-2xl text-slate-900">
-            What “deployment” means
+          <h2 className="font-semibold font-display text-2xl text-slate-900">
+            What "deployment" means
           </h2>
           <p className="mt-3 text-base text-slate-700 leading-relaxed">
             Deployments are two-week assignments in another county, region, or
@@ -169,9 +169,9 @@ function DeploymentSnapshot() {
 
 function StepsSection() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <header className="mb-6 space-y-1">
-        <h2 className="font-semibold text-2xl text-slate-900">
+        <h2 className="font-semibold font-display text-2xl text-slate-900">
           General steps to deploy
         </h2>
         <p className="text-slate-600 text-sm">
@@ -179,10 +179,10 @@ function StepsSection() {
         </p>
       </header>
       <ol className="relative space-y-6">
-        <div className="pointer-events-none absolute top-0 left-5 hidden h-full w-px bg-linear-to-b from-rose-200 via-rose-300 to-transparent md:block" />
+        <div className="pointer-events-none absolute top-0 left-5 hidden h-full w-px bg-gradient-to-b from-red-200 via-red-300 to-transparent md:block" />
         {steps.map((step, index) => (
           <li className="relative flex gap-4 md:gap-6" key={step.title}>
-            <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-600 font-semibold text-white shadow-md">
+            <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 font-semibold text-white shadow-md">
               {index + 1}
             </div>
             <div className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50 p-4">
@@ -194,12 +194,12 @@ function StepsSection() {
               </p>
               {step.link ? (
                 <Link
-                  className="inline-flex font-semibold text-rose-700 text-sm underline-offset-4 hover:underline"
+                  className="inline-flex font-semibold text-red-600 text-sm underline-offset-4 hover:underline transition-colors"
                   href={step.link.href}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  {step.link.label}
+                  {step.link.label} →
                 </Link>
               ) : null}
             </div>
@@ -212,12 +212,12 @@ function StepsSection() {
 
 function GapSection() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <header className="space-y-2">
-        <p className="font-semibold text-slate-500 text-xs uppercase tracking-[0.25em]">
+        <p className="font-semibold text-slate-500 text-xs uppercase tracking-wider">
           Figure 1
         </p>
-        <h2 className="font-semibold text-2xl text-slate-900">
+        <h2 className="font-semibold font-display text-2xl text-slate-900">
           Understanding the GAP chart
         </h2>
         <p className="text-slate-700 text-sm">
@@ -257,8 +257,8 @@ function GapSection() {
 
 function RemindersSection() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
-      <h2 className="font-semibold text-2xl text-slate-900">
+    <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
+      <h2 className="font-semibold font-display text-2xl text-slate-900">
         General reminders
       </h2>
       <ul className="mt-4 space-y-3 text-slate-700 text-sm">
@@ -267,7 +267,7 @@ function RemindersSection() {
             className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
             key={item}
           >
-            <span className="mt-1 h-2 w-2 rounded-full bg-rose-500" />
+            <span className="mt-1 h-2 w-2 rounded-full bg-red-500" />
             <p className="leading-relaxed">{item}</p>
           </li>
         ))}

@@ -82,10 +82,16 @@ export default function SignIn() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-rose-50 to-white px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 via-white to-slate-50 px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="font-bold text-3xl text-slate-900">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-600 shadow-lg">
+            <svg className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <title>Red Cross logo</title>
+              <path d="M14 2h-4v8H2v4h8v8h4v-8h8v-4h-8V2z" />
+            </svg>
+          </div>
+          <h1 className="font-bold font-display text-3xl text-slate-900">
             Cal Poly Red Cross Club
           </h1>
           <p className="mt-2 text-slate-600">
@@ -214,11 +220,16 @@ export default function SignIn() {
             )}
 
             <button
-              className="w-full rounded-lg bg-rose-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-red-600 px-4 py-3 font-semibold text-white shadow-sm transition-all hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]"
               disabled={loading}
               type="submit"
             >
-              {loading && "Please wait..."}
+              {loading && (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Please wait...
+                </span>
+              )}
               {!loading && flow === "signIn" && "Sign In"}
               {!loading && flow === "signUp" && "Create Account"}
             </button>
@@ -229,7 +240,7 @@ export default function SignIn() {
               <p>
                 New to Red Cross?{" "}
                 <button
-                  className="font-medium text-rose-600 hover:text-rose-700"
+                  className="font-medium text-red-600 hover:text-red-700 transition-colors"
                   onClick={() => {
                     setFlow("signUp");
                     setError(null);
@@ -243,7 +254,7 @@ export default function SignIn() {
               <p>
                 Already have an account?{" "}
                 <button
-                  className="font-medium text-rose-600 hover:text-rose-700"
+                  className="font-medium text-red-600 hover:text-red-700 transition-colors"
                   onClick={() => {
                     setFlow("signIn");
                     setError(null);
