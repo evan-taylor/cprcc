@@ -76,16 +76,16 @@ const gapLegend = [
 const reminderItems = [
   "Access EDGE through Volunteer Connection so coursework logs to your profile automatically.",
   "Manually log contacts, interviews, club events, and deployments in Volunteer Connection to keep your experience current.",
-  "Update the “My Profile” tab with accurate contact info, skills, and availability before deployment season.",
+  "Update the &quot;My Profile&quot; tab with accurate contact info, skills, and availability before deployment season.",
   "Club-specific questions: redcrossclub@calpoly.edu. ARC program questions: christin.newlon@redcross.org.",
 ];
 
 export default async function DeploymentPage() {
   "use cache";
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900">
       <SiteHeader />
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 pt-32 pb-20 sm:px-8 lg:px-12">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 pt-24 pb-20 sm:px-6 lg:px-8">
         <HeroCard />
         <DeploymentSnapshot />
         <StepsSection />
@@ -98,23 +98,23 @@ export default async function DeploymentPage() {
 
 function HeroCard() {
   return (
-    <section className="rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200">
+    <section className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <div className="space-y-4">
-        <p className="text-rose-700 text-sm uppercase tracking-[0.3em]">
+        <p className="font-display font-semibold text-red-600 text-sm uppercase tracking-wider">
           Deployments
         </p>
-        <h1 className="font-semibold text-4xl text-slate-900 sm:text-5xl">
+        <h1 className="font-bold font-display text-4xl text-slate-900 tracking-tight sm:text-5xl">
           Take your service nationwide
         </h1>
         {overview.map((paragraph) => (
-          <p className="text-lg text-slate-700 leading-relaxed" key={paragraph}>
+          <p className="text-lg text-slate-900 leading-relaxed" key={paragraph}>
             {paragraph}
           </p>
         ))}
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <article className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-          <p className="text-slate-500 text-sm uppercase tracking-wide">
+          <p className="text-slate-900 text-sm uppercase tracking-wide">
             Start with shelter + feeding
           </p>
           <p className="mt-2 text-slate-900 text-sm leading-relaxed">
@@ -124,7 +124,7 @@ function HeroCard() {
           </p>
         </article>
         <article className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-          <p className="text-slate-500 text-sm uppercase tracking-wide">
+          <p className="text-slate-900 text-sm uppercase tracking-wide">
             Have credentials already?
           </p>
           <p className="mt-2 text-slate-900 text-sm leading-relaxed">
@@ -140,20 +140,20 @@ function HeroCard() {
 
 function DeploymentSnapshot() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <div className="grid gap-6 md:grid-cols-2">
         <article>
-          <h2 className="font-semibold text-2xl text-slate-900">
-            What “deployment” means
+          <h2 className="font-display font-semibold text-2xl text-slate-900">
+            What &quot;deployment&quot; means
           </h2>
-          <p className="mt-3 text-base text-slate-700 leading-relaxed">
+          <p className="mt-3 text-base text-slate-900 leading-relaxed">
             Deployments are two-week assignments in another county, region, or
             state once local needs outpace local responders. You will keep
             working within the GAP you trained for, whether that is sheltering,
             feeding, logistics, or client care.
           </p>
         </article>
-        <ul className="space-y-4 text-slate-700 text-sm">
+        <ul className="space-y-4 text-slate-900 text-sm">
           {deploymentNotes.map((note) => (
             <li
               className="rounded-2xl border border-slate-100 bg-slate-50 p-4 leading-relaxed"
@@ -170,37 +170,37 @@ function DeploymentSnapshot() {
 
 function StepsSection() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <header className="mb-6 space-y-1">
-        <h2 className="font-semibold text-2xl text-slate-900">
+        <h2 className="font-display font-semibold text-2xl text-slate-900">
           General steps to deploy
         </h2>
-        <p className="text-slate-600 text-sm">
+        <p className="text-slate-900 text-sm">
           Follow this path to move from club member to deployable volunteer.
         </p>
       </header>
       <ol className="relative space-y-6">
-        <div className="pointer-events-none absolute top-0 left-5 hidden h-full w-px bg-linear-to-b from-rose-200 via-rose-300 to-transparent md:block" />
+        <div className="pointer-events-none absolute top-0 left-5 hidden h-full w-px bg-gradient-to-b from-red-200 via-red-300 to-transparent md:block" />
         {steps.map((step, index) => (
           <li className="relative flex gap-4 md:gap-6" key={step.title}>
-            <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-600 font-semibold text-white shadow-md">
+            <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 font-semibold text-white shadow-md">
               {index + 1}
             </div>
             <div className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50 p-4">
               <h3 className="font-semibold text-base text-slate-900">
                 {step.title}
               </h3>
-              <p className="text-slate-700 text-sm leading-relaxed">
+              <p className="text-slate-900 text-sm leading-relaxed">
                 {step.body}
               </p>
               {step.link ? (
                 <Link
-                  className="inline-flex font-semibold text-rose-700 text-sm underline-offset-4 hover:underline"
+                  className="inline-flex font-semibold text-red-600 text-sm underline-offset-4 transition-colors hover:underline"
                   href={step.link.href}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  {step.link.label}
+                  {step.link.label} →
                 </Link>
               ) : null}
             </div>
@@ -213,15 +213,15 @@ function StepsSection() {
 
 function GapSection() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
       <header className="space-y-2">
-        <p className="font-semibold text-slate-500 text-xs uppercase tracking-[0.25em]">
+        <p className="font-semibold text-slate-900 text-xs uppercase tracking-wider">
           Figure 1
         </p>
-        <h2 className="font-semibold text-2xl text-slate-900">
+        <h2 className="font-display font-semibold text-2xl text-slate-900">
           Understanding the GAP chart
         </h2>
-        <p className="text-slate-700 text-sm">
+        <p className="text-slate-900 text-sm">
           Align your interests with the right Group, Activity, and Position
           before you request training.
         </p>
@@ -244,11 +244,11 @@ function GapSection() {
             <h3 className="font-semibold text-base text-slate-900">
               {item.title}
             </h3>
-            <p className="mt-2 text-slate-700 text-sm">{item.description}</p>
+            <p className="mt-2 text-slate-900 text-sm">{item.description}</p>
           </article>
         ))}
       </div>
-      <p className="mt-4 text-slate-700 text-sm leading-relaxed">
+      <p className="mt-4 text-slate-900 text-sm leading-relaxed">
         Light blue = client-facing, yellow = first-time volunteer priorities,
         green = best for volunteers with health licenses.
       </p>
@@ -258,17 +258,17 @@ function GapSection() {
 
 function RemindersSection() {
   return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
-      <h2 className="font-semibold text-2xl text-slate-900">
+    <section className="rounded-2xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
+      <h2 className="font-display font-semibold text-2xl text-slate-900">
         General reminders
       </h2>
-      <ul className="mt-4 space-y-3 text-slate-700 text-sm">
+      <ul className="mt-4 space-y-3 text-slate-900 text-sm">
         {reminderItems.map((item) => (
           <li
             className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
             key={item}
           >
-            <span className="mt-1 h-2 w-2 rounded-full bg-rose-500" />
+            <span className="mt-1 h-2 w-2 rounded-full bg-red-500" />
             <p className="leading-relaxed">{item}</p>
           </li>
         ))}

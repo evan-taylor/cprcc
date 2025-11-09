@@ -15,7 +15,7 @@ const navItems = [
   { href: "/contact", label: "Contact" },
 ];
 
-const scrollThreshold = 80;
+const scrollThreshold = 20;
 
 type HeaderVariant = "default" | "inverted";
 
@@ -42,27 +42,27 @@ export default function SiteHeader({
   const transparent = isInverted && !scrolled;
 
   const headerClasses = transparent
-    ? "bg-transparent text-white border-transparent"
-    : "bg-white text-slate-900 border-slate-200 shadow-sm";
+    ? "bg-white/5 text-white border-white/10 backdrop-blur-xl"
+    : "bg-white/80 text-slate-900 border-slate-200/60 shadow-sm backdrop-blur-xl";
   const navLinkClasses = transparent
-    ? "text-white/90 hover:text-white"
-    : "text-slate-600 hover:text-rose-700";
-  const brandClasses = transparent ? "text-white" : "text-rose-700";
+    ? "text-white/90 hover:text-white font-medium"
+    : "text-slate-900 hover:text-red-600 font-medium";
+  const brandClasses = transparent ? "text-white" : "text-red-600";
   const iconColor = transparent ? "white" : "#334155";
 
   return (
     <header
-      className={`fixed top-0 z-30 w-full border-b backdrop-blur transition-colors ${headerClasses}`}
+      className={`fixed top-0 z-50 w-full border-b transition-all duration-200 ${headerClasses}`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
         <Link
-          className={`font-semibold text-lg tracking-wide ${brandClasses}`}
+          className={`font-bold font-display text-lg tracking-tight transition-colors ${brandClasses}`}
           href="/"
         >
           Cal Poly Red Cross Club
         </Link>
-        <div className="flex flex-1 items-center justify-end gap-4">
-          <nav className="hidden gap-6 font-medium text-sm md:flex">
+        <div className="flex flex-1 items-center justify-end gap-6">
+          <nav className="hidden gap-7 text-sm md:flex">
             {navItems.map((item) => (
               <Link
                 className={`transition-colors ${navLinkClasses}`}
@@ -84,7 +84,7 @@ export default function SiteHeader({
           <button
             aria-expanded={mobileMenuOpen}
             aria-label="Toggle navigation menu"
-            className="-mr-2 p-2 md:hidden"
+            className="rounded-lg p-2 transition-colors hover:bg-slate-100/80 md:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             type="button"
           >
@@ -109,10 +109,10 @@ export default function SiteHeader({
         </div>
       </div>
       {mobileMenuOpen && (
-        <nav className="flex flex-col gap-2 border-inherit border-t px-4 pb-4 font-medium text-sm md:hidden">
+        <nav className="flex flex-col gap-1 border-inherit border-t bg-white/95 px-4 py-3 text-sm text-slate-900 backdrop-blur-xl md:hidden">
           {navItems.map((item) => (
             <Link
-              className={`py-2 transition-colors ${navLinkClasses}`}
+              className="rounded-lg px-3 py-2.5 font-medium text-slate-900 transition-colors hover:bg-slate-100 hover:text-red-600"
               href={item.href}
               key={`mobile-${item.href}`}
               onClick={() => setMobileMenuOpen(false)}
@@ -122,7 +122,7 @@ export default function SiteHeader({
           ))}
           {isAuthenticated && currentUser?.role === "board" && (
             <Link
-              className={`py-2 transition-colors ${navLinkClasses}`}
+              className="rounded-lg px-3 py-2.5 font-medium text-slate-900 transition-colors hover:bg-slate-100 hover:text-red-600"
               href="/admin"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -167,11 +167,11 @@ function AuthButton({ inverted }: { inverted: boolean }) {
 
   if (!isAuthenticated) {
     const baseClasses =
-      "inline-flex h-9 items-center rounded-full px-4 font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2";
+      "inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95";
     const solidClasses =
-      "bg-rose-600 text-white shadow-sm hover:bg-rose-700 focus-visible:ring-rose-500";
+      "bg-red-600 !text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500";
     const glassClasses =
-      "text-white bg-white/15 ring-1 ring-white/25 hover:bg-white/25 backdrop-blur-sm focus-visible:ring-white/60";
+      "!text-white bg-white/20 ring-1 ring-inset ring-white/30 hover:bg-white/30 backdrop-blur-sm focus-visible:ring-white/60";
 
     return (
       <Link
@@ -190,10 +190,10 @@ function AuthButton({ inverted }: { inverted: boolean }) {
 
   return (
     <button
-      className={`rounded-full px-4 py-2 font-semibold text-sm text-white shadow-sm transition ${
+      className={`inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
         inverted
-          ? "bg-white/20 hover:bg-white/30"
-          : "bg-rose-600 hover:bg-rose-700"
+          ? "bg-white/20 !text-white ring-1 ring-white/30 ring-inset backdrop-blur-sm hover:bg-white/30 focus-visible:ring-white/60"
+          : "bg-red-600 !text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500"
       }`}
       onClick={handleSignOut}
       type="button"

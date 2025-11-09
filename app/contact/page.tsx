@@ -51,14 +51,12 @@ export default async function ContactPage() {
 function HeroSection() {
   return (
     <section className="rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200">
-      <p className="text-rose-700 text-sm uppercase tracking-[0.3em]">
-        Contact
-      </p>
+      <p className="text-red-600 text-sm uppercase tracking-[0.3em]">Contact</p>
       <h1 className="font-semibold text-4xl text-slate-900">
         Get in touch with Red Cross Club
       </h1>
-      <p className="mt-4 text-lg text-slate-700">
-        We’re here to help. Reach out to us anytime!
+      <p className="mt-4 text-lg text-slate-900">
+        We&apos;re here to help. Reach out to us anytime!
       </p>
     </section>
   );
@@ -72,13 +70,13 @@ function ContactTiles() {
           const isExternal = contact.link.startsWith("http");
           return (
             <Link
-              className="flex h-full flex-col rounded-2xl border border-slate-100 bg-slate-50 p-4 text-left transition hover:border-rose-300 hover:shadow-sm"
+              className="flex h-full flex-col rounded-2xl border border-slate-100 bg-slate-50 p-4 text-left transition hover:border-red-300 hover:shadow-sm"
               href={contact.link}
               key={contact.label}
               rel={isExternal ? "noopener noreferrer" : undefined}
               target={isExternal ? "_blank" : undefined}
             >
-              <span className="text-slate-500 text-sm uppercase tracking-wide">
+              <span className="text-slate-900 text-sm uppercase tracking-wide">
                 {contact.label}
               </span>
               <span className="mt-2 break-all font-semibold text-slate-900">

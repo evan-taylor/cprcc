@@ -1,28 +1,104 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Background colors */
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+
+  /* Border colors */
+  --color-border: #e2e8f0;
+  --color-border-hover: #cbd5e1;
+
+  /* Text colors */
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
+
+  /* Brand colors - Red Cross red */
+  --color-primary: #dc2626;
+  --color-primary-hover: #b91c1c;
+  --color-primary-light: #fee2e2;
+  --color-primary-dark: #991b1b;
+
+  /* Accent colors */
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --color-accent-light: #dbeafe;
+
+  /* Semantic colors */
+  --color-success: #16a34a;
+  --color-success-light: #dcfce7;
+  --color-warning: #ea580c;
+  --color-warning-light: #ffedd5;
+  --color-danger: #dc2626;
+  --color-danger-light: #fee2e2;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Spacing scale */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Border radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display:
+    var(--font-red-hat-display), var(--font-inter), system-ui, sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-primary: var(--color-primary);
+  --color-accent: var(--color-accent);
+  --color-border: var(--color-border);
+  --color-muted: var(--color-text-muted);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
 }
 
+/* Dark mode disabled until full dark theme is implemented
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-bg: #0a0a0a;
+    --color-bg-subtle: #18181b;
+    --color-surface: #18181b;
+    --color-surface-hover: #27272a;
+    --color-border: #3f3f46;
+    --color-border-hover: #52525b;
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
+    --color-text-subtle: #64748b;
   }
 }
+*/
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: -0.011em;
 }
 
 html {
@@ -34,7 +110,59 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: inherit;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.875rem);
+}
+
+h4 {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+}
+
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 @layer base {
+  /* Global anchor styling with zero specificity to allow utilities to override */
+  :where(a) {
+    color: inherit;
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  :where(a:hover) {
+    text-decoration: underline;
+  }
+
   /* Form inputs with proper contrast and readability */
   /* Forms are intentionally locked to light theme (white bg, dark text) per product requirement */
   input[type="text"],
@@ -50,19 +178,25 @@ html {
   select,
   textarea {
     width: 100%;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     border-width: 1px;
-    border-color: rgb(203 213 225);
+    border-color: var(--color-border);
     background-color: rgb(255 255 255);
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: rgb(15 23 42);
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    box-shadow: var(--shadow-sm);
     color-scheme: light;
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+    font-family: var(--font-sans);
+  }
+
+  textarea {
+    min-height: 6rem;
+    resize: vertical;
   }
 
   input[type="text"]::placeholder,
@@ -74,7 +208,7 @@ html {
   input[type="url"]::placeholder,
   select::placeholder,
   textarea::placeholder {
-    color: rgb(148 163 184);
+    color: var(--color-text-subtle);
   }
 
   input[type="text"]:focus,
@@ -91,8 +225,8 @@ html {
   textarea:focus {
     outline: 2px solid transparent;
     outline-offset: 2px;
-    border-color: rgb(59 130 246);
-    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
   }
 
   input[type="text"]:disabled,
@@ -107,9 +241,10 @@ html {
   input[type="datetime-local"]:disabled,
   select:disabled,
   textarea:disabled {
-    background-color: rgb(241 245 249);
-    color: rgb(100 116 139);
+    background-color: var(--color-bg-subtle);
+    color: var(--color-text-muted);
     cursor: not-allowed;
+    opacity: 0.6;
   }
 
   input[type="text"]:disabled::placeholder,
@@ -121,17 +256,53 @@ html {
   input[type="url"]:disabled::placeholder,
   select:disabled::placeholder,
   textarea:disabled::placeholder {
-    color: rgb(148 163 184);
+    color: var(--color-text-subtle);
   }
 
   /* Checkboxes and radios */
   input[type="checkbox"],
   input[type="radio"] {
-    accent-color: rgb(225 29 72);
+    accent-color: var(--color-primary);
+    width: 1.125rem;
+    height: 1.125rem;
+    cursor: pointer;
+  }
+
+  input[type="checkbox"]:disabled,
+  input[type="radio"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 
   /* Labels */
   label {
-    color: rgb(30 41 59);
+    color: var(--color-text);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    display: block;
+    margin-bottom: 0.375rem;
+  }
+
+  /* Smooth transitions for interactive elements */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition-property:
+      color, background-color, border-color, box-shadow, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
