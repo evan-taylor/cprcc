@@ -35,7 +35,8 @@ const contacts = [
   },
 ];
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  "use cache";
   return (
     <div className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 text-slate-900">
       <SiteHeader />

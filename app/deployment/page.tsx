@@ -80,7 +80,8 @@ const reminderItems = [
   "Club-specific questions: redcrossclub@calpoly.edu. ARC program questions: christin.newlon@redcross.org.",
 ];
 
-export default function DeploymentPage() {
+export default async function DeploymentPage() {
+  "use cache";
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900">
       <SiteHeader />

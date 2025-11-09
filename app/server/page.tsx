@@ -1,8 +1,10 @@
 import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
+import { connection } from "next/server";
 import { api } from "@/convex/_generated/api";
 import Home from "./inner";
 
 export default async function ServerPage() {
+  await connection();
   const preloaded = await preloadQuery(api.myFunctions.listNumbers, {
     count: 3,
   });

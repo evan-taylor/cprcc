@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Red_Hat_Display } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import { Suspense } from "react";
 import ConvexClientProvider from "@/components/convex-client-provider";
 
 const inter = Inter({
@@ -127,6 +128,7 @@ export default function RootLayout({
   };
 
   return (
+<<<<<<< HEAD
     <ConvexAuthNextjsServerProvider>
       <html lang="en">
         <head>
@@ -139,10 +141,45 @@ export default function RootLayout({
         </head>
         <body
           className={`${inter.variable} ${redHatDisplay.variable} bg-white text-slate-900 antialiased`}
+||||||| 5a638bd
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en">
+        <head>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(organizationSchema),
+            }}
+            type="application/ld+json"
+          />
+        </head>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+=======
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+          type="application/ld+json"
+        />
+        <Suspense
+          fallback={
+            <div className="flex min-h-screen items-center justify-center bg-white text-slate-600">
+              <p aria-live="polite" role="status">
+                Preparing your session…
+              </p>
+            </div>
+          }
+>>>>>>> origin/main
         >
-          <ConvexClientProvider>{children}</ConvexClientProvider>
-        </body>
-      </html>
-    </ConvexAuthNextjsServerProvider>
+          <ConvexAuthNextjsServerProvider>
+            <ConvexClientProvider>{children}</ConvexClientProvider>
+          </ConvexAuthNextjsServerProvider>
+        </Suspense>
+      </body>
+    </html>
   );
 }

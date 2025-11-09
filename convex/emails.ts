@@ -93,7 +93,7 @@ export const sendCarpoolEmails = action({
 
       try {
         await resend.emails.send({
-          from: "Cal Poly Red Cross Club <info@notifications.taylorlabs.co>",
+          from: "Cal Poly Red Cross Club <notifications@calpolyredcross.org>",
           to: [driverEmail],
           replyTo: "redcrossclub@calpoly.edu",
           subject: generateDriverEmailSubject(event.title),
@@ -125,7 +125,7 @@ export const sendCarpoolEmails = action({
 
         try {
           await resend.emails.send({
-            from: "Cal Poly Red Cross Club <info@notifications.taylorlabs.co>",
+            from: "Cal Poly Red Cross Club <notifications@calpolyredcross.org>",
             to: [rider.email],
             replyTo: "redcrossclub@calpoly.edu",
             subject: generateRiderEmailSubject(event.title),

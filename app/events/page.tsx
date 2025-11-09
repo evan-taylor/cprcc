@@ -22,7 +22,6 @@ export default function EventsPage() {
   }, []);
   const events = useQuery(api.events.listUpcomingEvents);
   const currentUser = useQuery(api.users.getCurrentUser);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
       <SiteHeader />
