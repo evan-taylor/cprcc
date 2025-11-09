@@ -128,36 +128,9 @@ export default function RootLayout({
   };
 
   return (
-<<<<<<< HEAD
-    <ConvexAuthNextjsServerProvider>
-      <html lang="en">
-        <head>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(organizationSchema),
-            }}
-            type="application/ld+json"
-          />
-        </head>
-        <body
-          className={`${inter.variable} ${redHatDisplay.variable} bg-white text-slate-900 antialiased`}
-||||||| 5a638bd
-    <ConvexAuthNextjsServerProvider>
-      <html lang="en">
-        <head>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(organizationSchema),
-            }}
-            type="application/ld+json"
-          />
-        </head>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-=======
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${redHatDisplay.variable} bg-white text-slate-900 antialiased`}
       >
         <script
           dangerouslySetInnerHTML={{
@@ -167,13 +140,12 @@ export default function RootLayout({
         />
         <Suspense
           fallback={
-            <div className="flex min-h-screen items-center justify-center bg-white text-slate-600">
+            <div className="flex min-h-screen items-center justify-center bg-white text-slate-900">
               <p aria-live="polite" role="status">
                 Preparing your session…
               </p>
             </div>
           }
->>>>>>> origin/main
         >
           <ConvexAuthNextjsServerProvider>
             <ConvexClientProvider>{children}</ConvexClientProvider>
