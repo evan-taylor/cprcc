@@ -109,7 +109,7 @@ export default function SiteHeader({
         </div>
       </div>
       {mobileMenuOpen && (
-        <nav className="flex flex-col gap-1 border-inherit border-t bg-white/95 px-4 py-3 text-sm backdrop-blur-xl md:hidden">
+        <nav className="flex flex-col gap-1 border-inherit border-t bg-white/95 px-4 py-3 text-sm text-slate-900 backdrop-blur-xl md:hidden">
           {navItems.map((item) => (
             <Link
               className="rounded-lg px-3 py-2.5 font-medium text-slate-900 transition-colors hover:bg-slate-100 hover:text-red-600"

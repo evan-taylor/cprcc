@@ -140,16 +140,6 @@ h4 {
   font-size: clamp(1.125rem, 2.5vw, 1.5rem);
 }
 
-:where(a) {
-  color: inherit;
-  text-decoration: none;
-  transition: color 150ms ease;
-}
-
-:where(a:hover) {
-  text-decoration: underline;
-}
-
 ::selection {
   background-color: var(--color-primary-light);
   color: var(--color-primary-dark);
@@ -162,6 +152,17 @@ h4 {
 }
 
 @layer base {
+  /* Global anchor styling with zero specificity to allow utilities to override */
+  :where(a) {
+    color: inherit;
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  :where(a:hover) {
+    text-decoration: underline;
+  }
+
   /* Form inputs with proper contrast and readability */
   /* Forms are intentionally locked to light theme (white bg, dark text) per product requirement */
   input[type="text"],
