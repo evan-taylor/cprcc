@@ -12,21 +12,28 @@ const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const eventIdOrSlug = params.eventId as string;
+  const raw = params?.eventId;
+  let eventIdOrSlug: string | undefined;
+  if (typeof raw === "string") {
+    eventIdOrSlug = raw;
+  } else if (Array.isArray(raw)) {
+    eventIdOrSlug = raw[0];
+  } else {
+    eventIdOrSlug = undefined;
+  }
 
-  const isSlug =
-    eventIdOrSlug.includes("-") || !eventIdOrSlug.match(CONVEX_ID_PATTERN);
+  const isConvexId = !!eventIdOrSlug && CONVEX_ID_PATTERN.test(eventIdOrSlug);
 
   const eventById = useQuery(
     api.events.getEvent,
-    isSlug ? "skip" : { eventId: eventIdOrSlug as Id<"events"> }
+    isConvexId ? { eventId: eventIdOrSlug as Id<"events"> } : "skip"
   );
   const eventBySlug = useQuery(
     api.events.getEventBySlug,
-    isSlug ? { slug: eventIdOrSlug } : "skip"
+    eventIdOrSlug && !isConvexId ? { slug: eventIdOrSlug } : "skip"
   );
 
-  const event = isSlug ? eventBySlug : eventById;
+  const event = isConvexId ? eventById : eventBySlug;
   const eventId = event?._id;
   const currentUser = useQuery(api.users.getCurrentUser);
   const createRsvp = useMutation(api.events.createRsvp);
@@ -48,7 +55,7 @@ export default function EventDetailPage() {
   const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
   const rsvpFormRef = useRef<HTMLDivElement>(null);
 
-  if (event === undefined || currentUser === undefined) {
+  if (!eventIdOrSlug || event === undefined || currentUser === undefined) {
     return (
       <div className="min-h-screen bg-slate-50">
         <SiteHeader />
