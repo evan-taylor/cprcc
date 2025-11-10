@@ -331,6 +331,11 @@ export default function CarpoolManagementPage() {
       .filter((rsvp) => rsvp.needsRide)
       .map((rsvp) => rsvp.userProfileId)
   );
+  const uniqueSelfTransportUserIds = new Set<Id<"userProfiles">>(
+    event.rsvps
+      .filter((rsvp) => rsvp.selfTransport)
+      .map((rsvp) => rsvp.userProfileId)
+  );
   const drivers = event.rsvps.filter((rsvp) => rsvp.canDrive);
   const allFinalized =
     carpools.length > 0 && carpools.every((c) => c.status === "finalized");
@@ -393,7 +398,7 @@ export default function CarpoolManagementPage() {
           </div>
         )}
 
-        <div className="mb-8 grid gap-6 sm:grid-cols-3">
+        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="font-semibold text-slate-900 text-sm">Total RSVPs</p>
             <p className="mt-2 font-bold text-3xl text-slate-900">
@@ -410,6 +415,12 @@ export default function CarpoolManagementPage() {
             <p className="font-semibold text-slate-900 text-sm">Need Rides</p>
             <p className="mt-2 font-bold text-3xl text-orange-600">
               {uniqueRiderUserIds.size}
+            </p>
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="font-semibold text-slate-900 text-sm">Self-Transport</p>
+            <p className="mt-2 font-bold text-3xl text-green-600">
+              {uniqueSelfTransportUserIds.size}
             </p>
           </div>
         </div>

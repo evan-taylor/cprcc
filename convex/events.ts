@@ -354,6 +354,7 @@ export const createRsvp = mutation({
     shiftId: v.optional(v.id("shifts")),
     needsRide: v.boolean(),
     canDrive: v.boolean(),
+    selfTransport: v.boolean(),
     driverInfo: v.optional(
       v.object({
         carType: v.string(),
@@ -388,6 +389,10 @@ export const createRsvp = mutation({
 
     if (args.needsRide && args.canDrive) {
       throw new Error("Cannot both need a ride and offer to drive");
+    }
+
+    if (args.selfTransport && (args.needsRide || args.canDrive)) {
+      throw new Error("Cannot select self-transport with other transportation options");
     }
 
     if (args.shiftId) {
@@ -433,6 +438,7 @@ export const createRsvp = mutation({
           shiftId: args.shiftId,
           needsRide: args.needsRide,
           canDrive: args.canDrive,
+          selfTransport: args.selfTransport,
           driverInfo: args.driverInfo,
           createdAt: Date.now(),
         });
@@ -443,6 +449,7 @@ export const createRsvp = mutation({
         shiftId: args.shiftId,
         needsRide: args.needsRide,
         canDrive: args.canDrive,
+        selfTransport: args.selfTransport,
         driverInfo: args.driverInfo,
       });
       return;
@@ -454,6 +461,7 @@ export const createRsvp = mutation({
       shiftId: args.shiftId,
       needsRide: args.needsRide,
       canDrive: args.canDrive,
+      selfTransport: args.selfTransport,
       driverInfo: args.driverInfo,
       createdAt: Date.now(),
     });
@@ -736,9 +744,9 @@ export const generateCarpools = mutation({
       .collect();
 
     const driverRsvps = rsvps.filter(
-      (rsvp) => rsvp.canDrive && rsvp.driverInfo
+      (rsvp) => rsvp.canDrive && rsvp.driverInfo && !rsvp.selfTransport
     );
-    const allRiders = rsvps.filter((rsvp) => rsvp.needsRide);
+    const allRiders = rsvps.filter((rsvp) => rsvp.needsRide && !rsvp.selfTransport);
 
     const driversByUser = new Map<string, (typeof driverRsvps)[0]>();
     for (const rsvp of driverRsvps) {

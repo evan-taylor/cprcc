@@ -46,6 +46,7 @@ export default defineSchema({
     shiftId: v.optional(v.id("shifts")),
     needsRide: v.boolean(),
     canDrive: v.boolean(),
+    selfTransport: v.boolean(),
     driverInfo: v.optional(
       v.object({
         carType: v.string(),

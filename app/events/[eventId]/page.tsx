@@ -46,6 +46,7 @@ export default function EventDetailPage() {
   );
   const [needsRide, setNeedsRide] = useState(false);
   const [canDrive, setCanDrive] = useState(false);
+  const [selfTransport, setSelfTransport] = useState(false);
   const [carType, setCarType] = useState("");
   const [carColor, setCarColor] = useState("");
   const [capacity, setCapacity] = useState(4);
@@ -157,9 +158,9 @@ export default function EventDetailPage() {
         return;
       }
 
-      if (event.isOffsite && !needsRide && !canDrive) {
+      if (event.isOffsite && !needsRide && !canDrive && !selfTransport) {
         setError(
-          "For offsite events, please indicate if you need a ride or can drive"
+          "For offsite events, please select a transportation option"
         );
         setIsSubmitting(false);
         return;
@@ -189,6 +190,7 @@ export default function EventDetailPage() {
             shiftId,
             needsRide: event.isOffsite ? needsRide : false,
             canDrive: event.isOffsite ? canDrive : false,
+            selfTransport: event.isOffsite ? selfTransport : false,
             driverInfo: canDrive ? { carType, carColor, capacity } : undefined,
           });
           results.push({ shiftId, success: true });
@@ -208,11 +210,12 @@ export default function EventDetailPage() {
         setShowRsvpForm(false);
         setNeedsRide(false);
         setCanDrive(false);
+        setSelfTransport(false);
         setCarType("");
         setCarColor("");
         setCapacity(4);
         setSelectedShiftIds(new Set());
-      } else if (successCount > 0) {
+      }else if (successCount > 0) {
         const failedShifts = results
           .filter((r) => !r.success)
           .map((r) => {
@@ -600,46 +603,69 @@ export default function EventDetailPage() {
                       <p className="font-semibold text-slate-900 text-sm">
                         Transportation
                       </p>
-                      <div className="flex items-center gap-2">
+                      <label
+                        className="flex cursor-pointer select-none items-center gap-3"
+                        htmlFor="needsRide"
+                      >
                         <input
                           checked={needsRide}
-                          className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
                           id="needsRide"
                           onChange={(e) => {
                             setNeedsRide(e.target.checked);
                             if (e.target.checked) {
                               setCanDrive(false);
+                              setSelfTransport(false);
                             }
                           }}
                           type="checkbox"
                         />
-                        <label
-                          className="text-slate-900 text-sm"
-                          htmlFor="needsRide"
-                        >
+                        <span className="text-slate-900 text-sm leading-5">
                           I need a ride
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-2">
+                        </span>
+                      </label>
+                      <label
+                        className="flex cursor-pointer select-none items-center gap-3"
+                        htmlFor="canDrive"
+                      >
                         <input
                           checked={canDrive}
-                          className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
                           id="canDrive"
                           onChange={(e) => {
                             setCanDrive(e.target.checked);
                             if (e.target.checked) {
                               setNeedsRide(false);
+                              setSelfTransport(false);
                             }
                           }}
                           type="checkbox"
                         />
-                        <label
-                          className="text-slate-900 text-sm"
-                          htmlFor="canDrive"
-                        >
+                        <span className="text-slate-900 text-sm leading-5">
                           I can drive
-                        </label>
-                      </div>
+                        </span>
+                      </label>
+                      <label
+                        className="flex cursor-pointer select-none items-center gap-3"
+                        htmlFor="selfTransport"
+                      >
+                        <input
+                          checked={selfTransport}
+                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          id="selfTransport"
+                          onChange={(e) => {
+                            setSelfTransport(e.target.checked);
+                            if (e.target.checked) {
+                              setNeedsRide(false);
+                              setCanDrive(false);
+                            }
+                          }}
+                          type="checkbox"
+                        />
+                        <span className="text-slate-900 text-sm leading-5">
+                          I will transport myself
+                        </span>
+                      </label>
 
                       {canDrive && (
                         <div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -776,6 +802,11 @@ export default function EventDetailPage() {
                             Needs a ride
                           </p>
                         )}
+                        {rsvp.selfTransport && (
+                          <p className="mt-1 text-green-700 text-sm">
+                            Transporting self
+                          </p>
+                        )}
                       </div>
                       <button
                         className="rounded-full border border-rose-300 px-4 py-2 font-semibold text-rose-700 text-sm transition hover:bg-rose-50"
@@ -865,6 +896,11 @@ export default function EventDetailPage() {
                         {rsvp.needsRide && (
                           <p className="mt-1 text-orange-700 text-xs">
                             Needs ride
+                          </p>
+                        )}
+                        {rsvp.selfTransport && (
+                          <p className="mt-1 text-green-700 text-xs">
+                            Self-transport
                           </p>
                         )}
                       </div>
