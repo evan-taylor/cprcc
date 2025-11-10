@@ -603,10 +603,13 @@ export default function EventDetailPage() {
                       <p className="font-semibold text-slate-900 text-sm">
                         Transportation
                       </p>
-                      <div className="flex items-center gap-2">
+                      <label
+                        className="flex cursor-pointer select-none items-center gap-3"
+                        htmlFor="needsRide"
+                      >
                         <input
                           checked={needsRide}
-                          className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
                           id="needsRide"
                           onChange={(e) => {
                             setNeedsRide(e.target.checked);
@@ -617,17 +620,17 @@ export default function EventDetailPage() {
                           }}
                           type="checkbox"
                         />
-                        <label
-                          className="text-slate-900 text-sm"
-                          htmlFor="needsRide"
-                        >
+                        <span className="text-slate-900 text-sm leading-5">
                           I need a ride
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-2">
+                        </span>
+                      </label>
+                      <label
+                        className="flex cursor-pointer select-none items-center gap-3"
+                        htmlFor="canDrive"
+                      >
                         <input
                           checked={canDrive}
-                          className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
                           id="canDrive"
                           onChange={(e) => {
                             setCanDrive(e.target.checked);
@@ -638,17 +641,17 @@ export default function EventDetailPage() {
                           }}
                           type="checkbox"
                         />
-                        <label
-                          className="text-slate-900 text-sm"
-                          htmlFor="canDrive"
-                        >
+                        <span className="text-slate-900 text-sm leading-5">
                           I can drive
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-2">
+                        </span>
+                      </label>
+                      <label
+                        className="flex cursor-pointer select-none items-center gap-3"
+                        htmlFor="selfTransport"
+                      >
                         <input
                           checked={selfTransport}
-                          className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
                           id="selfTransport"
                           onChange={(e) => {
                             setSelfTransport(e.target.checked);
@@ -659,13 +662,10 @@ export default function EventDetailPage() {
                           }}
                           type="checkbox"
                         />
-                        <label
-                          className="text-slate-900 text-sm"
-                          htmlFor="selfTransport"
-                        >
+                        <span className="text-slate-900 text-sm leading-5">
                           I will transport myself
-                        </label>
-                      </div>
+                        </span>
+                      </label>
 
                       {canDrive && (
                         <div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
