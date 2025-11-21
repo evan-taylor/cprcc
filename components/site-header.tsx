@@ -10,6 +10,7 @@ import { api } from "@/convex/_generated/api";
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/events", label: "Events" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/volunteer-connection", label: "Volunteer Connection" },
   { href: "/deployment", label: "Deployment" },
   { href: "/contact", label: "Contact" },

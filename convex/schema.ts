@@ -72,4 +72,12 @@ export default defineSchema({
   })
     .index("by_carpool", ["carpoolId"])
     .index("by_rsvp", ["rsvpId"]),
+  photos: defineTable({
+    storageId: v.id("_storage"),
+    caption: v.optional(v.string()),
+    uploadedBy: v.id("userProfiles"),
+    uploadedAt: v.number(),
+  })
+    .index("by_uploaded_at", ["uploadedAt"])
+    .index("by_uploaded_by", ["uploadedBy"]),
 });
