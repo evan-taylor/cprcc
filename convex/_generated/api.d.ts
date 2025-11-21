@@ -15,6 +15,7 @@ import type * as emails from "../emails.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
 import type * as myFunctions from "../myFunctions.js";
+import type * as photos from "../photos.js";
 import type * as users from "../users.js";
 
 import type {
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   events: typeof events;
   http: typeof http;
   myFunctions: typeof myFunctions;
+  photos: typeof photos;
   users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
