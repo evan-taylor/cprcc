@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,12 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const SUCCESS_MESSAGE_DURATION = 3000;
+
+type UploadFile = {
+  file: File;
+  preview: string;
+  error?: string;
+};
 
 export default function GalleryPage() {
   useEffect(() => {
@@ -30,32 +35,77 @@ export default function GalleryPage() {
   const savePhoto = useMutation(api.photos.savePhoto);
   const deletePhoto = useMutation(api.photos.deletePhoto);
 
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedImages, setSelectedImages] = useState<UploadFile[]>([]);
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
   const imageInput = useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        setUploadError("Please select an image file");
-        return;
-      }
-      if (file.size > MAX_FILE_SIZE) {
-        setUploadError("Image must be smaller than 20MB");
-        return;
-      }
-      setSelectedImage(file);
-      setUploadError(null);
+  const convertHeicToJpeg = async (file: File): Promise<File> => {
+    try {
+      const heic2any = (await import("heic2any")).default;
+      const jpegBlob = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.9,
+      });
+      const blob = Array.isArray(jpegBlob) ? jpegBlob[0] : jpegBlob;
+      return new File(
+        [blob],
+        file.name.replace(/\.heic$/i, ".jpg"),
+        { type: "image/jpeg" }
+      );
+    } catch (error) {
+      throw new Error(`Failed to convert HEIC file: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
+  };
+
+  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    setUploadError(null);
+    const uploadFiles: UploadFile[] = [];
+
+    for (const file of files) {
+      let processedFile = file;
+      let error: string | undefined;
+
+      const isHeic = file.type === "image/heic" || 
+                     file.type === "image/heif" || 
+                     file.name.toLowerCase().endsWith(".heic") ||
+                     file.name.toLowerCase().endsWith(".heif");
+
+      if (isHeic) {
+        try {
+          processedFile = await convertHeicToJpeg(file);
+        } catch (err) {
+          error = err instanceof Error ? err.message : "Failed to convert HEIC file";
+        }
+      } else if (!file.type.startsWith("image/")) {
+        error = "Not an image file";
+      }
+
+      if (!error && processedFile.size > MAX_FILE_SIZE) {
+        error = "File too large (max 20MB)";
+      }
+
+      uploadFiles.push({
+        file: processedFile,
+        preview: URL.createObjectURL(processedFile),
+        error,
+      });
+    }
+
+    setSelectedImages(uploadFiles);
   };
 
   const handleUpload = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedImage) {
+    const validImages = selectedImages.filter(img => !img.error);
+    if (validImages.length === 0) {
       return;
     }
 
@@ -64,39 +114,63 @@ export default function GalleryPage() {
     setUploadSuccess(false);
 
     try {
-      const postUrl = await generateUploadUrl();
+      let successCount = 0;
+      let failCount = 0;
 
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": selectedImage.type },
-        body: selectedImage,
-      });
+      for (let i = 0; i < validImages.length; i++) {
+        const { file } = validImages[i];
+        setUploadProgress(`Uploading ${i + 1} of ${validImages.length}...`);
 
-      if (!result.ok) {
-        throw new Error("Failed to upload image");
+        try {
+          const postUrl = await generateUploadUrl();
+
+          const result = await fetch(postUrl, {
+            method: "POST",
+            headers: { "Content-Type": file.type || "application/octet-stream" },
+            body: file,
+          });
+
+          if (!result.ok) {
+            throw new Error("Failed to upload image");
+          }
+
+          const { storageId } = await result.json();
+
+          await savePhoto({
+            storageId: storageId as Id<"_storage">,
+            caption: caption.trim() || undefined,
+          });
+
+          successCount++;
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to upload ${file.name}:`, error);
+        }
       }
 
-      const { storageId } = await result.json();
-
-      await savePhoto({
-        storageId: storageId as Id<"_storage">,
-        caption: caption.trim() || undefined,
-      });
-
-      setSelectedImage(null);
+      selectedImages.forEach(img => URL.revokeObjectURL(img.preview));
+      setSelectedImages([]);
       setCaption("");
-      setUploadSuccess(true);
+      setUploadProgress("");
       if (imageInput.current) {
         imageInput.current.value = "";
       }
 
-      setTimeout(() => setUploadSuccess(false), SUCCESS_MESSAGE_DURATION);
+      if (successCount > 0) {
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), SUCCESS_MESSAGE_DURATION);
+      }
+
+      if (failCount > 0) {
+        setUploadError(`${successCount} uploaded successfully, ${failCount} failed`);
+      }
     } catch (error) {
       setUploadError(
-        error instanceof Error ? error.message : "Failed to upload photo"
+        error instanceof Error ? error.message : "Failed to upload photos"
       );
     } finally {
       setUploading(false);
+      setUploadProgress("");
     }
   };
 
@@ -152,29 +226,54 @@ export default function GalleryPage() {
                     Select Image
                   </label>
                   <input
-                    accept="image/*"
+                    accept="image/*,.heic,.heif"
                     className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-red-50 file:px-4 file:py-2 file:font-semibold file:text-red-700 file:text-sm hover:file:bg-red-100 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
                     disabled={uploading}
                     id="photo-upload"
+                    multiple
                     onChange={handleImageSelect}
                     ref={imageInput}
                     type="file"
                   />
                 </div>
 
+                {selectedImages.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="font-medium text-slate-900 text-sm">
+                      Selected: {selectedImages.length} file{selectedImages.length !== 1 ? "s" : ""}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {selectedImages.map((img, idx) => (
+                        <div key={idx} className="relative aspect-square overflow-hidden rounded-lg border-2 border-slate-200">
+                          <img
+                            alt={`Preview ${idx + 1}`}
+                            className="h-full w-full object-cover"
+                            src={img.preview}
+                          />
+                          {img.error && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-red-500/80 p-2 text-center text-white text-xs">
+                              {img.error}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label
                     className="mb-2 block font-medium text-slate-900 text-sm"
                     htmlFor="caption"
                   >
-                    Caption (optional)
+                    Caption (optional, applies to all photos)
                   </label>
                   <input
                     className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
                     disabled={uploading}
                     id="caption"
                     onChange={(e) => setCaption(e.target.value)}
-                    placeholder="Add a caption for this photo..."
+                    placeholder="Add a caption for these photos..."
                     type="text"
                     value={caption}
                   />
@@ -188,12 +287,18 @@ export default function GalleryPage() {
 
                 {uploadSuccess && (
                   <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-green-800 text-sm">
-                    Photo uploaded successfully!
+                    Photos uploaded successfully!
+                  </div>
+                )}
+
+                {uploadProgress && (
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-blue-800 text-sm">
+                    {uploadProgress}
                   </div>
                 )}
 
                 <Button
-                  disabled={!selectedImage || uploading}
+                  disabled={selectedImages.filter(img => !img.error).length === 0 || uploading}
                   size="lg"
                   type="submit"
                 >
@@ -203,7 +308,7 @@ export default function GalleryPage() {
                       Uploading...
                     </>
                   ) : (
-                    "Upload Photo"
+                    `Upload ${selectedImages.filter(img => !img.error).length} Photo${selectedImages.filter(img => !img.error).length !== 1 ? "s" : ""}`
                   )}
                 </Button>
               </form>
@@ -250,61 +355,61 @@ export default function GalleryPage() {
         )}
 
         {photos !== undefined && photos.length > 0 && (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
             {photos.map((photo) => (
-              <Card
-                className="group overflow-hidden transition-all hover:shadow-lg"
+              <div
+                className="mb-6 break-inside-avoid"
                 key={photo._id}
               >
-                <div className="relative aspect-square overflow-hidden bg-slate-100">
-                  {photo.url && (
-                    <Image
-                      alt={photo.caption || "Event photo"}
-                      className="object-cover transition-transform group-hover:scale-105"
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      src={photo.url}
-                    />
-                  )}
-                </div>
-                <CardContent className="p-4">
-                  {photo.caption && (
-                    <p className="mb-2 text-slate-900 text-sm leading-relaxed">
-                      {photo.caption}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between text-slate-900 text-xs">
-                    <span>By {photo.uploaderName}</span>
-                    <span>
-                      {new Date(photo.uploadedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
+                <Card className="group overflow-hidden transition-all hover:shadow-lg">
+                  <div className="relative overflow-hidden bg-slate-100">
+                    {photo.url && (
+                      <img
+                        alt={photo.caption || "Event photo"}
+                        className="w-full h-auto object-cover transition-transform group-hover:scale-105"
+                        src={photo.url}
+                      />
+                    )}
                   </div>
-                  {currentUser?.role === "board" && (
-                    <div className="mt-3 border-slate-100 border-t pt-3">
-                      {deleteError && deletingPhotoId === photo._id && (
-                        <p className="mb-2 text-red-600 text-xs">
-                          {deleteError}
-                        </p>
-                      )}
-                      <Button
-                        className="w-full"
-                        disabled={deletingPhotoId === photo._id}
-                        onClick={() => handleDelete(photo._id)}
-                        size="sm"
-                        variant="destructive"
-                      >
-                        {deletingPhotoId === photo._id
-                          ? "Deleting..."
-                          : "Delete Photo"}
-                      </Button>
+                  <CardContent className="p-4">
+                    {photo.caption && (
+                      <p className="mb-2 text-slate-900 text-sm leading-relaxed">
+                        {photo.caption}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between text-slate-900 text-xs">
+                      <span>By {photo.uploaderName}</span>
+                      <span>
+                        {new Date(photo.uploadedAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                    {currentUser?.role === "board" && (
+                      <div className="mt-3 border-slate-100 border-t pt-3">
+                        {deleteError && deletingPhotoId === photo._id && (
+                          <p className="mb-2 text-red-600 text-xs">
+                            {deleteError}
+                          </p>
+                        )}
+                        <Button
+                          className="w-full"
+                          disabled={deletingPhotoId === photo._id}
+                          onClick={() => handleDelete(photo._id)}
+                          size="sm"
+                          variant="destructive"
+                        >
+                          {deletingPhotoId === photo._id
+                            ? "Deleting..."
+                            : "Delete Photo"}
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         )}
