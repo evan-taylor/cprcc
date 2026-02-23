@@ -133,6 +133,7 @@ export default function RootLayout({
         className={`${inter.variable} ${redHatDisplay.variable} bg-white text-slate-900 antialiased`}
       >
         <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires dangerouslySetInnerHTML per Next.js convention
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(organizationSchema),
           }}
@@ -141,9 +142,7 @@ export default function RootLayout({
         <Suspense
           fallback={
             <div className="flex min-h-screen items-center justify-center bg-white text-slate-900">
-              <p aria-live="polite" role="status">
-                Preparing your session…
-              </p>
+              <output aria-live="polite">Preparing your session…</output>
             </div>
           }
         >

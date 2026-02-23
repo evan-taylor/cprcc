@@ -9,6 +9,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: page component with loading/auth guards and complex form state management
 export default function EditEventPage() {
   const params = useParams();
   const router = useRouter();
@@ -57,7 +58,9 @@ export default function EditEventPage() {
 
   const suggestedSlug = useQuery(
     api.events.generateSlugSuggestion,
-    title && slugTouched && eventId ? { title, excludeEventId: eventId } : "skip"
+    title && slugTouched && eventId
+      ? { title, excludeEventId: eventId }
+      : "skip"
   );
 
   useEffect(() => {
@@ -179,8 +182,10 @@ export default function EditEventPage() {
   };
 
   const handleDelete = async () => {
-    if (!eventId) return;
-    
+    if (!eventId) {
+      return;
+    }
+
     setIsDeleting(true);
     setError(null);
 

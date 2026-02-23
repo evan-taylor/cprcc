@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import type { QueryCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 
 function generateSlugFromTitle(title: string): string {
@@ -348,6 +349,58 @@ export const generateSlugSuggestion = query({
   },
 });
 
+function validateTransportOptions(args: {
+  canDrive: boolean;
+  driverInfo?: { carType: string; carColor: string; capacity: number };
+  needsRide: boolean;
+  selfTransport: boolean;
+}) {
+  if (args.canDrive && !args.driverInfo) {
+    throw new Error("Driver info required when offering to drive");
+  }
+  if (args.needsRide && args.canDrive) {
+    throw new Error("Cannot both need a ride and offer to drive");
+  }
+  if (args.selfTransport && (args.needsRide || args.canDrive)) {
+    throw new Error(
+      "Cannot select self-transport with other transportation options"
+    );
+  }
+}
+
+async function validateShiftCapacity(
+  ctx: MutationCtx,
+  eventId: Id<"events">,
+  shiftId: Id<"shifts">,
+  userProfileId: Id<"userProfiles">
+) {
+  const shift = await ctx.db.get(shiftId);
+  if (!shift || shift.eventId !== eventId) {
+    throw new Error("Invalid shift for this event");
+  }
+
+  const existingShiftRsvps = await ctx.db
+    .query("rsvps")
+    .withIndex("by_shift", (q) => q.eq("shiftId", shiftId))
+    .collect();
+
+  const existingRsvp = await ctx.db
+    .query("rsvps")
+    .withIndex("by_event_and_user", (q) =>
+      q.eq("eventId", eventId).eq("userProfileId", userProfileId)
+    )
+    .first();
+
+  const isUserAlreadyInShift = existingRsvp?.shiftId === shiftId;
+
+  if (
+    !isUserAlreadyInShift &&
+    existingShiftRsvps.length >= shift.requiredPeople
+  ) {
+    throw new Error("This shift is already full");
+  }
+}
+
 export const createRsvp = mutation({
   args: {
     eventId: v.id("events"),
@@ -383,44 +436,15 @@ export const createRsvp = mutation({
       throw new Error("Event not found");
     }
 
-    if (args.canDrive && !args.driverInfo) {
-      throw new Error("Driver info required when offering to drive");
-    }
-
-    if (args.needsRide && args.canDrive) {
-      throw new Error("Cannot both need a ride and offer to drive");
-    }
-
-    if (args.selfTransport && (args.needsRide || args.canDrive)) {
-      throw new Error("Cannot select self-transport with other transportation options");
-    }
+    validateTransportOptions(args);
 
     if (args.shiftId) {
-      const shift = await ctx.db.get(args.shiftId);
-      if (!shift || shift.eventId !== args.eventId) {
-        throw new Error("Invalid shift for this event");
-      }
-
-      const existingShiftRsvps = await ctx.db
-        .query("rsvps")
-        .withIndex("by_shift", (q) => q.eq("shiftId", args.shiftId))
-        .collect();
-
-      const existingRsvp = await ctx.db
-        .query("rsvps")
-        .withIndex("by_event_and_user", (q) =>
-          q.eq("eventId", args.eventId).eq("userProfileId", userProfile._id)
-        )
-        .first();
-
-      const isUserAlreadyInShift = existingRsvp?.shiftId === args.shiftId;
-
-      if (
-        !isUserAlreadyInShift &&
-        existingShiftRsvps.length >= shift.requiredPeople
-      ) {
-        throw new Error("This shift is already full");
-      }
+      await validateShiftCapacity(
+        ctx,
+        args.eventId,
+        args.shiftId,
+        userProfile._id
+      );
     }
 
     const existingRsvp = await ctx.db
@@ -692,6 +716,64 @@ export const getShiftRsvps = query({
   },
 });
 
+function deduplicateByUser<
+  T extends { userProfileId: string; createdAt: number },
+>(rsvps: T[]): T[] {
+  const byUser = new Map<string, T>();
+  for (const rsvp of rsvps) {
+    const existing = byUser.get(rsvp.userProfileId);
+    if (!existing || rsvp.createdAt > existing.createdAt) {
+      byUser.set(rsvp.userProfileId, rsvp);
+    }
+  }
+  return Array.from(byUser.values());
+}
+
+async function deleteExistingCarpools(ctx: MutationCtx, eventId: Id<"events">) {
+  const existingCarpools = await ctx.db
+    .query("carpools")
+    .withIndex("by_event", (q) => q.eq("eventId", eventId))
+    .collect();
+
+  for (const carpool of existingCarpools) {
+    const members = await ctx.db
+      .query("carpoolMembers")
+      .withIndex("by_carpool", (q) => q.eq("carpoolId", carpool._id))
+      .collect();
+    for (const member of members) {
+      await ctx.db.delete(member._id);
+    }
+    await ctx.db.delete(carpool._id);
+  }
+}
+
+function assignRidersToDrivers<
+  D extends { _id: string; driverInfo?: { capacity: number } | undefined },
+  R extends { _id: string },
+>(drivers: D[], riders: R[]) {
+  const unassigned = [...riders];
+  const assignments: Array<{
+    driverRsvpId: D["_id"];
+    riderRsvpIds: R["_id"][];
+  }> = [];
+
+  for (const driver of drivers) {
+    const capacity = driver.driverInfo?.capacity ?? 0;
+    const assigned: R["_id"][] = [];
+
+    for (let i = 0; i < capacity && unassigned.length > 0; i++) {
+      const rider = unassigned.shift();
+      if (rider) {
+        assigned.push(rider._id);
+      }
+    }
+
+    assignments.push({ driverRsvpId: driver._id, riderRsvpIds: assigned });
+  }
+
+  return { assignments, unassignedCount: unassigned.length };
+}
+
 export const generateCarpools = mutation({
   args: {
     eventId: v.id("events"),
@@ -720,93 +802,32 @@ export const generateCarpools = mutation({
       throw new Error("Can only generate carpools for offsite events");
     }
 
-    const existingCarpools = await ctx.db
-      .query("carpools")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
-      .collect();
-
-    for (const carpool of existingCarpools) {
-      const members = await ctx.db
-        .query("carpoolMembers")
-        .withIndex("by_carpool", (q) => q.eq("carpoolId", carpool._id))
-        .collect();
-
-      for (const member of members) {
-        await ctx.db.delete(member._id);
-      }
-
-      await ctx.db.delete(carpool._id);
-    }
+    await deleteExistingCarpools(ctx, args.eventId);
 
     const rsvps = await ctx.db
       .query("rsvps")
       .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
       .collect();
 
-    const driverRsvps = rsvps.filter(
-      (rsvp) => rsvp.canDrive && rsvp.driverInfo && !rsvp.selfTransport
+    const drivers = deduplicateByUser(
+      rsvps.filter(
+        (rsvp) => rsvp.canDrive && rsvp.driverInfo && !rsvp.selfTransport
+      )
     );
-    const allRiders = rsvps.filter((rsvp) => rsvp.needsRide && !rsvp.selfTransport);
-
-    const driversByUser = new Map<string, (typeof driverRsvps)[0]>();
-    for (const rsvp of driverRsvps) {
-      const userProfileId = rsvp.userProfileId;
-      if (driversByUser.has(userProfileId)) {
-        const existing = driversByUser.get(userProfileId);
-        if (existing && rsvp.createdAt > existing.createdAt) {
-          driversByUser.set(userProfileId, rsvp);
-        }
-      } else {
-        driversByUser.set(userProfileId, rsvp);
-      }
-    }
-
-    const drivers = Array.from(driversByUser.values());
-
-    const ridersByUser = new Map<string, (typeof allRiders)[0]>();
-    for (const rsvp of allRiders) {
-      const userProfileId = rsvp.userProfileId;
-      if (ridersByUser.has(userProfileId)) {
-        const existing = ridersByUser.get(userProfileId);
-        if (existing && rsvp.createdAt > existing.createdAt) {
-          ridersByUser.set(userProfileId, rsvp);
-        }
-      } else {
-        ridersByUser.set(userProfileId, rsvp);
-      }
-    }
-
-    const riders = Array.from(ridersByUser.values());
+    const riders = deduplicateByUser(
+      rsvps.filter((rsvp) => rsvp.needsRide && !rsvp.selfTransport)
+    );
 
     if (riders.length > 0 && drivers.length === 0) {
       throw new Error("No drivers available for riders");
     }
 
-    const carpoolAssignments: Array<{
-      driverRsvpId: (typeof drivers)[0]["_id"];
-      riderRsvpIds: Array<(typeof riders)[0]["_id"]>;
-    }> = [];
+    const { assignments, unassignedCount } = assignRidersToDrivers(
+      drivers,
+      riders
+    );
 
-    const unassignedRiders = [...riders];
-
-    for (const driver of drivers) {
-      const capacity = driver.driverInfo?.capacity ?? 0;
-      const assignedRiders: typeof riders = [];
-
-      for (let i = 0; i < capacity && unassignedRiders.length > 0; i++) {
-        const rider = unassignedRiders.shift();
-        if (rider) {
-          assignedRiders.push(rider);
-        }
-      }
-
-      carpoolAssignments.push({
-        driverRsvpId: driver._id,
-        riderRsvpIds: assignedRiders.map((r) => r._id),
-      });
-    }
-
-    for (const assignment of carpoolAssignments) {
+    for (const assignment of assignments) {
       const carpoolId = await ctx.db.insert("carpools", {
         eventId: args.eventId,
         driverRsvpId: assignment.driverRsvpId,
@@ -823,9 +844,9 @@ export const generateCarpools = mutation({
     }
 
     return {
-      carpoolsCreated: carpoolAssignments.length,
-      ridersAssigned: riders.length - unassignedRiders.length,
-      ridersUnassigned: unassignedRiders.length,
+      carpoolsCreated: assignments.length,
+      ridersAssigned: riders.length - unassignedCount,
+      ridersUnassigned: unassignedCount,
     };
   },
 });

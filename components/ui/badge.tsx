@@ -1,8 +1,15 @@
-import React from "react";
+import type React from "react";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "info";
   children: React.ReactNode;
+  variant?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "success"
+    | "warning"
+    | "danger"
+    | "info";
 }
 
 export function Badge({

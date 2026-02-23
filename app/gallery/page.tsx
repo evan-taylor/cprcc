@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -10,12 +11,14 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const SUCCESS_MESSAGE_DURATION = 3000;
+const HEIC_EXTENSION_PATTERN = /\.heic$/i;
 
-type UploadFile = {
-  file: File;
-  preview: string;
+interface UploadFile {
   error?: string;
-};
+  file: File;
+  id: string;
+  preview: string;
+}
 
 export default function GalleryPage() {
   useEffect(() => {
@@ -54,57 +57,104 @@ export default function GalleryPage() {
       const blob = Array.isArray(jpegBlob) ? jpegBlob[0] : jpegBlob;
       return new File(
         [blob],
-        file.name.replace(/\.heic$/i, ".jpg"),
-        { type: "image/jpeg" }
+        file.name.replace(HEIC_EXTENSION_PATTERN, ".jpg"),
+        {
+          type: "image/jpeg",
+        }
       );
     } catch (error) {
-      throw new Error(`Failed to convert HEIC file: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw new Error(
+        `Failed to convert HEIC file: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   };
 
-  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const processFile = async (file: File): Promise<UploadFile> => {
+    let processedFile = file;
+    let error: string | undefined;
+
+    const isHeic =
+      file.type === "image/heic" ||
+      file.type === "image/heif" ||
+      file.name.toLowerCase().endsWith(".heic") ||
+      file.name.toLowerCase().endsWith(".heif");
+
+    if (isHeic) {
+      try {
+        processedFile = await convertHeicToJpeg(file);
+      } catch (err) {
+        error =
+          err instanceof Error ? err.message : "Failed to convert HEIC file";
+      }
+    } else if (!file.type.startsWith("image/")) {
+      error = "Not an image file";
+    }
+
+    if (!error && processedFile.size > MAX_FILE_SIZE) {
+      error = "File too large (max 20MB)";
+    }
+
+    return {
+      file: processedFile,
+      id: `${file.name}-${file.size}-${file.lastModified}`,
+      preview: URL.createObjectURL(processedFile),
+      error,
+    };
+  };
+
+  const handleImageSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = Array.from(event.target.files || []);
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      return;
+    }
 
     setUploadError(null);
     const uploadFiles: UploadFile[] = [];
 
     for (const file of files) {
-      let processedFile = file;
-      let error: string | undefined;
-
-      const isHeic = file.type === "image/heic" || 
-                     file.type === "image/heif" || 
-                     file.name.toLowerCase().endsWith(".heic") ||
-                     file.name.toLowerCase().endsWith(".heif");
-
-      if (isHeic) {
-        try {
-          processedFile = await convertHeicToJpeg(file);
-        } catch (err) {
-          error = err instanceof Error ? err.message : "Failed to convert HEIC file";
-        }
-      } else if (!file.type.startsWith("image/")) {
-        error = "Not an image file";
-      }
-
-      if (!error && processedFile.size > MAX_FILE_SIZE) {
-        error = "File too large (max 20MB)";
-      }
-
-      uploadFiles.push({
-        file: processedFile,
-        preview: URL.createObjectURL(processedFile),
-        error,
-      });
+      uploadFiles.push(await processFile(file));
     }
 
     setSelectedImages(uploadFiles);
   };
 
+  const uploadSingleImage = async (file: File): Promise<boolean> => {
+    const postUrl = await generateUploadUrl();
+    const result = await fetch(postUrl, {
+      method: "POST",
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      body: file,
+    });
+
+    if (!result.ok) {
+      throw new Error("Failed to upload image");
+    }
+
+    const { storageId } = await result.json();
+    await savePhoto({
+      storageId: storageId as Id<"_storage">,
+      caption: caption.trim() || undefined,
+    });
+    return true;
+  };
+
+  const resetUploadForm = () => {
+    for (const img of selectedImages) {
+      URL.revokeObjectURL(img.preview);
+    }
+    setSelectedImages([]);
+    setCaption("");
+    setUploadProgress("");
+    if (imageInput.current) {
+      imageInput.current.value = "";
+    }
+  };
+
   const handleUpload = async (event: React.FormEvent) => {
     event.preventDefault();
-    const validImages = selectedImages.filter(img => !img.error);
+    const validImages = selectedImages.filter((img) => !img.error);
     if (validImages.length === 0) {
       return;
     }
@@ -117,44 +167,17 @@ export default function GalleryPage() {
       let successCount = 0;
       let failCount = 0;
 
-      for (let i = 0; i < validImages.length; i++) {
-        const { file } = validImages[i];
+      for (const [i, { file }] of validImages.entries()) {
         setUploadProgress(`Uploading ${i + 1} of ${validImages.length}...`);
-
         try {
-          const postUrl = await generateUploadUrl();
-
-          const result = await fetch(postUrl, {
-            method: "POST",
-            headers: { "Content-Type": file.type || "application/octet-stream" },
-            body: file,
-          });
-
-          if (!result.ok) {
-            throw new Error("Failed to upload image");
-          }
-
-          const { storageId } = await result.json();
-
-          await savePhoto({
-            storageId: storageId as Id<"_storage">,
-            caption: caption.trim() || undefined,
-          });
-
+          await uploadSingleImage(file);
           successCount++;
-        } catch (error) {
+        } catch {
           failCount++;
-          console.error(`Failed to upload ${file.name}:`, error);
         }
       }
 
-      selectedImages.forEach(img => URL.revokeObjectURL(img.preview));
-      setSelectedImages([]);
-      setCaption("");
-      setUploadProgress("");
-      if (imageInput.current) {
-        imageInput.current.value = "";
-      }
+      resetUploadForm();
 
       if (successCount > 0) {
         setUploadSuccess(true);
@@ -162,7 +185,9 @@ export default function GalleryPage() {
       }
 
       if (failCount > 0) {
-        setUploadError(`${successCount} uploaded successfully, ${failCount} failed`);
+        setUploadError(
+          `${successCount} uploaded successfully, ${failCount} failed`
+        );
       }
     } catch (error) {
       setUploadError(
@@ -240,15 +265,22 @@ export default function GalleryPage() {
                 {selectedImages.length > 0 && (
                   <div className="space-y-2">
                     <p className="font-medium text-slate-900 text-sm">
-                      Selected: {selectedImages.length} file{selectedImages.length !== 1 ? "s" : ""}
+                      Selected: {selectedImages.length} file
+                      {selectedImages.length !== 1 ? "s" : ""}
                     </p>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {selectedImages.map((img, idx) => (
-                        <div key={idx} className="relative aspect-square overflow-hidden rounded-lg border-2 border-slate-200">
+                      {selectedImages.map((img) => (
+                        <div
+                          className="relative aspect-square overflow-hidden rounded-lg border-2 border-slate-200"
+                          key={img.id}
+                        >
+                          {/* biome-ignore lint/performance/noImgElement: blob URLs from createObjectURL cannot be optimized by next/image */}
                           <img
-                            alt={`Preview ${idx + 1}`}
+                            alt={`Preview of ${img.file.name}`}
                             className="h-full w-full object-cover"
+                            height={200}
                             src={img.preview}
+                            width={200}
                           />
                           {img.error && (
                             <div className="absolute inset-0 flex items-center justify-center bg-red-500/80 p-2 text-center text-white text-xs">
@@ -298,7 +330,10 @@ export default function GalleryPage() {
                 )}
 
                 <Button
-                  disabled={selectedImages.filter(img => !img.error).length === 0 || uploading}
+                  disabled={
+                    selectedImages.filter((img) => !img.error).length === 0 ||
+                    uploading
+                  }
                   size="lg"
                   type="submit"
                 >
@@ -308,7 +343,7 @@ export default function GalleryPage() {
                       Uploading...
                     </>
                   ) : (
-                    `Upload ${selectedImages.filter(img => !img.error).length} Photo${selectedImages.filter(img => !img.error).length !== 1 ? "s" : ""}`
+                    `Upload ${selectedImages.filter((img) => !img.error).length} Photo${selectedImages.filter((img) => !img.error).length !== 1 ? "s" : ""}`
                   )}
                 </Button>
               </form>
@@ -357,17 +392,17 @@ export default function GalleryPage() {
         {photos !== undefined && photos.length > 0 && (
           <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
             {photos.map((photo) => (
-              <div
-                className="mb-6 break-inside-avoid"
-                key={photo._id}
-              >
+              <div className="mb-6 break-inside-avoid" key={photo._id}>
                 <Card className="group overflow-hidden transition-all hover:shadow-lg">
                   <div className="relative overflow-hidden bg-slate-100">
                     {photo.url && (
-                      <img
+                      <Image
                         alt={photo.caption || "Event photo"}
-                        className="w-full h-auto object-cover transition-transform group-hover:scale-105"
+                        className="h-auto w-full object-cover transition-transform group-hover:scale-105"
+                        height={600}
                         src={photo.url}
+                        unoptimized
+                        width={800}
                       />
                     )}
                   </div>
@@ -380,11 +415,14 @@ export default function GalleryPage() {
                     <div className="flex items-center justify-between text-slate-900 text-xs">
                       <span>By {photo.uploaderName}</span>
                       <span>
-                        {new Date(photo.uploadedAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {new Date(photo.uploadedAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )}
                       </span>
                     </div>
                     {currentUser?.role === "board" && (

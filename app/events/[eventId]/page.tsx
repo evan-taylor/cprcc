@@ -9,6 +9,114 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
 
+interface RsvpStatusProps {
+  event: {
+    eventType: string;
+    shifts: Array<{ _id: Id<"shifts">; startTime: number }>;
+  };
+  handleCancelRsvp: (rsvpId: Id<"rsvps">) => void;
+  hasRsvped: boolean;
+  setShowRsvpForm: (show: boolean) => void;
+  userRsvps: Array<{
+    _id: Id<"rsvps">;
+    canDrive: boolean;
+    driverInfo?: { carColor: string; carType: string };
+    needsRide: boolean;
+    selfTransport?: boolean;
+    shiftId?: Id<"shifts">;
+  }>;
+}
+
+function RsvpStatusSection({
+  event,
+  handleCancelRsvp,
+  hasRsvped,
+  setShowRsvpForm,
+  userRsvps,
+}: RsvpStatusProps) {
+  if (!hasRsvped) {
+    return (
+      <button
+        className="w-full rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition hover:bg-rose-700"
+        onClick={() => setShowRsvpForm(true)}
+        type="button"
+      >
+        RSVP to Event
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {userRsvps.map((rsvp) => {
+        const shift = rsvp.shiftId
+          ? event.shifts.find((s) => s._id === rsvp.shiftId)
+          : undefined;
+        return (
+          <div
+            className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4"
+            key={rsvp._id}
+          >
+            <div>
+              <p className="font-semibold text-green-900">
+                You&apos;re signed up!
+              </p>
+              {shift && (
+                <p className="mt-1 text-green-700 text-sm">
+                  Shift:{" "}
+                  {new Date(shift.startTime).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </p>
+              )}
+              {rsvp.canDrive && (
+                <p className="mt-1 text-green-700 text-sm">
+                  Driving: {rsvp.driverInfo?.carColor}{" "}
+                  {rsvp.driverInfo?.carType}
+                </p>
+              )}
+              {rsvp.needsRide && (
+                <p className="mt-1 text-green-700 text-sm">Needs a ride</p>
+              )}
+              {rsvp.selfTransport && (
+                <p className="mt-1 text-green-700 text-sm">Transporting self</p>
+              )}
+            </div>
+            <button
+              className="rounded-full border border-rose-300 px-4 py-2 font-semibold text-rose-700 text-sm transition hover:bg-rose-50"
+              onClick={() => handleCancelRsvp(rsvp._id)}
+              type="button"
+            >
+              Cancel RSVP
+            </button>
+          </div>
+        );
+      })}
+      {event.eventType === "boothing" && (
+        <button
+          className="w-full rounded-full border-2 border-rose-600 px-6 py-3 font-semibold text-rose-600 transition hover:bg-rose-50"
+          onClick={() => setShowRsvpForm(true)}
+          type="button"
+        >
+          Sign Up for Another Shift
+        </button>
+      )}
+    </div>
+  );
+}
+
+const shiftLabelClass = (isDisabled: boolean, isSelected: boolean) => {
+  if (isDisabled) {
+    return "cursor-not-allowed opacity-60";
+  }
+  if (isSelected) {
+    return "border-rose-400 bg-rose-50 ring-2 ring-rose-400";
+  }
+  return "border-slate-200 bg-slate-50 hover:border-rose-200";
+};
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: page component with loading/auth guards and complex event detail rendering
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -108,7 +216,9 @@ export default function EventDetailPage() {
   };
 
   const selectAllAvailableShifts = () => {
-    if (event.eventType !== "boothing") return;
+    if (event.eventType !== "boothing") {
+      return;
+    }
 
     const availableShiftIds = event.shifts
       .filter((shift) => {
@@ -134,6 +244,7 @@ export default function EventDetailPage() {
     });
   };
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: multi-step RSVP submission with validation, shift iteration, and error handling
   const handleRsvpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -159,9 +270,7 @@ export default function EventDetailPage() {
       }
 
       if (event.isOffsite && !needsRide && !canDrive && !selfTransport) {
-        setError(
-          "For offsite events, please select a transportation option"
-        );
+        setError("For offsite events, please select a transportation option");
         setIsSubmitting(false);
         return;
       }
@@ -215,7 +324,7 @@ export default function EventDetailPage() {
         setCarColor("");
         setCapacity(4);
         setSelectedShiftIds(new Set());
-      }else if (successCount > 0) {
+      } else if (successCount > 0) {
         const failedShifts = results
           .filter((r) => !r.success)
           .map((r) => {
@@ -312,7 +421,9 @@ export default function EventDetailPage() {
                 <div className="flex flex-col gap-2">
                   <button
                     className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
-                    onClick={() => router.push(`/events/${event.slug ?? event._id}/edit`)}
+                    onClick={() =>
+                      router.push(`/events/${event.slug ?? event._id}/edit`)
+                    }
                     type="button"
                   >
                     Edit Event
@@ -321,7 +432,9 @@ export default function EventDetailPage() {
                     <button
                       className="rounded-full bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700"
                       onClick={() =>
-                        router.push(`/events/${event.slug ?? event._id}/carpools`)
+                        router.push(
+                          `/events/${event.slug ?? event._id}/carpools`
+                        )
                       }
                       type="button"
                     >
@@ -417,13 +530,7 @@ export default function EventDetailPage() {
 
                   return (
                     <label
-                      className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition ${
-                        isDisabled
-                          ? "cursor-not-allowed opacity-60"
-                          : isSelected
-                            ? "border-rose-400 bg-rose-50 ring-2 ring-rose-400"
-                            : "border-slate-200 bg-slate-50 hover:border-rose-200"
-                      }`}
+                      className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition ${shiftLabelClass(isDisabled, isSelected)}`}
                       htmlFor={`shift-${shift._id}`}
                       key={shift._id}
                     >
@@ -506,7 +613,9 @@ export default function EventDetailPage() {
                             const shift = event.shifts.find(
                               (s) => s._id === shiftId
                             );
-                            if (!shift) return null;
+                            if (!shift) {
+                              return null;
+                            }
                             return (
                               <div
                                 className="flex items-center justify-between rounded-md bg-white px-3 py-2"
@@ -542,6 +651,7 @@ export default function EventDetailPage() {
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
                                   >
+                                    <title>Remove shift</title>
                                     <path
                                       d="M6 18L18 6M6 6l12 12"
                                       strokeLinecap="round"
@@ -762,79 +872,14 @@ export default function EventDetailPage() {
                     </button>
                   </div>
                 </form>
-              ) : hasRsvped ? (
-                <div className="space-y-3">
-                  {userRsvps.map((rsvp) => (
-                    <div
-                      className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4"
-                      key={rsvp._id}
-                    >
-                      <div>
-                        <p className="font-semibold text-green-900">
-                          You&apos;re signed up!
-                        </p>
-                        {rsvp.shiftId &&
-                          (() => {
-                            const shift = event.shifts.find(
-                              (s) => s._id === rsvp.shiftId
-                            );
-                            return shift ? (
-                              <p className="mt-1 text-green-700 text-sm">
-                                Shift:{" "}
-                                {new Date(shift.startTime).toLocaleTimeString(
-                                  "en-US",
-                                  {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                  }
-                                )}
-                              </p>
-                            ) : null;
-                          })()}
-                        {rsvp.canDrive && (
-                          <p className="mt-1 text-green-700 text-sm">
-                            Driving: {rsvp.driverInfo?.carColor}{" "}
-                            {rsvp.driverInfo?.carType}
-                          </p>
-                        )}
-                        {rsvp.needsRide && (
-                          <p className="mt-1 text-green-700 text-sm">
-                            Needs a ride
-                          </p>
-                        )}
-                        {rsvp.selfTransport && (
-                          <p className="mt-1 text-green-700 text-sm">
-                            Transporting self
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        className="rounded-full border border-rose-300 px-4 py-2 font-semibold text-rose-700 text-sm transition hover:bg-rose-50"
-                        onClick={() => handleCancelRsvp(rsvp._id)}
-                        type="button"
-                      >
-                        Cancel RSVP
-                      </button>
-                    </div>
-                  ))}
-                  {event.eventType === "boothing" && (
-                    <button
-                      className="w-full rounded-full border-2 border-rose-600 px-6 py-3 font-semibold text-rose-600 transition hover:bg-rose-50"
-                      onClick={() => setShowRsvpForm(true)}
-                      type="button"
-                    >
-                      Sign Up for Another Shift
-                    </button>
-                  )}
-                </div>
               ) : (
-                <button
-                  className="w-full rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition hover:bg-rose-700"
-                  onClick={() => setShowRsvpForm(true)}
-                  type="button"
-                >
-                  RSVP to Event
-                </button>
+                <RsvpStatusSection
+                  event={event}
+                  handleCancelRsvp={handleCancelRsvp}
+                  hasRsvped={hasRsvped}
+                  setShowRsvpForm={setShowRsvpForm}
+                  userRsvps={userRsvps}
+                />
               )}
             </div>
           )}
@@ -846,6 +891,7 @@ export default function EventDetailPage() {
                 <button
                   className="font-semibold text-rose-600 hover:text-rose-700"
                   onClick={() => router.push("/signin")}
+                  type="button"
                 >
                   sign in
                 </button>{" "}

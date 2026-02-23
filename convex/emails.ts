@@ -6,11 +6,11 @@ import { action } from "./_generated/server";
 import {
   generateDriverEmailHtml,
   generateDriverEmailSubject,
-} from "./emails/carpoolDriverEmail";
+} from "./emails/carpool-driver-email";
 import {
   generateRiderEmailHtml,
   generateRiderEmailSubject,
-} from "./emails/carpoolRiderEmail";
+} from "./emails/carpool-rider-email";
 
 export const sendCarpoolEmails = action({
   args: {

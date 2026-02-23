@@ -97,9 +97,9 @@ function HeroCard() {
         <p className="text-lg text-slate-900">
           This quick walkthrough mirrors what you&apos;ll see inside Volunteer
           Connection. Grab your ID, a good internet connection, and 10 minutes.
-          Once you&apos;re done, the Red Cross will verify your profile, and you&apos;ll
-          be cleared to sign up for Red Cross volunteer oppurtunities and log
-          your hours!
+          Once you&apos;re done, the Red Cross will verify your profile, and
+          you&apos;ll be cleared to sign up for Red Cross volunteer
+          oppurtunities and log your hours!
         </p>
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-2">

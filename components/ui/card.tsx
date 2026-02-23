@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -25,7 +25,10 @@ export function CardHeader({
   ...props
 }: CardHeaderProps) {
   return (
-    <div className={`px-6 py-5 border-b border-slate-100 ${className}`} {...props}>
+    <div
+      className={`border-slate-100 border-b px-6 py-5 ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -58,7 +61,7 @@ export function CardFooter({
 }: CardFooterProps) {
   return (
     <div
-      className={`px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl ${className}`}
+      className={`rounded-b-2xl border-slate-100 border-t bg-slate-50/50 px-6 py-4 ${className}`}
       {...props}
     >
       {children}
@@ -78,7 +81,7 @@ export function CardTitle({
 }: CardTitleProps) {
   return (
     <h3
-      className={`font-display font-semibold text-xl text-slate-900 ${className}`}
+      className={`font-display font-semibold text-slate-900 text-xl ${className}`}
       {...props}
     >
       {children}
@@ -97,7 +100,7 @@ export function CardDescription({
   ...props
 }: CardDescriptionProps) {
   return (
-    <p className={`text-sm text-slate-900 mt-1.5 ${className}`} {...props}>
+    <p className={`mt-1.5 text-slate-900 text-sm ${className}`} {...props}>
       {children}
     </p>
   );

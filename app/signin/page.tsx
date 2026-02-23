@@ -85,7 +85,11 @@ export default function SignIn() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-600 shadow-lg">
-            <svg className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-10 w-10 text-white"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <title>Red Cross logo</title>
               <path d="M14 2h-4v8H2v4h8v8h4v-8h8v-4h-8V2z" />
             </svg>
@@ -219,7 +223,7 @@ export default function SignIn() {
             )}
 
             <button
-              className="w-full rounded-lg bg-red-600 px-4 py-3 font-semibold text-white shadow-sm transition-all hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]"
+              className="w-full rounded-lg bg-red-600 px-4 py-3 font-semibold text-white shadow-sm transition-all hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               disabled={loading}
               type="submit"
             >
@@ -239,7 +243,7 @@ export default function SignIn() {
               <p>
                 New to Red Cross?{" "}
                 <button
-                  className="font-medium text-red-600 hover:text-red-700 transition-colors"
+                  className="font-medium text-red-600 transition-colors hover:text-red-700"
                   onClick={() => {
                     setFlow("signUp");
                     setError(null);
@@ -253,7 +257,7 @@ export default function SignIn() {
               <p>
                 Already have an account?{" "}
                 <button
-                  className="font-medium text-red-600 hover:text-red-700 transition-colors"
+                  className="font-medium text-red-600 transition-colors hover:text-red-700"
                   onClick={() => {
                     setFlow("signIn");
                     setError(null);

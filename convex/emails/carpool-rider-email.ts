@@ -1,25 +1,29 @@
-interface DriverEmailProps {
-  eventTitle: string;
-  eventDate: string;
-  eventTime: string;
-  eventLocation: string;
-  driverName: string;
+interface RiderEmailProps {
   carColor: string;
   carType: string;
-  capacity: number;
-  riders: Array<{ name: string; email: string; phoneNumber?: string }>;
+  driverEmail: string;
+  driverName: string;
+  driverPhoneNumber?: string;
+  eventDate: string;
+  eventLocation: string;
+  eventTime: string;
+  eventTitle: string;
+  otherRiders: Array<{ name: string; phoneNumber?: string }>;
+  riderName: string;
 }
 
-export function generateDriverEmailHtml(props: DriverEmailProps): string {
+export function generateRiderEmailHtml(props: RiderEmailProps): string {
   const {
     eventTitle,
     eventDate,
     eventTime,
     eventLocation,
+    driverName,
+    driverEmail,
+    driverPhoneNumber,
     carColor,
     carType,
-    capacity,
-    riders,
+    otherRiders,
   } = props;
 
   return `
@@ -41,7 +45,7 @@ export function generateDriverEmailHtml(props: DriverEmailProps): string {
   <div class="container">
     <div class="header">
       <h1>Cal Poly Red Cross Club</h1>
-      <h2>Carpool Assignment - Driver</h2>
+      <h2>Carpool Assignment - Rider</h2>
     </div>
     <div class="content">
       <h3>Event: ${eventTitle}</h3>
@@ -51,23 +55,23 @@ export function generateDriverEmailHtml(props: DriverEmailProps): string {
       
       <div class="carpool-info">
         <h4>Your Carpool Assignment</h4>
-        <p><strong>Role:</strong> Driver</p>
-        <p><strong>Your Vehicle:</strong> ${carColor} ${carType}</p>
-        <p><strong>Capacity:</strong> ${capacity} passengers</p>
+        <p><strong>Role:</strong> Passenger</p>
+        <p><strong>Driver:</strong> ${driverName}<br/><a href="mailto:${driverEmail}">${driverEmail}</a>${driverPhoneNumber ? `<br/><a href="tel:${driverPhoneNumber}">${driverPhoneNumber}</a>` : ""}</p>
+        <p><strong>Vehicle:</strong> ${carColor} ${carType}</p>
         
-        <h4>Your Passengers:</h4>
+        <h4>Other Passengers:</h4>
         ${
-          riders.length > 0
+          otherRiders.length > 0
             ? `
         <ul class="rider-list">
-          ${riders.map((rider) => `<li>${rider.name}<br/><a href="mailto:${rider.email}">${rider.email}</a>${rider.phoneNumber ? `<br/><a href="tel:${rider.phoneNumber}">${rider.phoneNumber}</a>` : ""}</li>`).join("")}
+          ${otherRiders.map((r) => `<li>${r.name}${r.phoneNumber ? `<br/><a href="tel:${r.phoneNumber}">${r.phoneNumber}</a>` : ""}</li>`).join("")}
         </ul>
         `
-            : "<p>No passengers assigned to your vehicle.</p>"
+            : "<p>You are the only passenger in this carpool.</p>"
         }
       </div>
       
-      <p>Please coordinate with your passengers about pickup times and locations. If you have any questions or need to make changes, please contact the board.</p>
+      <p>Please coordinate with your driver about pickup times and locations. Make sure to be ready on time!</p>
     </div>
     <div class="footer">
       <p>Cal Poly Red Cross Club</p>
@@ -79,6 +83,6 @@ export function generateDriverEmailHtml(props: DriverEmailProps): string {
   `.trim();
 }
 
-export function generateDriverEmailSubject(eventTitle: string): string {
-  return `Carpool Assignment: ${eventTitle} - Driver`;
+export function generateRiderEmailSubject(eventTitle: string): string {
+  return `Carpool Assignment: ${eventTitle} - Passenger`;
 }

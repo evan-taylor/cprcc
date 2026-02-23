@@ -110,7 +110,7 @@ export default function SiteHeader({
         </div>
       </div>
       {mobileMenuOpen && (
-        <nav className="flex flex-col gap-1 border-inherit border-t bg-white/95 px-4 py-3 text-sm text-slate-900 backdrop-blur-xl md:hidden">
+        <nav className="flex flex-col gap-1 border-inherit border-t bg-white/95 px-4 py-3 text-slate-900 text-sm backdrop-blur-xl md:hidden">
           {navItems.map((item) => (
             <Link
               className="rounded-lg px-3 py-2.5 font-medium text-slate-900 transition-colors hover:bg-slate-100 hover:text-red-600"
@@ -193,8 +193,8 @@ function AuthButton({ inverted }: { inverted: boolean }) {
     <button
       className={`inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
         inverted
-          ? "bg-white/20 !text-white ring-1 ring-white/30 ring-inset backdrop-blur-sm hover:bg-white/30 focus-visible:ring-white/60"
-          : "bg-red-600 !text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500"
+          ? "!text-white bg-white/20 ring-1 ring-white/30 ring-inset backdrop-blur-sm hover:bg-white/30 focus-visible:ring-white/60"
+          : "!text-white bg-red-600 shadow-sm hover:bg-red-700 focus-visible:ring-red-500"
       }`}
       onClick={handleSignOut}
       type="button"

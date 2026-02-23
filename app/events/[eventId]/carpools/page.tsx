@@ -20,6 +20,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: page component with multiple loading/auth guard states and drag-and-drop logic
 export default function CarpoolManagementPage() {
   const params = useParams();
   const router = useRouter();
@@ -418,7 +419,9 @@ export default function CarpoolManagementPage() {
             </p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="font-semibold text-slate-900 text-sm">Self-Transport</p>
+            <p className="font-semibold text-slate-900 text-sm">
+              Self-Transport
+            </p>
             <p className="mt-2 font-bold text-3xl text-green-600">
               {uniqueSelfTransportUserIds.size}
             </p>
@@ -507,6 +510,7 @@ export default function CarpoolManagementPage() {
                         rsvp.userProfileId
                       );
                       return (
+                        // biome-ignore lint/a11y/useSemanticElements: draggable container needs role="button" for keyboard accessibility; a <button> is not appropriate for drag-and-drop source elements
                         <div
                           className="cursor-move rounded-lg border border-orange-300 bg-white p-3 shadow-sm transition hover:shadow-md"
                           draggable={anyDraft}
@@ -543,16 +547,21 @@ export default function CarpoolManagementPage() {
                 const isFull = carpool.riders.length >= carpool.driver.capacity;
                 const isDraft = carpool.status === "draft";
 
+                const borderClass = (() => {
+                  if (isDraft && !isFull) {
+                    return "border-slate-200 hover:border-blue-300";
+                  }
+                  if (isDraft && isFull) {
+                    return "border-slate-300 bg-slate-50";
+                  }
+                  return "border-green-200";
+                })();
+
                 return (
-                  <div
+                  // biome-ignore lint/a11y/noNoninteractiveElementInteractions: HTML5 drag-and-drop drop target requires onDragOver/onDrop handlers
+                  <section
                     aria-label={`Carpool ${index + 1}`}
-                    className={`rounded-3xl border-2 bg-white p-8 shadow-sm transition ${
-                      isDraft && !isFull
-                        ? "border-slate-200 hover:border-blue-300"
-                        : isDraft && isFull
-                          ? "border-slate-300 bg-slate-50"
-                          : "border-green-200"
-                    }`}
+                    className={`rounded-3xl border-2 bg-white p-8 shadow-sm transition ${borderClass}`}
                     data-droppable-id={`carpool:${carpool.carpoolId}`}
                     key={carpool.carpoolId}
                     onDragLeave={(e) => {
@@ -577,7 +586,9 @@ export default function CarpoolManagementPage() {
                         "ring-blue-400"
                       );
 
-                      if (!isDraft || isFull) return;
+                      if (!isDraft || isFull) {
+                        return;
+                      }
 
                       const riderId = e.dataTransfer
                         .getData("text/plain")
@@ -587,7 +598,6 @@ export default function CarpoolManagementPage() {
                         `carpool:${carpool.carpoolId}`
                       );
                     }}
-                    role="region"
                   >
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-semibold text-slate-900 text-xl">
@@ -660,6 +670,7 @@ export default function CarpoolManagementPage() {
                               rider.rsvpId
                             );
                             return (
+                              // biome-ignore lint/a11y/useSemanticElements: draggable container needs role="button" for keyboard accessibility; a <button> is not appropriate for drag-and-drop source elements
                               <div
                                 className={`rounded-lg border border-slate-200 bg-slate-50 p-3 ${
                                   isDraft
@@ -679,6 +690,8 @@ export default function CarpoolManagementPage() {
                                     `rider:${rider.rsvpId}`
                                   );
                                 }}
+                                role="button"
+                                tabIndex={0}
                               >
                                 <p className="font-semibold text-slate-900 text-sm">
                                   {rider.name}
@@ -697,7 +710,7 @@ export default function CarpoolManagementPage() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </section>
                 );
               })}
             </div>
