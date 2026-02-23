@@ -4,6 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 
@@ -42,6 +43,8 @@ export default function SignIn() {
       const name = formData.get("name") as string;
       const phoneNumber = formData.get("phoneNumber") as string;
 
+      const email = formData.get("email") as string;
+
       if (flow === "signUp") {
         if (!name || name.trim().length === 0) {
           setError("Please enter your name");
@@ -60,15 +63,32 @@ export default function SignIn() {
 
         await ensureCurrentUserProfile({ phoneNumber: localPhone });
 
+        posthog.identify(email, { email, name: name.trim() });
+        posthog.capture("user_signed_up", {
+          has_phone_number: !!localPhone,
+        });
+
         router.push("/");
         setLoading(false);
       } else {
         formData.set("flow", "signIn");
         await signIn("password", formData);
+
+        posthog.identify(email, { email });
+        posthog.capture("user_signed_in");
+
         router.push("/");
         setLoading(false);
       }
     } catch (authError) {
+      posthog.captureException(
+        authError instanceof Error
+          ? authError
+          : new Error("Authentication failed")
+      );
+      posthog.capture("sign_in_failed", {
+        flow,
+      });
       if (authError instanceof Error) {
         setError(
           "Invalid email or password. If you don\u2019t have an account, please sign up."

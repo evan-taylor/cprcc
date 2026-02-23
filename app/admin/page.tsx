@@ -2,6 +2,7 @@
 
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
@@ -112,7 +113,15 @@ export default function AdminPage() {
     setError(null);
     try {
       await promoteToBoard({ profileId });
+      const promotedUser = allUsers?.find((u) => u._id === profileId);
+      posthog.capture("user_promoted_to_board", {
+        promoted_user_id: profileId,
+        promoted_user_name: promotedUser?.name,
+      });
     } catch (err) {
+      posthog.captureException(
+        err instanceof Error ? err : new Error("Promotion failed")
+      );
       if (err instanceof Error) {
         setError(err.message);
       } else {

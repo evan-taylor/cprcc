@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useRef, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
@@ -321,7 +322,24 @@ export default function EventDetailPage() {
       const successCount = results.filter((r) => r.success).length;
       const failureCount = results.filter((r) => !r.success).length;
 
+      let transportMode = "none";
+      if (canDrive) {
+        transportMode = "driver";
+      } else if (needsRide) {
+        transportMode = "needs_ride";
+      } else if (selfTransport) {
+        transportMode = "self_transport";
+      }
+
       if (failureCount === 0) {
+        posthog.capture("event_rsvp_submitted", {
+          event_id: eventId,
+          event_title: event.title,
+          event_type: event.eventType,
+          is_offsite: event.isOffsite,
+          shifts_count: successCount,
+          transport: transportMode,
+        });
         setShowRsvpForm(false);
         setNeedsRide(false);
         setCanDrive(false);
@@ -331,6 +349,15 @@ export default function EventDetailPage() {
         setCapacity(4);
         setSelectedShiftIds(new Set());
       } else if (successCount > 0) {
+        posthog.capture("event_rsvp_submitted", {
+          event_id: eventId,
+          event_title: event.title,
+          event_type: event.eventType,
+          is_offsite: event.isOffsite,
+          shifts_count: successCount,
+          partial_failure: true,
+          transport: transportMode,
+        });
         const failedShifts = results
           .filter((r) => !r.success)
           .map((r) => {
@@ -352,9 +379,24 @@ export default function EventDetailPage() {
           .map((r) => r.shiftId as Id<"shifts">);
         setSelectedShiftIds(new Set(failedShiftIds));
       } else {
+        posthog.capture("event_rsvp_failed", {
+          event_id: eventId,
+          event_title: event.title,
+          event_type: event.eventType,
+          error: results[0]?.error,
+        });
         setError(results[0]?.error || "Failed to RSVP");
       }
     } catch (err) {
+      posthog.captureException(
+        err instanceof Error ? err : new Error("RSVP failed")
+      );
+      posthog.capture("event_rsvp_failed", {
+        event_id: eventId,
+        event_title: event.title,
+        event_type: event.eventType,
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
       setError(err instanceof Error ? err.message : "Failed to RSVP");
     } finally {
       setIsSubmitting(false);
@@ -364,7 +406,15 @@ export default function EventDetailPage() {
   const handleCancelRsvp = async (rsvpId: Id<"rsvps">) => {
     try {
       await deleteRsvp({ rsvpId });
+      posthog.capture("event_rsvp_cancelled", {
+        event_id: eventId,
+        event_title: event.title,
+        event_type: event.eventType,
+      });
     } catch (err) {
+      posthog.captureException(
+        err instanceof Error ? err : new Error("Cancel RSVP failed")
+      );
       setError(err instanceof Error ? err.message : "Failed to cancel RSVP");
     }
   };

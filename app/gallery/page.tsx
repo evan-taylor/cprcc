@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import Image from "next/image";
+import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -161,6 +162,7 @@ export default function GalleryPage() {
     }
   };
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: batch photo upload with per-file error handling and PostHog capture
   const handleUpload = async (event: React.FormEvent) => {
     event.preventDefault();
     const validImages = selectedImages.filter((img) => !img.error);
@@ -189,16 +191,33 @@ export default function GalleryPage() {
       resetUploadForm();
 
       if (successCount > 0) {
+        posthog.capture("photo_uploaded", {
+          photos_count: successCount,
+          has_caption: !!caption.trim(),
+          partial_failure: failCount > 0,
+        });
         setUploadSuccess(true);
         setTimeout(() => setUploadSuccess(false), SUCCESS_MESSAGE_DURATION);
       }
 
       if (failCount > 0) {
+        if (successCount === 0) {
+          posthog.capture("photo_upload_failed", {
+            photos_attempted: validImages.length,
+          });
+        }
         setUploadError(
           `${successCount} uploaded successfully, ${failCount} failed`
         );
       }
     } catch (error) {
+      posthog.captureException(
+        error instanceof Error ? error : new Error("Photo upload failed")
+      );
+      posthog.capture("photo_upload_failed", {
+        photos_attempted: validImages.length,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
       setUploadError(
         error instanceof Error ? error.message : "Failed to upload photos"
       );

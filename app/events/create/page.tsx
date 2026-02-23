@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { api } from "@/convex/_generated/api";
@@ -93,6 +94,7 @@ export default function CreateEventPage() {
     setShifts(newShifts);
   };
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: form submission with validation, shift mapping, and PostHog capture
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -129,8 +131,24 @@ export default function CreateEventPage() {
         shifts: eventShifts,
       });
 
+      posthog.capture("event_created", {
+        event_type: eventType,
+        is_offsite: isOffsite,
+        has_shifts: eventShifts ? eventShifts.length > 0 : false,
+        shifts_count: eventShifts?.length ?? 0,
+        has_custom_slug: slugTouched && !!slug,
+      });
+
       router.push("/events");
     } catch (err) {
+      posthog.captureException(
+        err instanceof Error ? err : new Error("Event creation failed")
+      );
+      posthog.capture("event_creation_failed", {
+        event_type: eventType,
+        is_offsite: isOffsite,
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
       setError(err instanceof Error ? err.message : "Failed to create event");
       setIsSubmitting(false);
     }
