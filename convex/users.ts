@@ -1,6 +1,11 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import {
+  getCurrentUserProfile,
+  requireAuth,
+  requireBoardMember,
+} from "./lib/auth";
 
 /**
  * Normalize phone number to E.164 format (or close to it)
@@ -52,18 +57,20 @@ export function formatPhoneNumber(phone: string): string {
 
 export const getCurrentUser = query({
   args: {},
+  returns: v.union(
+    v.object({
+      _id: v.id("userProfiles"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.string(),
+      phoneNumber: v.optional(v.string()),
+      role: v.union(v.literal("member"), v.literal("board")),
+      userId: v.id("users"),
+    }),
+    v.null()
+  ),
   handler: async (ctx) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      return null;
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    return userProfile;
+    return await getCurrentUserProfile(ctx);
   },
 });
 
@@ -71,6 +78,7 @@ export const ensureCurrentUserProfile = mutation({
   args: {
     phoneNumber: v.optional(v.string()),
   },
+  returns: v.id("userProfiles"),
   handler: async (ctx, args) => {
     const authUserId = await getAuthUserId(ctx);
     if (!authUserId) {
@@ -90,7 +98,8 @@ export const ensureCurrentUserProfile = mutation({
     const email = (authUser as { email?: string }).email as string;
     const name = (authUser as { name?: string }).name as string;
 
-    const isAdmin = email.trim().toLowerCase() === "etaylo28@calpoly.edu";
+    const adminEmail = process.env.ADMIN_EMAIL || "etaylo28@calpoly.edu";
+    const isAdmin = email.trim().toLowerCase() === adminEmail.toLowerCase();
     const role = isAdmin ? "board" : "member";
 
     if (existingProfile) {
@@ -125,6 +134,7 @@ export const createUserProfile = mutation({
     name: v.string(),
     email: v.string(),
   },
+  returns: v.id("userProfiles"),
   handler: async (ctx, args) => {
     const authUserId = await getAuthUserId(ctx);
     if (!authUserId) {
@@ -136,7 +146,14 @@ export const createUserProfile = mutation({
       .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
       .first();
 
-    const isAdmin = args.email.trim().toLowerCase() === "etaylo28@calpoly.edu";
+    const authUser = await ctx.db.get(authUserId);
+    if (!authUser) {
+      throw new Error("Auth user not found");
+    }
+
+    const authEmail = (authUser as { email?: string }).email as string;
+    const adminEmail = process.env.ADMIN_EMAIL || "etaylo28@calpoly.edu";
+    const isAdmin = authEmail.trim().toLowerCase() === adminEmail.toLowerCase();
     const role = isAdmin ? "board" : "member";
 
     if (existingProfile) {
@@ -148,7 +165,7 @@ export const createUserProfile = mutation({
 
     const profileId = await ctx.db.insert("userProfiles", {
       name: args.name,
-      email: args.email,
+      email: authEmail,
       role,
       userId: authUserId,
     });
@@ -161,20 +178,9 @@ export const promoteToBoard = mutation({
   args: {
     profileId: v.id("userProfiles"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const currentUserProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!currentUserProfile || currentUserProfile.role !== "board") {
-      throw new Error("Only board members can promote users");
-    }
+    await requireBoardMember(ctx);
 
     await ctx.db.patch(args.profileId, {
       role: "board",
@@ -184,20 +190,19 @@ export const promoteToBoard = mutation({
 
 export const listAllUsers = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("userProfiles"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.string(),
+      phoneNumber: v.optional(v.string()),
+      role: v.union(v.literal("member"), v.literal("board")),
+      userId: v.id("users"),
+    })
+  ),
   handler: async (ctx) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const currentUserProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!currentUserProfile || currentUserProfile.role !== "board") {
-      throw new Error("Only board members can view all users");
-    }
+    await requireBoardMember(ctx);
 
     const userProfiles = await ctx.db.query("userProfiles").collect();
     return userProfiles;
@@ -208,20 +213,9 @@ export const updatePhoneNumber = mutation({
   args: {
     phoneNumber: v.string(),
   },
+  returns: v.string(),
   handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile) {
-      throw new Error("User profile not found");
-    }
+    const userProfile = await requireAuth(ctx);
 
     const normalized = normalizePhoneNumber(args.phoneNumber);
 

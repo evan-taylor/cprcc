@@ -1,8 +1,7 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { getCurrentUserProfile, requireBoardMember } from "./lib/auth";
 
 function generateSlugFromTitle(title: string): string {
   return title
@@ -55,20 +54,9 @@ export const createEvent = mutation({
       )
     ),
   },
+  returns: v.id("events"),
   handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can create events");
-    }
+    const userProfile = await requireBoardMember(ctx);
 
     const baseSlug = args.slug || generateSlugFromTitle(args.title);
     const uniqueSlug = await generateUniqueSlug(ctx, baseSlug);
@@ -112,20 +100,9 @@ export const updateEvent = mutation({
     isOffsite: v.optional(v.boolean()),
     slug: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can update events");
-    }
+    await requireBoardMember(ctx);
 
     const event = await ctx.db.get(args.eventId);
     if (!event) {
@@ -166,20 +143,9 @@ export const deleteEvent = mutation({
   args: {
     eventId: v.id("events"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can delete events");
-    }
+    await requireBoardMember(ctx);
 
     const shifts = await ctx.db
       .query("shifts")
@@ -223,6 +189,22 @@ export const deleteEvent = mutation({
 
 export const listEvents = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("events"),
+      _creationTime: v.number(),
+      title: v.string(),
+      description: v.string(),
+      location: v.string(),
+      startTime: v.number(),
+      endTime: v.number(),
+      eventType: v.union(v.literal("regular"), v.literal("boothing")),
+      isOffsite: v.boolean(),
+      slug: v.optional(v.string()),
+      createdBy: v.id("userProfiles"),
+      createdAt: v.number(),
+    })
+  ),
   handler: async (ctx) => {
     const events = await ctx.db
       .query("events")
@@ -235,14 +217,30 @@ export const listEvents = query({
 });
 
 export const listUpcomingEvents = query({
-  args: {},
-  handler: async (ctx) => {
-    const now = Date.now();
+  args: {
+    now: v.number(),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("events"),
+      _creationTime: v.number(),
+      title: v.string(),
+      description: v.string(),
+      location: v.string(),
+      startTime: v.number(),
+      endTime: v.number(),
+      eventType: v.union(v.literal("regular"), v.literal("boothing")),
+      isOffsite: v.boolean(),
+      slug: v.optional(v.string()),
+      createdBy: v.id("userProfiles"),
+      createdAt: v.number(),
+    })
+  ),
+  handler: async (ctx, args) => {
     const events = await ctx.db
       .query("events")
-      .withIndex("by_start_time")
+      .withIndex("by_start_time", (q) => q.gte("startTime", args.now))
       .order("asc")
-      .filter((q) => q.gte(q.field("startTime"), now))
       .collect();
 
     return events;
@@ -253,11 +251,64 @@ export const getEvent = query({
   args: {
     eventId: v.id("events"),
   },
+  returns: v.union(
+    v.object({
+      _id: v.id("events"),
+      _creationTime: v.number(),
+      title: v.string(),
+      description: v.string(),
+      location: v.string(),
+      startTime: v.number(),
+      endTime: v.number(),
+      eventType: v.union(v.literal("regular"), v.literal("boothing")),
+      isOffsite: v.boolean(),
+      slug: v.optional(v.string()),
+      createdBy: v.id("userProfiles"),
+      createdAt: v.number(),
+      shifts: v.array(
+        v.object({
+          _id: v.id("shifts"),
+          _creationTime: v.number(),
+          eventId: v.id("events"),
+          startTime: v.number(),
+          endTime: v.number(),
+          requiredPeople: v.number(),
+        })
+      ),
+      rsvps: v.array(
+        v.object({
+          _id: v.id("rsvps"),
+          _creationTime: v.number(),
+          eventId: v.id("events"),
+          userProfileId: v.id("userProfiles"),
+          shiftId: v.optional(v.id("shifts")),
+          needsRide: v.boolean(),
+          canDrive: v.boolean(),
+          selfTransport: v.optional(v.boolean()),
+          driverInfo: v.optional(
+            v.object({
+              carType: v.string(),
+              carColor: v.string(),
+              capacity: v.number(),
+            })
+          ),
+          createdAt: v.number(),
+          userName: v.string(),
+          userEmail: v.optional(v.string()),
+          userPhoneNumber: v.optional(v.string()),
+        })
+      ),
+    }),
+    v.null()
+  ),
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.eventId);
     if (!event) {
       return null;
     }
+
+    const callerProfile = await getCurrentUserProfile(ctx);
+    const isBoardMember = callerProfile?.role === "board";
 
     const shifts = await ctx.db
       .query("shifts")
@@ -275,8 +326,12 @@ export const getEvent = query({
         return {
           ...rsvp,
           userName: userProfile?.name ?? "Unknown",
-          userEmail: userProfile?.email ?? "",
-          userPhoneNumber: userProfile?.phoneNumber,
+          ...(isBoardMember
+            ? {
+                userEmail: userProfile?.email ?? "",
+                userPhoneNumber: userProfile?.phoneNumber,
+              }
+            : {}),
         };
       })
     );
@@ -293,6 +348,56 @@ export const getEventBySlug = query({
   args: {
     slug: v.string(),
   },
+  returns: v.union(
+    v.object({
+      _id: v.id("events"),
+      _creationTime: v.number(),
+      title: v.string(),
+      description: v.string(),
+      location: v.string(),
+      startTime: v.number(),
+      endTime: v.number(),
+      eventType: v.union(v.literal("regular"), v.literal("boothing")),
+      isOffsite: v.boolean(),
+      slug: v.optional(v.string()),
+      createdBy: v.id("userProfiles"),
+      createdAt: v.number(),
+      shifts: v.array(
+        v.object({
+          _id: v.id("shifts"),
+          _creationTime: v.number(),
+          eventId: v.id("events"),
+          startTime: v.number(),
+          endTime: v.number(),
+          requiredPeople: v.number(),
+        })
+      ),
+      rsvps: v.array(
+        v.object({
+          _id: v.id("rsvps"),
+          _creationTime: v.number(),
+          eventId: v.id("events"),
+          userProfileId: v.id("userProfiles"),
+          shiftId: v.optional(v.id("shifts")),
+          needsRide: v.boolean(),
+          canDrive: v.boolean(),
+          selfTransport: v.optional(v.boolean()),
+          driverInfo: v.optional(
+            v.object({
+              carType: v.string(),
+              carColor: v.string(),
+              capacity: v.number(),
+            })
+          ),
+          createdAt: v.number(),
+          userName: v.string(),
+          userEmail: v.optional(v.string()),
+          userPhoneNumber: v.optional(v.string()),
+        })
+      ),
+    }),
+    v.null()
+  ),
   handler: async (ctx, args) => {
     const event = await ctx.db
       .query("events")
@@ -302,6 +407,9 @@ export const getEventBySlug = query({
     if (!event) {
       return null;
     }
+
+    const callerProfile = await getCurrentUserProfile(ctx);
+    const isBoardMember = callerProfile?.role === "board";
 
     const shifts = await ctx.db
       .query("shifts")
@@ -319,8 +427,12 @@ export const getEventBySlug = query({
         return {
           ...rsvp,
           userName: userProfile?.name ?? "Unknown",
-          userEmail: userProfile?.email ?? "",
-          userPhoneNumber: userProfile?.phoneNumber,
+          ...(isBoardMember
+            ? {
+                userEmail: userProfile?.email ?? "",
+                userPhoneNumber: userProfile?.phoneNumber,
+              }
+            : {}),
         };
       })
     );
@@ -338,6 +450,7 @@ export const generateSlugSuggestion = query({
     title: v.string(),
     excludeEventId: v.optional(v.id("events")),
   },
+  returns: v.string(),
   handler: async (ctx, args) => {
     const baseSlug = generateSlugFromTitle(args.title);
     const uniqueSlug = await generateUniqueSlug(
@@ -349,222 +462,6 @@ export const generateSlugSuggestion = query({
   },
 });
 
-function validateTransportOptions(args: {
-  canDrive: boolean;
-  driverInfo?: { carType: string; carColor: string; capacity: number };
-  needsRide: boolean;
-  selfTransport: boolean;
-}) {
-  if (args.canDrive && !args.driverInfo) {
-    throw new Error("Driver info required when offering to drive");
-  }
-  if (args.needsRide && args.canDrive) {
-    throw new Error("Cannot both need a ride and offer to drive");
-  }
-  if (args.selfTransport && (args.needsRide || args.canDrive)) {
-    throw new Error(
-      "Cannot select self-transport with other transportation options"
-    );
-  }
-}
-
-async function validateShiftCapacity(
-  ctx: MutationCtx,
-  eventId: Id<"events">,
-  shiftId: Id<"shifts">,
-  userProfileId: Id<"userProfiles">
-) {
-  const shift = await ctx.db.get(shiftId);
-  if (!shift || shift.eventId !== eventId) {
-    throw new Error("Invalid shift for this event");
-  }
-
-  const existingShiftRsvps = await ctx.db
-    .query("rsvps")
-    .withIndex("by_shift", (q) => q.eq("shiftId", shiftId))
-    .collect();
-
-  const existingRsvp = await ctx.db
-    .query("rsvps")
-    .withIndex("by_event_and_user", (q) =>
-      q.eq("eventId", eventId).eq("userProfileId", userProfileId)
-    )
-    .first();
-
-  const isUserAlreadyInShift = existingRsvp?.shiftId === shiftId;
-
-  if (
-    !isUserAlreadyInShift &&
-    existingShiftRsvps.length >= shift.requiredPeople
-  ) {
-    throw new Error("This shift is already full");
-  }
-}
-
-export const createRsvp = mutation({
-  args: {
-    eventId: v.id("events"),
-    shiftId: v.optional(v.id("shifts")),
-    needsRide: v.boolean(),
-    canDrive: v.boolean(),
-    selfTransport: v.boolean(),
-    driverInfo: v.optional(
-      v.object({
-        carType: v.string(),
-        carColor: v.string(),
-        capacity: v.number(),
-      })
-    ),
-  },
-  handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile) {
-      throw new Error("User profile not found");
-    }
-
-    const event = await ctx.db.get(args.eventId);
-    if (!event) {
-      throw new Error("Event not found");
-    }
-
-    validateTransportOptions(args);
-
-    if (args.shiftId) {
-      await validateShiftCapacity(
-        ctx,
-        args.eventId,
-        args.shiftId,
-        userProfile._id
-      );
-    }
-
-    const existingRsvp = await ctx.db
-      .query("rsvps")
-      .withIndex("by_event_and_user", (q) =>
-        q.eq("eventId", args.eventId).eq("userProfileId", userProfile._id)
-      )
-      .first();
-
-    if (existingRsvp) {
-      if (args.shiftId && existingRsvp.shiftId !== args.shiftId) {
-        await ctx.db.insert("rsvps", {
-          eventId: args.eventId,
-          userProfileId: userProfile._id,
-          shiftId: args.shiftId,
-          needsRide: args.needsRide,
-          canDrive: args.canDrive,
-          selfTransport: args.selfTransport,
-          driverInfo: args.driverInfo,
-          createdAt: Date.now(),
-        });
-        return;
-      }
-
-      await ctx.db.patch(existingRsvp._id, {
-        shiftId: args.shiftId,
-        needsRide: args.needsRide,
-        canDrive: args.canDrive,
-        selfTransport: args.selfTransport,
-        driverInfo: args.driverInfo,
-      });
-      return;
-    }
-
-    await ctx.db.insert("rsvps", {
-      eventId: args.eventId,
-      userProfileId: userProfile._id,
-      shiftId: args.shiftId,
-      needsRide: args.needsRide,
-      canDrive: args.canDrive,
-      selfTransport: args.selfTransport,
-      driverInfo: args.driverInfo,
-      createdAt: Date.now(),
-    });
-  },
-});
-
-export const deleteRsvp = mutation({
-  args: {
-    rsvpId: v.id("rsvps"),
-  },
-  handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile) {
-      throw new Error("User profile not found");
-    }
-
-    const rsvp = await ctx.db.get(args.rsvpId);
-    if (!rsvp) {
-      throw new Error("RSVP not found");
-    }
-
-    if (
-      rsvp.userProfileId !== userProfile._id &&
-      userProfile.role !== "board"
-    ) {
-      throw new Error("Can only delete your own RSVPs");
-    }
-
-    await ctx.db.delete(args.rsvpId);
-  },
-});
-
-export const getUserRsvps = query({
-  args: {},
-  handler: async (ctx) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      return [];
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile) {
-      return [];
-    }
-
-    const rsvps = await ctx.db
-      .query("rsvps")
-      .withIndex("by_user", (q) => q.eq("userProfileId", userProfile._id))
-      .collect();
-
-    const rsvpDetails = await Promise.all(
-      rsvps.map(async (rsvp) => {
-        const event = await ctx.db.get(rsvp.eventId);
-        const shift = rsvp.shiftId ? await ctx.db.get(rsvp.shiftId) : null;
-        return {
-          ...rsvp,
-          event,
-          shift,
-        };
-      })
-    );
-
-    return rsvpDetails;
-  },
-});
-
 export const addShift = mutation({
   args: {
     eventId: v.id("events"),
@@ -572,20 +469,9 @@ export const addShift = mutation({
     endTime: v.number(),
     requiredPeople: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can add shifts");
-    }
+    await requireBoardMember(ctx);
 
     const event = await ctx.db.get(args.eventId);
     if (!event) {
@@ -612,20 +498,9 @@ export const updateShift = mutation({
     endTime: v.optional(v.number()),
     requiredPeople: v.optional(v.number()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can update shifts");
-    }
+    await requireBoardMember(ctx);
 
     const shift = await ctx.db.get(args.shiftId);
     if (!shift) {
@@ -651,20 +526,9 @@ export const deleteShift = mutation({
   args: {
     shiftId: v.id("shifts"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can delete shifts");
-    }
+    await requireBoardMember(ctx);
 
     const rsvps = await ctx.db
       .query("rsvps")
@@ -683,11 +547,53 @@ export const getShiftRsvps = query({
   args: {
     shiftId: v.id("shifts"),
   },
+  returns: v.union(
+    v.object({
+      shift: v.object({
+        _id: v.id("shifts"),
+        _creationTime: v.number(),
+        eventId: v.id("events"),
+        startTime: v.number(),
+        endTime: v.number(),
+        requiredPeople: v.number(),
+      }),
+      rsvps: v.array(
+        v.object({
+          _id: v.id("rsvps"),
+          _creationTime: v.number(),
+          eventId: v.id("events"),
+          userProfileId: v.id("userProfiles"),
+          shiftId: v.optional(v.id("shifts")),
+          needsRide: v.boolean(),
+          canDrive: v.boolean(),
+          selfTransport: v.optional(v.boolean()),
+          driverInfo: v.optional(
+            v.object({
+              carType: v.string(),
+              carColor: v.string(),
+              capacity: v.number(),
+            })
+          ),
+          createdAt: v.number(),
+          userName: v.string(),
+          userEmail: v.optional(v.string()),
+          userPhoneNumber: v.optional(v.string()),
+        })
+      ),
+      currentCount: v.number(),
+      requiredCount: v.number(),
+      isFull: v.boolean(),
+    }),
+    v.null()
+  ),
   handler: async (ctx, args) => {
     const shift = await ctx.db.get(args.shiftId);
     if (!shift) {
       return null;
     }
+
+    const callerProfile = await getCurrentUserProfile(ctx);
+    const isBoardMember = callerProfile?.role === "board";
 
     const rsvps = await ctx.db
       .query("rsvps")
@@ -700,8 +606,12 @@ export const getShiftRsvps = query({
         return {
           ...rsvp,
           userName: userProfile?.name ?? "Unknown",
-          userEmail: userProfile?.email ?? "",
-          userPhoneNumber: userProfile?.phoneNumber,
+          ...(isBoardMember
+            ? {
+                userEmail: userProfile?.email ?? "",
+                userPhoneNumber: userProfile?.phoneNumber,
+              }
+            : {}),
         };
       })
     );
@@ -716,401 +626,6 @@ export const getShiftRsvps = query({
   },
 });
 
-function deduplicateByUser<
-  T extends { userProfileId: string; createdAt: number },
->(rsvps: T[]): T[] {
-  const byUser = new Map<string, T>();
-  for (const rsvp of rsvps) {
-    const existing = byUser.get(rsvp.userProfileId);
-    if (!existing || rsvp.createdAt > existing.createdAt) {
-      byUser.set(rsvp.userProfileId, rsvp);
-    }
-  }
-  return Array.from(byUser.values());
-}
-
-async function deleteExistingCarpools(ctx: MutationCtx, eventId: Id<"events">) {
-  const existingCarpools = await ctx.db
-    .query("carpools")
-    .withIndex("by_event", (q) => q.eq("eventId", eventId))
-    .collect();
-
-  for (const carpool of existingCarpools) {
-    const members = await ctx.db
-      .query("carpoolMembers")
-      .withIndex("by_carpool", (q) => q.eq("carpoolId", carpool._id))
-      .collect();
-    for (const member of members) {
-      await ctx.db.delete(member._id);
-    }
-    await ctx.db.delete(carpool._id);
-  }
-}
-
-function assignRidersToDrivers<
-  D extends { _id: string; driverInfo?: { capacity: number } | undefined },
-  R extends { _id: string },
->(drivers: D[], riders: R[]) {
-  const unassigned = [...riders];
-  const assignments: Array<{
-    driverRsvpId: D["_id"];
-    riderRsvpIds: R["_id"][];
-  }> = [];
-
-  for (const driver of drivers) {
-    const capacity = driver.driverInfo?.capacity ?? 0;
-    const assigned: R["_id"][] = [];
-
-    for (let i = 0; i < capacity && unassigned.length > 0; i++) {
-      const rider = unassigned.shift();
-      if (rider) {
-        assigned.push(rider._id);
-      }
-    }
-
-    assignments.push({ driverRsvpId: driver._id, riderRsvpIds: assigned });
-  }
-
-  return { assignments, unassignedCount: unassigned.length };
-}
-
-export const generateCarpools = mutation({
-  args: {
-    eventId: v.id("events"),
-  },
-  handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can generate carpools");
-    }
-
-    const event = await ctx.db.get(args.eventId);
-    if (!event) {
-      throw new Error("Event not found");
-    }
-
-    if (!event.isOffsite) {
-      throw new Error("Can only generate carpools for offsite events");
-    }
-
-    await deleteExistingCarpools(ctx, args.eventId);
-
-    const rsvps = await ctx.db
-      .query("rsvps")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
-      .collect();
-
-    const drivers = deduplicateByUser(
-      rsvps.filter(
-        (rsvp) => rsvp.canDrive && rsvp.driverInfo && !rsvp.selfTransport
-      )
-    );
-    const riders = deduplicateByUser(
-      rsvps.filter((rsvp) => rsvp.needsRide && !rsvp.selfTransport)
-    );
-
-    if (riders.length > 0 && drivers.length === 0) {
-      throw new Error("No drivers available for riders");
-    }
-
-    const { assignments, unassignedCount } = assignRidersToDrivers(
-      drivers,
-      riders
-    );
-
-    for (const assignment of assignments) {
-      const carpoolId = await ctx.db.insert("carpools", {
-        eventId: args.eventId,
-        driverRsvpId: assignment.driverRsvpId,
-        status: "draft",
-        createdAt: Date.now(),
-      });
-
-      for (const riderRsvpId of assignment.riderRsvpIds) {
-        await ctx.db.insert("carpoolMembers", {
-          carpoolId,
-          rsvpId: riderRsvpId,
-        });
-      }
-    }
-
-    return {
-      carpoolsCreated: assignments.length,
-      ridersAssigned: riders.length - unassignedCount,
-      ridersUnassigned: unassignedCount,
-    };
-  },
-});
-
-export const getCarpools = query({
-  args: {
-    eventId: v.id("events"),
-  },
-  handler: async (ctx, args) => {
-    const carpools = await ctx.db
-      .query("carpools")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
-      .collect();
-
-    const carpoolDetails = await Promise.all(
-      carpools.map(async (carpool) => {
-        const driverRsvp = await ctx.db.get(carpool.driverRsvpId);
-        const driverProfile = driverRsvp
-          ? await ctx.db.get(driverRsvp.userProfileId)
-          : null;
-
-        const members = await ctx.db
-          .query("carpoolMembers")
-          .withIndex("by_carpool", (q) => q.eq("carpoolId", carpool._id))
-          .collect();
-
-        const allRiderDetails = await Promise.all(
-          members.map(async (member) => {
-            const rsvp = await ctx.db.get(member.rsvpId);
-            const profile = rsvp ? await ctx.db.get(rsvp.userProfileId) : null;
-            return {
-              rsvpId: member.rsvpId,
-              userProfileId: rsvp?.userProfileId,
-              createdAt: rsvp?.createdAt ?? 0,
-              name: profile?.name ?? "Unknown",
-              email: profile?.email ?? "",
-              phoneNumber: profile?.phoneNumber,
-            };
-          })
-        );
-
-        const ridersByUser = new Map<
-          string,
-          {
-            rsvpId: string;
-            name: string;
-            email: string;
-            phoneNumber?: string;
-            createdAt: number;
-          }
-        >();
-        for (const rider of allRiderDetails) {
-          if (!rider.userProfileId) {
-            continue;
-          }
-          const existing = ridersByUser.get(rider.userProfileId);
-          if (!existing || rider.createdAt > existing.createdAt) {
-            ridersByUser.set(rider.userProfileId, {
-              rsvpId: rider.rsvpId,
-              name: rider.name,
-              email: rider.email,
-              phoneNumber: rider.phoneNumber,
-              createdAt: rider.createdAt,
-            });
-          }
-        }
-
-        const riderDetails = Array.from(ridersByUser.values()).map((rider) => ({
-          rsvpId: rider.rsvpId,
-          name: rider.name,
-          email: rider.email,
-          phoneNumber: rider.phoneNumber,
-        }));
-
-        return {
-          carpoolId: carpool._id,
-          status: carpool.status,
-          driver: {
-            rsvpId: carpool.driverRsvpId,
-            name: driverProfile?.name ?? "Unknown",
-            email: driverProfile?.email ?? "",
-            phoneNumber: driverProfile?.phoneNumber,
-            carType: driverRsvp?.driverInfo?.carType ?? "",
-            carColor: driverRsvp?.driverInfo?.carColor ?? "",
-            capacity: driverRsvp?.driverInfo?.capacity ?? 0,
-          },
-          riders: riderDetails,
-        };
-      })
-    );
-
-    return carpoolDetails;
-  },
-});
-
-export const updateCarpoolAssignment = mutation({
-  args: {
-    carpoolId: v.id("carpools"),
-    addRsvpIds: v.optional(v.array(v.id("rsvps"))),
-    removeRsvpIds: v.optional(v.array(v.id("rsvps"))),
-  },
-  handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can update carpool assignments");
-    }
-
-    if (args.removeRsvpIds) {
-      for (const rsvpId of args.removeRsvpIds) {
-        const member = await ctx.db
-          .query("carpoolMembers")
-          .withIndex("by_rsvp", (q) => q.eq("rsvpId", rsvpId))
-          .first();
-
-        if (member && member.carpoolId === args.carpoolId) {
-          await ctx.db.delete(member._id);
-        }
-      }
-    }
-
-    if (args.addRsvpIds) {
-      for (const rsvpId of args.addRsvpIds) {
-        const existingMember = await ctx.db
-          .query("carpoolMembers")
-          .withIndex("by_rsvp", (q) => q.eq("rsvpId", rsvpId))
-          .first();
-
-        if (existingMember) {
-          await ctx.db.delete(existingMember._id);
-        }
-
-        await ctx.db.insert("carpoolMembers", {
-          carpoolId: args.carpoolId,
-          rsvpId,
-        });
-      }
-    }
-  },
-});
-
-export const reassignRider = mutation({
-  args: {
-    eventId: v.id("events"),
-    riderRsvpId: v.id("rsvps"),
-    fromCarpoolId: v.optional(v.id("carpools")),
-    toCarpoolId: v.optional(v.id("carpools")),
-  },
-  handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can reassign riders");
-    }
-
-    const event = await ctx.db.get(args.eventId);
-    if (!event) {
-      throw new Error("Event not found");
-    }
-
-    if (args.toCarpoolId) {
-      const toCarpool = await ctx.db.get(args.toCarpoolId);
-      if (!toCarpool) {
-        throw new Error("Target carpool not found");
-      }
-
-      if (toCarpool.eventId !== args.eventId) {
-        throw new Error("Target carpool does not belong to this event");
-      }
-
-      if (toCarpool.status !== "draft") {
-        throw new Error("Cannot reassign riders to finalized carpools");
-      }
-
-      const driverRsvp = await ctx.db.get(toCarpool.driverRsvpId);
-      const capacity = driverRsvp?.driverInfo?.capacity ?? 0;
-
-      const existingMembers = await ctx.db
-        .query("carpoolMembers")
-        .withIndex("by_carpool", (q) => q.eq("carpoolId", toCarpool._id))
-        .collect();
-
-      if (existingMembers.length >= capacity) {
-        throw new Error("Target carpool is at capacity");
-      }
-    }
-
-    const existingMember = await ctx.db
-      .query("carpoolMembers")
-      .withIndex("by_rsvp", (q) => q.eq("rsvpId", args.riderRsvpId))
-      .first();
-
-    if (existingMember) {
-      const fromCarpool = await ctx.db.get(existingMember.carpoolId);
-      if (fromCarpool && fromCarpool.status !== "draft") {
-        throw new Error("Cannot reassign riders from finalized carpools");
-      }
-      await ctx.db.delete(existingMember._id);
-    }
-
-    if (args.toCarpoolId) {
-      await ctx.db.insert("carpoolMembers", {
-        carpoolId: args.toCarpoolId,
-        rsvpId: args.riderRsvpId,
-      });
-    }
-
-    return {
-      success: true,
-      riderRsvpId: args.riderRsvpId,
-      fromCarpoolId: existingMember?.carpoolId,
-      toCarpoolId: args.toCarpoolId,
-    };
-  },
-});
-
-export const finalizeCarpools = mutation({
-  args: {
-    eventId: v.id("events"),
-  },
-  handler: async (ctx, args) => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", authUserId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can finalize carpools");
-    }
-
-    const carpools = await ctx.db
-      .query("carpools")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
-      .collect();
-
-    for (const carpool of carpools) {
-      await ctx.db.patch(carpool._id, { status: "finalized" });
-    }
-
-    return { carpoolsFinalized: carpools.length };
-  },
-});
-
 /**
  * Backfill migration to add slugs to existing events that don't have them.
  * This should be run once after deploying the optional slug schema change.
@@ -1118,20 +633,14 @@ export const finalizeCarpools = mutation({
  */
 export const backfillEventSlugs = mutation({
   args: {},
+  returns: v.object({
+    totalEvents: v.number(),
+    eventsWithoutSlugs: v.number(),
+    updated: v.number(),
+    skipped: v.number(),
+  }),
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!userProfile || userProfile.role !== "board") {
-      throw new Error("Only board members can run migrations");
-    }
+    await requireBoardMember(ctx);
 
     const allEvents = await ctx.db.query("events").collect();
     const eventsWithoutSlugs = allEvents.filter((event) => !event.slug);

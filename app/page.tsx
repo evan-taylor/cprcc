@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import SiteHeader from "@/components/site-header";
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 const heroImage = "/hero.jpg";
 
 const missionCopy = [
-  `"Our mission is more than words. We always aim to prevent and relieve suffering with every action. The Red Cross shelters, feeds and provides comfort to people affected by disasters; supplies about 40% of the nation’s blood; teaches skills that save lives; distributes international humanitarian aid; and supports veterans, military members and their families.`,
+  `"Our mission is more than words. We always aim to prevent and relieve suffering with every action. The Red Cross shelters, feeds and provides comfort to people affected by disasters; supplies about 40% of the nation\u2019s blood; teaches skills that save lives; distributes international humanitarian aid; and supports veterans, military members and their families.`,
   `The Red Cross is not a government agency. The Red Cross is a registered 501(c)(3) nonprofit organization that depends on volunteers and the generosity of the American public to deliver its mission."`,
 ];
 
@@ -42,16 +43,22 @@ const contentKeyPrefixLength = 12;
 export default async function HomePage() {
   "use cache";
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-[color:var(--color-bg)] text-[color:var(--color-text)]">
       <SiteHeader variant="inverted" />
       <HeroSection />
-      <main className="space-y-16 pt-16 pb-24">
-        <ContentSection id="mission" paragraphs={missionCopy} title="Mission" />
+      <main>
+        <QuickStats />
+        <ContentSection
+          id="mission"
+          paragraphs={missionCopy}
+          title="Our Mission"
+        />
         <ContentSection
           id="who-we-are"
           paragraphs={whoWeAreCopy}
-          title="Who we are"
+          title="Who We Are"
         />
+        <CTASection />
       </main>
     </div>
   );
@@ -59,24 +66,87 @@ export default async function HomePage() {
 
 function HeroSection() {
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden text-center text-white">
+    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden text-center text-white">
       <Image
         alt="Cal Poly Red Cross Club tabling at an event"
         className="object-cover"
         fill
         priority
+        sizes="100vw"
         src={heroImage}
       />
-      <div className="absolute inset-0 bg-black/55" />
-      <div className="relative z-10 px-4">
-        <h1 className="mt-6 font-semibold text-4xl sm:text-5xl">
-          Cal Poly SLO Red Cross Club
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/70" />
+      <div className="relative z-10 mx-auto max-w-3xl px-6">
+        <div className="animate-fade-up">
+          <p className="mb-4 font-medium text-sm text-white/70 uppercase tracking-[0.25em]">
+            Cal Poly San Luis Obispo
+          </p>
+        </div>
+        <h1 className="stagger-1 animate-fade-up font-bold text-5xl tracking-tight sm:text-6xl lg:text-7xl">
+          Red Cross Club
         </h1>
-        <div className="mx-auto mt-3 h-1 w-28 rounded-full bg-white" />
+        <div className="stagger-2 mx-auto mt-4 h-0.5 w-20 animate-fade-up rounded-full bg-white/40" />
+        <p className="stagger-3 mx-auto mt-6 max-w-xl animate-fade-up text-lg text-white/80 leading-relaxed sm:text-xl">
+          Preventing and relieving suffering through volunteer action
+        </p>
+        <div className="stagger-4 mt-8 flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link
+            className="inline-flex h-12 items-center rounded-full bg-red-600 px-8 font-semibold text-base text-white shadow-lg shadow-red-600/30 transition-all duration-200 hover:bg-red-700 hover:shadow-red-600/40 hover:shadow-xl active:scale-[0.97]"
+            href="/events"
+          >
+            View Upcoming Events
+          </Link>
+          <Link
+            className="inline-flex h-12 items-center rounded-full bg-white/15 px-8 font-semibold text-base text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm transition-all duration-200 hover:bg-white/25 active:scale-[0.97]"
+            href="/volunteer-connection"
+          >
+            Get Involved
+          </Link>
+        </div>
       </div>
-      <div className="absolute bottom-10 flex flex-col items-center gap-1 text-white/80 text-xs uppercase tracking-wide">
-        <span>Scroll</span>
-        <span className="text-2xl">⌄</span>
+      <div className="absolute bottom-8 flex animate-scroll-hint flex-col items-center gap-1 text-white/50 text-xs">
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <title>Scroll down</title>
+          <path
+            d="M19 14l-7 7m0 0l-7-7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+    </section>
+  );
+}
+
+function QuickStats() {
+  const stats = [
+    { value: "40%", label: "of the nation\u2019s blood supply" },
+    { value: "300+", label: "chapters nationwide" },
+    { value: "Free", label: "to join \u2014 no experience needed" },
+  ];
+
+  return (
+    <section className="border-[color:var(--color-border)]/60 border-b bg-[color:var(--color-bg-subtle)]/60">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        {stats.map((stat) => (
+          <div
+            className="flex flex-col items-center gap-1 px-6 py-8 text-center sm:py-10"
+            key={stat.label}
+          >
+            <span className="font-display font-semibold text-3xl text-red-600 sm:text-4xl">
+              {stat.value}
+            </span>
+            <span className="text-[color:var(--color-text-muted)] text-sm">
+              {stat.label}
+            </span>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -92,16 +162,50 @@ function ContentSection({
   paragraphs: string[];
 }) {
   return (
-    <section className="px-4" id={id}>
-      <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 text-center">
-        <h2 className="font-semibold text-3xl text-slate-900">{title}</h2>
-        <div className="h-0.5 w-16 bg-slate-200" />
-        <div className="space-y-4 text-lg text-slate-900 leading-relaxed">
+    <section className="py-[var(--spacing-section)]" id={id}>
+      <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <h2 className="font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] sm:text-4xl">
+            {title}
+          </h2>
+          <div className="h-0.5 w-12 rounded-full bg-red-600/30" />
+        </div>
+        <div className="editorial-lead space-y-5">
           {paragraphs.map((paragraph) => (
             <p key={`${id}-${paragraph.slice(0, contentKeyPrefixLength)}`}>
               {paragraph}
             </p>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CTASection() {
+  return (
+    <section className="border-[color:var(--color-border)]/60 border-t bg-[color:var(--color-bg-subtle)]/70 py-[var(--spacing-section)]">
+      <div className="mx-auto max-w-3xl px-6 text-center">
+        <h2 className="font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] sm:text-4xl">
+          Ready to make a difference?
+        </h2>
+        <p className="editorial-lead mx-auto mt-4 max-w-xl">
+          Join our community of volunteers and help us serve those in need. All
+          Cal Poly students are welcome.
+        </p>
+        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link
+            className="inline-flex h-12 items-center rounded-full bg-red-600 px-8 font-semibold text-base text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
+            href="/volunteer-connection"
+          >
+            Start Volunteering
+          </Link>
+          <Link
+            className="inline-flex h-12 items-center rounded-full border border-slate-200 bg-white px-8 font-semibold text-base text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.97]"
+            href="/contact"
+          >
+            Contact Us
+          </Link>
         </div>
       </div>
     </section>

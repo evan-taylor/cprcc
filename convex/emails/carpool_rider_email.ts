@@ -1,4 +1,4 @@
-interface RiderEmailProps {
+export interface RiderEmailProps {
   carColor: string;
   carType: string;
   driverEmail: string;
@@ -10,6 +10,15 @@ interface RiderEmailProps {
   eventTitle: string;
   otherRiders: Array<{ name: string; phoneNumber?: string }>;
   riderName: string;
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export function generateRiderEmailHtml(props: RiderEmailProps): string {
@@ -24,6 +33,7 @@ export function generateRiderEmailHtml(props: RiderEmailProps): string {
     carColor,
     carType,
     otherRiders,
+    riderName,
   } = props;
 
   return `
@@ -48,23 +58,24 @@ export function generateRiderEmailHtml(props: RiderEmailProps): string {
       <h2>Carpool Assignment - Rider</h2>
     </div>
     <div class="content">
-      <h3>Event: ${eventTitle}</h3>
-      <p><strong>Date:</strong> ${eventDate}</p>
-      <p><strong>Time:</strong> ${eventTime}</p>
-      <p><strong>Location:</strong> ${eventLocation}</p>
+      <p>Hi ${escapeHtml(riderName)},</p>
+      <h3>Event: ${escapeHtml(eventTitle)}</h3>
+      <p><strong>Date:</strong> ${escapeHtml(eventDate)}</p>
+      <p><strong>Time:</strong> ${escapeHtml(eventTime)}</p>
+      <p><strong>Location:</strong> ${escapeHtml(eventLocation)}</p>
       
       <div class="carpool-info">
         <h4>Your Carpool Assignment</h4>
         <p><strong>Role:</strong> Passenger</p>
-        <p><strong>Driver:</strong> ${driverName}<br/><a href="mailto:${driverEmail}">${driverEmail}</a>${driverPhoneNumber ? `<br/><a href="tel:${driverPhoneNumber}">${driverPhoneNumber}</a>` : ""}</p>
-        <p><strong>Vehicle:</strong> ${carColor} ${carType}</p>
+        <p><strong>Driver:</strong> ${escapeHtml(driverName)}<br/><a href="mailto:${encodeURIComponent(driverEmail)}">${escapeHtml(driverEmail)}</a>${driverPhoneNumber ? `<br/><a href="tel:${encodeURIComponent(driverPhoneNumber)}">${escapeHtml(driverPhoneNumber)}</a>` : ""}</p>
+        <p><strong>Vehicle:</strong> ${escapeHtml(carColor)} ${escapeHtml(carType)}</p>
         
         <h4>Other Passengers:</h4>
         ${
           otherRiders.length > 0
             ? `
         <ul class="rider-list">
-          ${otherRiders.map((r) => `<li>${r.name}${r.phoneNumber ? `<br/><a href="tel:${r.phoneNumber}">${r.phoneNumber}</a>` : ""}</li>`).join("")}
+          ${otherRiders.map((r) => `<li>${escapeHtml(r.name)}${r.phoneNumber ? `<br/><a href="tel:${encodeURIComponent(r.phoneNumber)}">${escapeHtml(r.phoneNumber)}</a>` : ""}</li>`).join("")}
         </ul>
         `
             : "<p>You are the only passenger in this carpool.</p>"

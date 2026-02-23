@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Red_Hat_Display } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { Suspense } from "react";
@@ -11,8 +11,8 @@ const inter = Inter({
   display: "swap",
 });
 
-const redHatDisplay = Red_Hat_Display({
-  variable: "--font-red-hat-display",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
 });
@@ -130,7 +130,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${redHatDisplay.variable} bg-white text-slate-900 antialiased`}
+        className={`${inter.variable} ${fraunces.variable} bg-white text-slate-900 antialiased`}
       >
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires dangerouslySetInnerHTML per Next.js convention
@@ -142,7 +142,7 @@ export default function RootLayout({
         <Suspense
           fallback={
             <div className="flex min-h-screen items-center justify-center bg-white text-slate-900">
-              <output aria-live="polite">Preparing your session…</output>
+              <p aria-live="polite">Preparing your session…</p>
             </div>
           }
         >

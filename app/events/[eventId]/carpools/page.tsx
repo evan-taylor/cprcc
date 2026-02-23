@@ -50,13 +50,13 @@ export default function CarpoolManagementPage() {
 
   const currentUser = useQuery(api.users.getCurrentUser);
   const carpools = useQuery(
-    api.events.getCarpools,
+    api.carpools.getCarpools,
     eventId ? { eventId } : "skip"
   );
-  const generateCarpools = useMutation(api.events.generateCarpools);
-  const finalizeCarpools = useMutation(api.events.finalizeCarpools);
+  const generateCarpools = useMutation(api.carpools.generateCarpools);
+  const finalizeCarpools = useMutation(api.carpools.finalizeCarpools);
   const sendCarpoolEmails = useAction(api.emails.sendCarpoolEmails);
-  const reassignRider = useMutation(api.events.reassignRider);
+  const reassignRider = useMutation(api.carpools.reassignRider);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -68,6 +68,11 @@ export default function CarpoolManagementPage() {
     name: string;
     email: string;
   } | null>(null);
+
+  type Carpool = NonNullable<typeof carpools>[number];
+  type Rider = Carpool["riders"][number];
+  type Rsvp = NonNullable<typeof event>["rsvps"][number];
+  type Shift = NonNullable<typeof event>["shifts"][number];
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -89,7 +94,7 @@ export default function CarpoolManagementPage() {
     carpools === undefined
   ) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <p className="text-slate-900">Loading...</p>
@@ -100,7 +105,7 @@ export default function CarpoolManagementPage() {
 
   if (!currentUser || currentUser.role !== "board") {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
@@ -118,7 +123,7 @@ export default function CarpoolManagementPage() {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
@@ -133,7 +138,7 @@ export default function CarpoolManagementPage() {
 
   if (!event.isOffsite) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
@@ -217,8 +222,8 @@ export default function CarpoolManagementPage() {
   const handleDragStart = (event: DragStartEvent) => {
     const riderId = event.active.id.toString().replace("rider:", "");
     const rider = carpools
-      .flatMap((c) => c.riders)
-      .find((r) => r.rsvpId === riderId);
+      .flatMap((c: Carpool) => c.riders)
+      .find((r: Rider) => r.rsvpId === riderId);
     if (rider) {
       setActiveRider({
         rsvpId: rider.rsvpId as Id<"rsvps">,
@@ -247,14 +252,18 @@ export default function CarpoolManagementPage() {
       return;
     }
 
-    const fromCarpool = carpools.find((c) =>
-      c.riders.some((r) => r.rsvpId === riderId)
+    type Carpool = NonNullable<typeof carpools>[number];
+    type Rider = Carpool["riders"][number];
+    const fromCarpool = carpools.find((c: Carpool) =>
+      c.riders.some((r: Rider) => r.rsvpId === riderId)
     );
 
     let toCarpoolId: Id<"carpools"> | undefined;
     if (targetId !== "unassigned") {
       toCarpoolId = targetId.replace("carpool:", "") as Id<"carpools">;
-      const toCarpool = carpools.find((c) => c.carpoolId === toCarpoolId);
+      const toCarpool = carpools.find(
+        (c: Carpool) => c.carpoolId === toCarpoolId
+      );
 
       if (toCarpool && toCarpool.riders.length >= toCarpool.driver.capacity) {
         setError("Target carpool is at capacity");
@@ -279,25 +288,22 @@ export default function CarpoolManagementPage() {
 
   const getShiftTimesForUser = (userProfileId: string) => {
     const userRsvps = event.rsvps.filter(
-      (rsvp) => rsvp.userProfileId === userProfileId && rsvp.shiftId
+      (rsvp: Rsvp) => rsvp.userProfileId === userProfileId && rsvp.shiftId
     );
     const shiftTimes = userRsvps
-      .map((rsvp) => {
-        const shift = event.shifts.find((s) => s._id === rsvp.shiftId);
+      .map((rsvp: Rsvp) => {
+        const shift = event.shifts.find((s: Shift) => s._id === rsvp.shiftId);
         return shift;
       })
-      .filter(
-        (shift): shift is NonNullable<typeof shift> =>
-          shift !== null && shift !== undefined
-      )
-      .sort((a, b) => a.startTime - b.startTime);
+      .filter((shift: Shift | undefined): shift is Shift => shift !== undefined)
+      .sort((a: Shift, b: Shift) => a.startTime - b.startTime);
 
     if (shiftTimes.length === 0) {
       return null;
     }
 
     return shiftTimes
-      .map((shift) => {
+      .map((shift: Shift) => {
         const start = new Date(shift.startTime).toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
@@ -312,7 +318,7 @@ export default function CarpoolManagementPage() {
   };
 
   const getShiftTimesForRsvpId = (rsvpId: string) => {
-    const rsvp = event.rsvps.find((r) => r._id === rsvpId);
+    const rsvp = event.rsvps.find((r: Rsvp) => r._id === rsvpId);
     if (!rsvp) {
       return null;
     }
@@ -320,42 +326,43 @@ export default function CarpoolManagementPage() {
   };
 
   const uniqueRsvpUserIds = new Set<Id<"userProfiles">>(
-    event.rsvps.map((rsvp) => rsvp.userProfileId)
+    event.rsvps.map((rsvp: Rsvp) => rsvp.userProfileId)
   );
   const uniqueDriverUserIds = new Set<Id<"userProfiles">>(
     event.rsvps
-      .filter((rsvp) => rsvp.canDrive)
-      .map((rsvp) => rsvp.userProfileId)
+      .filter((rsvp: Rsvp) => rsvp.canDrive)
+      .map((rsvp: Rsvp) => rsvp.userProfileId)
   );
   const uniqueRiderUserIds = new Set<Id<"userProfiles">>(
     event.rsvps
-      .filter((rsvp) => rsvp.needsRide)
-      .map((rsvp) => rsvp.userProfileId)
+      .filter((rsvp: Rsvp) => rsvp.needsRide)
+      .map((rsvp: Rsvp) => rsvp.userProfileId)
   );
   const uniqueSelfTransportUserIds = new Set<Id<"userProfiles">>(
     event.rsvps
-      .filter((rsvp) => rsvp.selfTransport)
-      .map((rsvp) => rsvp.userProfileId)
+      .filter((rsvp: Rsvp) => rsvp.selfTransport)
+      .map((rsvp: Rsvp) => rsvp.userProfileId)
   );
-  const drivers = event.rsvps.filter((rsvp) => rsvp.canDrive);
+  const drivers = event.rsvps.filter((rsvp: Rsvp) => rsvp.canDrive);
   const allFinalized =
-    carpools.length > 0 && carpools.every((c) => c.status === "finalized");
-  const anyDraft = carpools.some((c) => c.status === "draft");
+    carpools.length > 0 &&
+    carpools.every((c: Carpool) => c.status === "finalized");
+  const anyDraft = carpools.some((c: Carpool) => c.status === "draft");
 
   const assignedRiderUserIds = new Set<Id<"userProfiles">>(
     carpools
-      .flatMap((c) => c.riders.map((r) => r.rsvpId))
+      .flatMap((c: Carpool) => c.riders.map((r: Rider) => r.rsvpId))
       .map(
-        (rsvpId) =>
-          event.rsvps.find((rsvp) => rsvp._id === rsvpId)?.userProfileId
+        (rsvpId: Id<"rsvps">) =>
+          event.rsvps.find((rsvp: Rsvp) => rsvp._id === rsvpId)?.userProfileId
       )
-      .filter((id): id is Id<"userProfiles"> => id !== undefined)
+      .filter(
+        (id: Id<"userProfiles"> | undefined): id is Id<"userProfiles"> =>
+          id !== undefined
+      )
   );
 
-  const unassignedRidersByUser = new Map<
-    Id<"userProfiles">,
-    (typeof event.rsvps)[0]
-  >();
+  const unassignedRidersByUser = new Map<Id<"userProfiles">, Rsvp>();
   for (const rsvp of event.rsvps) {
     if (rsvp.needsRide && !assignedRiderUserIds.has(rsvp.userProfileId)) {
       const existing = unassignedRidersByUser.get(rsvp.userProfileId);
@@ -367,12 +374,12 @@ export default function CarpoolManagementPage() {
   const unassignedRiders = Array.from(unassignedRidersByUser.values());
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
       <SiteHeader />
       <main className="mx-auto w-full max-w-5xl px-4 pt-24 pb-16 sm:px-8">
         <div className="mb-6">
           <button
-            className="text-rose-600 text-sm hover:text-rose-700"
+            className="font-medium text-red-600 text-sm hover:text-red-700"
             onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
             type="button"
           >
@@ -381,7 +388,7 @@ export default function CarpoolManagementPage() {
         </div>
 
         <header className="mb-8">
-          <h1 className="font-semibold text-4xl text-slate-900">
+          <h1 className="font-display font-semibold text-4xl text-[color:var(--color-text-emphasis)]">
             Carpool Management
           </h1>
           <p className="mt-2 text-slate-900">{event.title}</p>
@@ -400,25 +407,25 @@ export default function CarpoolManagementPage() {
         )}
 
         <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="editorial-card rounded-3xl p-6">
             <p className="font-semibold text-slate-900 text-sm">Total RSVPs</p>
             <p className="mt-2 font-bold text-3xl text-slate-900">
               {uniqueRsvpUserIds.size}
             </p>
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="editorial-card rounded-3xl p-6">
             <p className="font-semibold text-slate-900 text-sm">Drivers</p>
             <p className="mt-2 font-bold text-3xl text-blue-600">
               {uniqueDriverUserIds.size}
             </p>
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="editorial-card rounded-3xl p-6">
             <p className="font-semibold text-slate-900 text-sm">Need Rides</p>
             <p className="mt-2 font-bold text-3xl text-orange-600">
               {uniqueRiderUserIds.size}
             </p>
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="editorial-card rounded-3xl p-6">
             <p className="font-semibold text-slate-900 text-sm">
               Self-Transport
             </p>
@@ -428,7 +435,7 @@ export default function CarpoolManagementPage() {
           </div>
         </div>
 
-        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="editorial-card mb-8 rounded-3xl p-8">
           <h2 className="mb-4 font-semibold text-slate-900 text-xl">
             Carpool Actions
           </h2>
@@ -505,7 +512,7 @@ export default function CarpoolManagementPage() {
                     </span>
                   </div>
                   <div className="space-y-2">
-                    {unassignedRiders.map((rsvp) => {
+                    {unassignedRiders.map((rsvp: Rsvp) => {
                       const shiftTimes = getShiftTimesForUser(
                         rsvp.userProfileId
                       );
@@ -543,7 +550,7 @@ export default function CarpoolManagementPage() {
                 </div>
               )}
 
-              {carpools.map((carpool, index) => {
+              {carpools.map((carpool: Carpool, index: number) => {
                 const isFull = carpool.riders.length >= carpool.driver.capacity;
                 const isDraft = carpool.status === "draft";
 
@@ -642,7 +649,7 @@ export default function CarpoolManagementPage() {
                       </p>
                       {(() => {
                         const driverRsvp = event.rsvps.find(
-                          (r) => r._id === carpool.driver.rsvpId
+                          (r: Rsvp) => r._id === carpool.driver.rsvpId
                         );
                         const shiftTimes = driverRsvp
                           ? getShiftTimesForUser(driverRsvp.userProfileId)
@@ -665,7 +672,7 @@ export default function CarpoolManagementPage() {
                         </p>
                       ) : (
                         <div className="space-y-2">
-                          {carpool.riders.map((rider) => {
+                          {carpool.riders.map((rider: Rider) => {
                             const shiftTimes = getShiftTimesForRsvpId(
                               rider.rsvpId
                             );

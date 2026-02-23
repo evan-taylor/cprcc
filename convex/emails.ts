@@ -1,4 +1,5 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
+"use node";
+
 import { v } from "convex/values";
 import { Resend } from "resend";
 import { api } from "./_generated/api";
@@ -6,16 +7,21 @@ import { action } from "./_generated/server";
 import {
   generateDriverEmailHtml,
   generateDriverEmailSubject,
-} from "./emails/carpool-driver-email";
+} from "./emails/carpool_driver_email";
 import {
   generateRiderEmailHtml,
   generateRiderEmailSubject,
-} from "./emails/carpool-rider-email";
+} from "./emails/carpool_rider_email";
 
 export const sendCarpoolEmails = action({
   args: {
     eventId: v.id("events"),
   },
+  returns: v.object({
+    emailsSent: v.number(),
+    emailsFailed: v.number(),
+    carpoolsProcessed: v.number(),
+  }),
   handler: async (
     ctx,
     args
@@ -24,13 +30,8 @@ export const sendCarpoolEmails = action({
     emailsFailed: number;
     carpoolsProcessed: number;
   }> => {
-    const authUserId = await getAuthUserId(ctx);
-    if (!authUserId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.runQuery(api.users.getCurrentUser);
-    if (!userProfile || userProfile.role !== "board") {
+    const currentUser = await ctx.runQuery(api.users.getCurrentUser);
+    if (!currentUser || currentUser.role !== "board") {
       throw new Error("Only board members can send carpool emails");
     }
 
@@ -42,7 +43,7 @@ export const sendCarpoolEmails = action({
       throw new Error("Event not found");
     }
 
-    const carpools = await ctx.runQuery(api.events.getCarpools, {
+    const carpools = await ctx.runQuery(api.carpools.getCarpools, {
       eventId: args.eventId,
     });
 

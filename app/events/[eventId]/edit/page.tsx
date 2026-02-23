@@ -97,7 +97,7 @@ export default function EditEventPage() {
 
   if (event === undefined || currentUser === undefined) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <p className="text-slate-900">Loading...</p>
@@ -108,7 +108,7 @@ export default function EditEventPage() {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
@@ -126,7 +126,7 @@ export default function EditEventPage() {
 
   if (!currentUser || currentUser.role !== "board") {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
@@ -200,12 +200,12 @@ export default function EditEventPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-4 pt-24 pb-16 sm:px-8">
         <div className="mb-6">
           <button
-            className="text-rose-600 text-sm hover:text-rose-700"
+            className="font-medium text-red-600 text-sm hover:text-red-700"
             onClick={() => router.push(`/events/${event.slug ?? event._id}`)}
             type="button"
           >
@@ -214,7 +214,9 @@ export default function EditEventPage() {
         </div>
 
         <header className="mb-8">
-          <h1 className="font-semibold text-4xl text-slate-900">Edit Event</h1>
+          <h1 className="font-display font-semibold text-4xl text-[color:var(--color-text-emphasis)]">
+            Edit Event
+          </h1>
           <p className="mt-2 text-slate-900">
             Update event details. Note: Event type and shifts cannot be changed
             after creation.
@@ -222,7 +224,7 @@ export default function EditEventPage() {
         </header>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="editorial-card rounded-3xl p-8">
             <h2 className="mb-6 font-semibold text-slate-900 text-xl">
               Event Details
             </h2>
@@ -408,7 +410,7 @@ export default function EditEventPage() {
           </div>
 
           {event.eventType === "boothing" && event.shifts.length > 0 && (
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="editorial-card rounded-3xl p-8">
               <h2 className="mb-4 font-semibold text-slate-900 text-xl">
                 Shifts
               </h2>
@@ -417,32 +419,37 @@ export default function EditEventPage() {
                 contact a system administrator or delete and recreate the event.
               </p>
               <div className="space-y-3">
-                {event.shifts.map((shift, index) => {
-                  const shiftStart = new Date(shift.startTime);
-                  const shiftEnd = new Date(shift.endTime);
-                  return (
-                    <div
-                      className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-                      key={shift._id}
-                    >
-                      <h3 className="font-semibold text-slate-900">
-                        Shift {index + 1}
-                      </h3>
-                      <p className="mt-1 text-slate-900 text-sm">
-                        {shiftStart.toLocaleTimeString("en-US", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}{" "}
-                        -{" "}
-                        {shiftEnd.toLocaleTimeString("en-US", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}{" "}
-                        ({shift.requiredPeople} people needed)
-                      </p>
-                    </div>
-                  );
-                })}
+                {event.shifts.map(
+                  (
+                    shift: NonNullable<typeof event>["shifts"][number],
+                    index: number
+                  ) => {
+                    const shiftStart = new Date(shift.startTime);
+                    const shiftEnd = new Date(shift.endTime);
+                    return (
+                      <div
+                        className="editorial-card-soft rounded-lg p-4"
+                        key={shift._id}
+                      >
+                        <h3 className="font-semibold text-slate-900">
+                          Shift {index + 1}
+                        </h3>
+                        <p className="mt-1 text-slate-900 text-sm">
+                          {shiftStart.toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}{" "}
+                          -{" "}
+                          {shiftEnd.toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}{" "}
+                          ({shift.requiredPeople} people needed)
+                        </p>
+                      </div>
+                    );
+                  }
+                )}
               </div>
             </div>
           )}
@@ -471,7 +478,7 @@ export default function EditEventPage() {
           </div>
         </form>
 
-        <div className="mt-8 rounded-3xl border border-rose-300 bg-white p-8 shadow-sm">
+        <div className="editorial-card mt-8 rounded-3xl border border-rose-300 p-8">
           <h2 className="mb-4 font-semibold text-rose-900 text-xl">
             Danger Zone
           </h2>

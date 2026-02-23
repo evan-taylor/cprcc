@@ -15,6 +15,12 @@ const sitePages = [
       "Browse upcoming volunteer opportunities and RSVP to Red Cross activities",
   },
   {
+    title: "Gallery",
+    href: "/gallery",
+    description:
+      "Browse photos from our events and see our volunteers in action",
+  },
+  {
     title: "Volunteer Connection",
     href: "/volunteer-connection",
     description:
@@ -35,57 +41,43 @@ const sitePages = [
 
 export default function SitemapPage() {
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 text-slate-900">
+    <div className="min-h-screen bg-[color:var(--color-bg)] text-[color:var(--color-text)]">
       <SiteHeader />
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 pt-32 pb-20 sm:px-8 lg:px-12">
-        <HeroCard />
-        <PagesSection />
+      <main className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 pt-28 pb-24 sm:px-8">
+        <header className="max-w-xl">
+          <p className="editorial-kicker animate-fade-up">Sitemap</p>
+          <h1 className="stagger-1 editorial-title mt-3 animate-fade-up">
+            Explore our website
+          </h1>
+          <p className="stagger-2 editorial-lead mt-4 animate-fade-up">
+            Find all the pages and resources available on the Cal Poly Red Cross
+            Club website.
+          </p>
+        </header>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {sitePages.map((page) => (
+            <Link
+              className="group editorial-card flex flex-col rounded-2xl p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]"
+              href={page.href}
+              key={page.href}
+            >
+              <h3 className="font-semibold text-[color:var(--color-text-emphasis)] text-lg transition-colors duration-150 group-hover:text-red-600">
+                {page.title}
+              </h3>
+              <p className="mt-2 text-[color:var(--color-text-muted)] text-sm">
+                {page.description}
+              </p>
+              <span className="mt-4 font-medium text-red-600 text-sm transition-colors duration-150 group-hover:text-red-700">
+                Visit page
+                <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">
+                  &rarr;
+                </span>
+              </span>
+            </Link>
+          ))}
+        </div>
       </main>
     </div>
-  );
-}
-
-function HeroCard() {
-  return (
-    <section className="rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200">
-      <div className="space-y-4">
-        <p className="text-rose-700 text-sm uppercase tracking-[0.3em]">
-          Sitemap
-        </p>
-        <h1 className="font-semibold text-4xl text-slate-900">
-          Explore our website
-        </h1>
-        <p className="text-lg text-slate-900">
-          Find all the pages and resources available on the Cal Poly Red Cross
-          Club website. Navigate to any section to learn more about our mission,
-          events, and volunteer opportunities.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function PagesSection() {
-  return (
-    <section className="rounded-3xl border border-white/80 bg-white p-8 shadow-sm ring-1 ring-slate-200">
-      <h2 className="mb-6 font-semibold text-2xl text-slate-900">All Pages</h2>
-      <div className="grid gap-4 md:grid-cols-2">
-        {sitePages.map((page) => (
-          <Link
-            className="flex flex-col rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-rose-300 hover:shadow-sm"
-            href={page.href}
-            key={page.href}
-          >
-            <h3 className="font-semibold text-lg text-slate-900">
-              {page.title}
-            </h3>
-            <p className="mt-2 text-slate-900 text-sm">{page.description}</p>
-            <span className="mt-3 font-medium text-rose-700 text-sm">
-              Visit page →
-            </span>
-          </Link>
-        ))}
-      </div>
-    </section>
   );
 }

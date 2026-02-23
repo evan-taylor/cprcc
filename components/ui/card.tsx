@@ -7,7 +7,7 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Card({ className = "", children, ...props }: CardProps) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
+      className={`editorial-card rounded-2xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg ${className}`}
       {...props}
     >
       {children}
@@ -26,7 +26,7 @@ export function CardHeader({
 }: CardHeaderProps) {
   return (
     <div
-      className={`border-slate-100 border-b px-6 py-5 ${className}`}
+      className={`border-[color:var(--color-border)]/70 border-b px-6 py-5 ${className}`}
       {...props}
     >
       {children}
@@ -61,7 +61,7 @@ export function CardFooter({
 }: CardFooterProps) {
   return (
     <div
-      className={`rounded-b-2xl border-slate-100 border-t bg-slate-50/50 px-6 py-4 ${className}`}
+      className={`rounded-b-2xl border-[color:var(--color-border)]/70 border-t bg-[color:var(--color-bg-subtle)]/70 px-6 py-4 ${className}`}
       {...props}
     >
       {children}
@@ -81,7 +81,7 @@ export function CardTitle({
 }: CardTitleProps) {
   return (
     <h3
-      className={`font-display font-semibold text-slate-900 text-xl ${className}`}
+      className={`font-display font-semibold text-[color:var(--color-text-emphasis)] text-xl leading-tight ${className}`}
       {...props}
     >
       {children}
@@ -100,7 +100,10 @@ export function CardDescription({
   ...props
 }: CardDescriptionProps) {
   return (
-    <p className={`mt-1.5 text-slate-900 text-sm ${className}`} {...props}>
+    <p
+      className={`mt-1.5 text-[color:var(--color-text-muted)] text-sm leading-relaxed ${className}`}
+      {...props}
+    >
       {children}
     </p>
   );

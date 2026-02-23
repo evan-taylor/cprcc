@@ -40,7 +40,7 @@ export default function CreateEventPage() {
 
   if (currentUser === undefined) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <p className="text-slate-900">Loading...</p>
@@ -51,7 +51,7 @@ export default function CreateEventPage() {
 
   if (!currentUser || currentUser.role !== "board") {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
@@ -137,11 +137,11 @@ export default function CreateEventPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-4 pt-24 pb-16 sm:px-8">
         <header className="mb-8">
-          <h1 className="font-semibold text-4xl text-slate-900">
+          <h1 className="font-display font-semibold text-4xl text-[color:var(--color-text-emphasis)]">
             Create Event
           </h1>
           <p className="mt-2 text-slate-900">
@@ -150,7 +150,7 @@ export default function CreateEventPage() {
         </header>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="editorial-card rounded-3xl p-8">
             <h2 className="mb-6 font-semibold text-slate-900 text-xl">
               Event Details
             </h2>
@@ -340,7 +340,7 @@ export default function CreateEventPage() {
           </div>
 
           {eventType === "boothing" && (
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="editorial-card rounded-3xl p-8">
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="font-semibold text-slate-900 text-xl">Shifts</h2>
                 <button
@@ -361,7 +361,7 @@ export default function CreateEventPage() {
                 <div className="space-y-4">
                   {shifts.map((shift, index) => (
                     <div
-                      className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+                      className="editorial-card-soft rounded-lg p-4"
                       key={shift.id}
                     >
                       <div className="mb-3 flex items-center justify-between">

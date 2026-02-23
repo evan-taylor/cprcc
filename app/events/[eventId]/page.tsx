@@ -144,8 +144,8 @@ export default function EventDetailPage() {
   const event = isConvexId ? eventById : eventBySlug;
   const eventId = event?._id;
   const currentUser = useQuery(api.users.getCurrentUser);
-  const createRsvp = useMutation(api.events.createRsvp);
-  const deleteRsvp = useMutation(api.events.deleteRsvp);
+  const createRsvp = useMutation(api.rsvps.createRsvp);
+  const deleteRsvp = useMutation(api.rsvps.deleteRsvp);
   const updatePhoneNumber = useMutation(api.users.updatePhoneNumber);
 
   const [showRsvpForm, setShowRsvpForm] = useState(false);
@@ -166,7 +166,7 @@ export default function EventDetailPage() {
 
   if (!eventIdOrSlug || event === undefined || currentUser === undefined) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <p className="text-slate-900">Loading...</p>
@@ -177,7 +177,7 @@ export default function EventDetailPage() {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
@@ -195,12 +195,14 @@ export default function EventDetailPage() {
 
   const eventDate = new Date(event.startTime);
   const endDate = new Date(event.endTime);
+  type EventRsvp = (typeof event.rsvps)[number];
+  type EventShift = (typeof event.shifts)[number];
   const userRsvps = event.rsvps.filter(
-    (rsvp) => rsvp.userProfileId === currentUser?._id
+    (rsvp: EventRsvp) => rsvp.userProfileId === currentUser?._id
   );
   const hasRsvped = userRsvps.length > 0;
   const uniqueRsvpUserIds = new Set<Id<"userProfiles">>(
-    event.rsvps.map((rsvp) => rsvp.userProfileId)
+    event.rsvps.map((rsvp: EventRsvp) => rsvp.userProfileId)
   );
 
   const toggleShiftSelection = (shiftId: Id<"shifts">) => {
@@ -221,13 +223,17 @@ export default function EventDetailPage() {
     }
 
     const availableShiftIds = event.shifts
-      .filter((shift) => {
-        const shiftRsvps = event.rsvps.filter((r) => r.shiftId === shift._id);
+      .filter((shift: EventShift) => {
+        const shiftRsvps = event.rsvps.filter(
+          (r: EventRsvp) => r.shiftId === shift._id
+        );
         const isFull = shiftRsvps.length >= shift.requiredPeople;
-        const userHasThisShift = userRsvps.some((r) => r.shiftId === shift._id);
+        const userHasThisShift = userRsvps.some(
+          (r: EventRsvp) => r.shiftId === shift._id
+        );
         return !(isFull || userHasThisShift);
       })
-      .map((shift) => shift._id);
+      .map((shift: EventShift) => shift._id);
 
     setSelectedShiftIds(new Set(availableShiftIds));
   };
@@ -328,7 +334,9 @@ export default function EventDetailPage() {
         const failedShifts = results
           .filter((r) => !r.success)
           .map((r) => {
-            const shift = event.shifts.find((s) => s._id === r.shiftId);
+            const shift = event.shifts.find(
+              (s: EventShift) => s._id === r.shiftId
+            );
             return shift
               ? `${new Date(shift.startTime).toLocaleTimeString("en-US", {
                   hour: "numeric",
@@ -383,12 +391,12 @@ export default function EventDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
       <SiteHeader />
       <main className="mx-auto w-full max-w-4xl px-4 pt-24 pb-16 sm:px-8">
         <div className="mb-6">
           <button
-            className="text-rose-600 text-sm hover:text-rose-700"
+            className="font-medium text-red-600 text-sm hover:text-red-700"
             onClick={() => router.push("/events")}
             type="button"
           >
@@ -397,7 +405,7 @@ export default function EventDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="editorial-card rounded-3xl p-8">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
@@ -485,7 +493,7 @@ export default function EventDetailPage() {
           </div>
 
           {event.eventType === "boothing" && event.shifts.length > 0 && (
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="editorial-card rounded-3xl p-8">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-semibold text-slate-900 text-xl">
                   Available Shifts
@@ -515,15 +523,15 @@ export default function EventDetailPage() {
                 )}
               </div>
               <div className="space-y-3">
-                {event.shifts.map((shift) => {
+                {event.shifts.map((shift: EventShift) => {
                   const shiftStart = new Date(shift.startTime);
                   const shiftEnd = new Date(shift.endTime);
                   const shiftRsvps = event.rsvps.filter(
-                    (r) => r.shiftId === shift._id
+                    (r: EventRsvp) => r.shiftId === shift._id
                   );
                   const isFull = shiftRsvps.length >= shift.requiredPeople;
                   const userHasThisShift = userRsvps.some(
-                    (r) => r.shiftId === shift._id
+                    (r: EventRsvp) => r.shiftId === shift._id
                   );
                   const isSelected = selectedShiftIds.has(shift._id);
                   const isDisabled = isFull || userHasThisShift;
@@ -592,10 +600,7 @@ export default function EventDetailPage() {
           )}
 
           {currentUser && (
-            <div
-              className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
-              ref={rsvpFormRef}
-            >
+            <div className="editorial-card rounded-3xl p-8" ref={rsvpFormRef}>
               <h2 className="mb-4 font-semibold text-slate-900 text-xl">
                 Your RSVP
               </h2>
@@ -611,7 +616,7 @@ export default function EventDetailPage() {
                         <div className="space-y-2">
                           {Array.from(selectedShiftIds).map((shiftId) => {
                             const shift = event.shifts.find(
-                              (s) => s._id === shiftId
+                              (s: EventShift) => s._id === shiftId
                             );
                             if (!shift) {
                               return null;
@@ -778,7 +783,7 @@ export default function EventDetailPage() {
                       </label>
 
                       {canDrive && (
-                        <div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                        <div className="editorial-card-soft mt-4 space-y-3 rounded-lg p-4">
                           <p className="font-semibold text-slate-900 text-sm">
                             Driver Information
                           </p>
@@ -901,7 +906,7 @@ export default function EventDetailPage() {
           )}
 
           {currentUser?.role === "board" && (
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="editorial-card rounded-3xl p-8">
               <h2 className="mb-4 font-semibold text-slate-900 text-xl">
                 Attendees ({uniqueRsvpUserIds.size})
               </h2>
@@ -911,7 +916,7 @@ export default function EventDetailPage() {
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {event.rsvps.map((rsvp) => (
+                  {event.rsvps.map((rsvp: EventRsvp) => (
                     <div
                       className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
                       key={rsvp._id}
@@ -953,7 +958,7 @@ export default function EventDetailPage() {
                       {rsvp.shiftId &&
                         (() => {
                           const shift = event.shifts.find(
-                            (s) => s._id === rsvp.shiftId
+                            (s: EventShift) => s._id === rsvp.shiftId
                           );
                           return shift ? (
                             <p className="text-slate-900 text-xs">

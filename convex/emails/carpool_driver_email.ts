@@ -1,4 +1,4 @@
-interface DriverEmailProps {
+export interface DriverEmailProps {
   capacity: number;
   carColor: string;
   carType: string;
@@ -10,6 +10,15 @@ interface DriverEmailProps {
   riders: Array<{ name: string; email: string; phoneNumber?: string }>;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function generateDriverEmailHtml(props: DriverEmailProps): string {
   const {
     eventTitle,
@@ -19,6 +28,7 @@ export function generateDriverEmailHtml(props: DriverEmailProps): string {
     carColor,
     carType,
     capacity,
+    driverName,
     riders,
   } = props;
 
@@ -44,15 +54,16 @@ export function generateDriverEmailHtml(props: DriverEmailProps): string {
       <h2>Carpool Assignment - Driver</h2>
     </div>
     <div class="content">
-      <h3>Event: ${eventTitle}</h3>
-      <p><strong>Date:</strong> ${eventDate}</p>
-      <p><strong>Time:</strong> ${eventTime}</p>
-      <p><strong>Location:</strong> ${eventLocation}</p>
+      <p>Hi ${escapeHtml(driverName)},</p>
+      <h3>Event: ${escapeHtml(eventTitle)}</h3>
+      <p><strong>Date:</strong> ${escapeHtml(eventDate)}</p>
+      <p><strong>Time:</strong> ${escapeHtml(eventTime)}</p>
+      <p><strong>Location:</strong> ${escapeHtml(eventLocation)}</p>
       
       <div class="carpool-info">
         <h4>Your Carpool Assignment</h4>
         <p><strong>Role:</strong> Driver</p>
-        <p><strong>Your Vehicle:</strong> ${carColor} ${carType}</p>
+        <p><strong>Your Vehicle:</strong> ${escapeHtml(carColor)} ${escapeHtml(carType)}</p>
         <p><strong>Capacity:</strong> ${capacity} passengers</p>
         
         <h4>Your Passengers:</h4>
@@ -60,7 +71,7 @@ export function generateDriverEmailHtml(props: DriverEmailProps): string {
           riders.length > 0
             ? `
         <ul class="rider-list">
-          ${riders.map((rider) => `<li>${rider.name}<br/><a href="mailto:${rider.email}">${rider.email}</a>${rider.phoneNumber ? `<br/><a href="tel:${rider.phoneNumber}">${rider.phoneNumber}</a>` : ""}</li>`).join("")}
+          ${riders.map((rider) => `<li>${escapeHtml(rider.name)}<br/><a href="mailto:${encodeURIComponent(rider.email)}">${escapeHtml(rider.email)}</a>${rider.phoneNumber ? `<br/><a href="tel:${encodeURIComponent(rider.phoneNumber)}">${escapeHtml(rider.phoneNumber)}</a>` : ""}</li>`).join("")}
         </ul>
         `
             : "<p>No passengers assigned to your vehicle.</p>"

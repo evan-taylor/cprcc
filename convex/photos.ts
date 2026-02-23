@@ -1,27 +1,12 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireBoardMember } from "./lib/auth";
 
 export const generateUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!userProfile) {
-      throw new Error("User profile not found");
-    }
-
-    if (userProfile.role !== "board") {
-      throw new Error("Only board members can upload photos");
-    }
-
+    await requireBoardMember(ctx);
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -31,24 +16,9 @@ export const savePhoto = mutation({
     storageId: v.id("_storage"),
     caption: v.optional(v.string()),
   },
+  returns: v.id("photos"),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!userProfile) {
-      throw new Error("User profile not found");
-    }
-
-    if (userProfile.role !== "board") {
-      throw new Error("Only board members can upload photos");
-    }
+    const userProfile = await requireBoardMember(ctx);
 
     const photoId = await ctx.db.insert("photos", {
       storageId: args.storageId,
@@ -62,6 +32,19 @@ export const savePhoto = mutation({
 });
 
 export const listPhotos = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("photos"),
+      _creationTime: v.number(),
+      storageId: v.id("_storage"),
+      caption: v.optional(v.string()),
+      uploadedBy: v.id("userProfiles"),
+      uploadedAt: v.number(),
+      url: v.union(v.string(), v.null()),
+      uploaderName: v.string(),
+    })
+  ),
   handler: async (ctx) => {
     const photos = await ctx.db
       .query("photos")
@@ -90,24 +73,9 @@ export const deletePhoto = mutation({
   args: {
     photoId: v.id("photos"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!userProfile) {
-      throw new Error("User profile not found");
-    }
-
-    if (userProfile.role !== "board") {
-      throw new Error("Only board members can delete photos");
-    }
+    await requireBoardMember(ctx);
 
     const photo = await ctx.db.get(args.photoId);
     if (!photo) {

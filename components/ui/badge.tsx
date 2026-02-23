@@ -19,16 +19,16 @@ export function Badge({
   ...props
 }: BadgeProps) {
   const baseStyles =
-    "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide";
+    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em]";
 
   const variants = {
-    default: "bg-slate-100 text-slate-900",
-    primary: "bg-red-100 text-red-700",
-    secondary: "bg-blue-100 text-blue-700",
-    success: "bg-green-100 text-green-700",
-    warning: "bg-orange-100 text-orange-700",
-    danger: "bg-red-100 text-red-700",
-    info: "bg-blue-100 text-blue-700",
+    default: "border-slate-200 bg-slate-100 text-slate-600",
+    primary: "border-red-200 bg-red-50 text-red-700",
+    secondary: "border-violet-200 bg-violet-50 text-violet-700",
+    success: "border-green-200 bg-green-50 text-green-700",
+    warning: "border-orange-200 bg-orange-50 text-orange-700",
+    danger: "border-rose-200 bg-rose-50 text-rose-700",
+    info: "border-sky-200 bg-sky-50 text-sky-700",
   };
 
   return (

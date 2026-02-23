@@ -4,7 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
 
 const navItems = [
@@ -16,7 +16,7 @@ const navItems = [
   { href: "/contact", label: "Contact" },
 ];
 
-const scrollThreshold = 20;
+const SCROLL_THRESHOLD = 20;
 
 type HeaderVariant = "default" | "inverted";
 
@@ -32,107 +32,178 @@ export default function SiteHeader({
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > scrollThreshold);
+      setScrolled(window.scrollY > SCROLL_THRESHOLD);
     };
     handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return;
+    }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeMobileMenu();
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [mobileMenuOpen, closeMobileMenu]);
 
   const isInverted = variant === "inverted";
   const transparent = isInverted && !scrolled;
 
-  const headerClasses = transparent
-    ? "bg-white/5 text-white border-white/10 backdrop-blur-xl"
-    : "bg-white/80 text-slate-900 border-slate-200/60 shadow-sm backdrop-blur-xl";
-  const navLinkClasses = transparent
-    ? "text-white/90 hover:text-white font-medium"
-    : "text-slate-900 hover:text-red-600 font-medium";
-  const brandClasses = transparent ? "text-white" : "text-red-600";
-  const iconColor = transparent ? "white" : "#334155";
-
   return (
-    <header
-      className={`fixed top-0 z-50 w-full border-b transition-all duration-200 ${headerClasses}`}
-    >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
-        <Link
-          className={`font-bold font-display text-lg tracking-tight transition-colors ${brandClasses}`}
-          href="/"
-        >
-          Cal Poly Red Cross Club
-        </Link>
-        <div className="flex flex-1 items-center justify-end gap-6">
-          <nav className="hidden gap-7 text-sm md:flex">
-            {navItems.map((item) => (
-              <Link
-                className={`transition-colors ${navLinkClasses}`}
-                href={item.href}
-                key={item.href}
-              >
-                {item.label}
-              </Link>
-            ))}
-            {isAuthenticated && currentUser?.role === "board" && (
-              <Link
-                className={`transition-colors ${navLinkClasses}`}
-                href="/admin"
-              >
-                Admin
-              </Link>
-            )}
-          </nav>
-          <button
-            aria-expanded={mobileMenuOpen}
-            aria-label="Toggle navigation menu"
-            className="rounded-lg p-2 transition-colors hover:bg-slate-100/80 md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            type="button"
+    <>
+      <header
+        className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+          transparent
+            ? "border-white/15 border-b bg-white/10 text-white backdrop-blur-xl"
+            : "border-[color:var(--color-border)]/70 border-b bg-white/80 text-[color:var(--color-text)] shadow-sm backdrop-blur-xl"
+        }`}
+        style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
+          <Link
+            className={`font-display font-semibold text-lg tracking-tight transition-colors duration-200 ${
+              transparent ? "text-white" : "text-red-600"
+            }`}
+            href="/"
           >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke={iconColor}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <title>{mobileMenuOpen ? "Close menu" : "Open menu"}</title>
-              {mobileMenuOpen ? (
-                <path d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" />
+            Cal Poly Red Cross Club
+          </Link>
+          <div className="flex flex-1 items-center justify-end gap-5">
+            <nav className="hidden items-center gap-1 md:flex">
+              {navItems.map((item) => (
+                <Link
+                  className={`rounded-full px-3.5 py-1.5 font-medium text-sm transition-all duration-150 ${
+                    transparent
+                      ? "text-white/85 hover:bg-white/20 hover:text-white"
+                      : "text-[color:var(--color-text-muted)] hover:bg-[color:var(--color-bg-subtle)] hover:text-[color:var(--color-text-emphasis)]"
+                  }`}
+                  href={item.href}
+                  key={item.href}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {isAuthenticated && currentUser?.role === "board" && (
+                <Link
+                  className={`rounded-full px-3.5 py-1.5 font-medium text-sm transition-all duration-150 ${
+                    transparent
+                      ? "text-white/85 hover:bg-white/20 hover:text-white"
+                      : "text-[color:var(--color-text-muted)] hover:bg-[color:var(--color-bg-subtle)] hover:text-[color:var(--color-text-emphasis)]"
+                  }`}
+                  href="/admin"
+                >
+                  Admin
+                </Link>
               )}
-            </svg>
-          </button>
-          <AuthButton inverted={transparent} />
+            </nav>
+
+            <MobileMenuButton
+              iconColor={transparent ? "white" : "#334155"}
+              isOpen={mobileMenuOpen}
+              onToggle={() => setMobileMenuOpen((prev) => !prev)}
+            />
+
+            <AuthButton inverted={transparent} />
+          </div>
         </div>
-      </div>
-      {mobileMenuOpen && (
-        <nav className="flex flex-col gap-1 border-inherit border-t bg-white/95 px-4 py-3 text-slate-900 text-sm backdrop-blur-xl md:hidden">
-          {navItems.map((item) => (
+      </header>
+
+      {/* Mobile menu overlay */}
+      <div
+        aria-hidden={!mobileMenuOpen}
+        className={`fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-opacity duration-200 md:hidden ${
+          mobileMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={closeMobileMenu}
+      />
+
+      {/* Mobile menu panel */}
+      <nav
+        aria-label="Mobile navigation"
+        className={`fixed top-[57px] right-0 left-0 z-50 border-[color:var(--color-border)]/70 border-b bg-white/95 backdrop-blur-xl transition-all duration-[250ms] md:hidden ${
+          mobileMenuOpen
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-2 opacity-0"
+        }`}
+        style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
+      >
+        <div className="flex flex-col px-4 py-3">
+          {navItems.map((item, index) => (
             <Link
-              className="rounded-lg px-3 py-2.5 font-medium text-slate-900 transition-colors hover:bg-slate-100 hover:text-red-600"
+              className={`rounded-xl px-4 py-3 font-medium text-[color:var(--color-text-muted)] transition-colors duration-150 hover:bg-[color:var(--color-bg-subtle)] hover:text-[color:var(--color-text-emphasis)] active:bg-[color:var(--color-bg-subtle)]${mobileMenuOpen ? "animate-slide-down" : ""}`}
               href={item.href}
               key={`mobile-${item.href}`}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={closeMobileMenu}
+              style={{
+                animationDelay: mobileMenuOpen ? `${index * 30}ms` : "0ms",
+              }}
             >
               {item.label}
             </Link>
           ))}
           {isAuthenticated && currentUser?.role === "board" && (
             <Link
-              className="rounded-lg px-3 py-2.5 font-medium text-slate-900 transition-colors hover:bg-slate-100 hover:text-red-600"
+              className="rounded-xl px-4 py-3 font-medium text-[color:var(--color-text-muted)] transition-colors duration-150 hover:bg-[color:var(--color-bg-subtle)] hover:text-[color:var(--color-text-emphasis)] active:bg-[color:var(--color-bg-subtle)]"
               href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               Admin
             </Link>
           )}
-        </nav>
-      )}
-    </header>
+        </div>
+      </nav>
+    </>
+  );
+}
+
+function MobileMenuButton({
+  isOpen,
+  onToggle,
+  iconColor,
+}: {
+  isOpen: boolean;
+  onToggle: () => void;
+  iconColor: string;
+}) {
+  return (
+    <button
+      aria-expanded={isOpen}
+      aria-label="Toggle navigation menu"
+      className="flex h-10 w-10 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-slate-100/80 active:scale-95 md:hidden"
+      onClick={onToggle}
+      type="button"
+    >
+      <svg
+        className="h-5 w-5 transition-transform duration-200"
+        fill="none"
+        stroke={iconColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        style={{
+          transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
+          transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)",
+        }}
+        viewBox="0 0 24 24"
+      >
+        <title>{isOpen ? "Close menu" : "Open menu"}</title>
+        {isOpen ? (
+          <path d="M6 18L18 6M6 6l12 12" />
+        ) : (
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        )}
+      </svg>
+    </button>
   );
 }
 
@@ -147,13 +218,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
   const [profileEnsured, setProfileEnsured] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      return;
-    }
-    if (currentUser === undefined) {
-      return;
-    }
-    if (profileEnsured) {
+    if (!isAuthenticated || currentUser === undefined || profileEnsured) {
       return;
     }
 
@@ -164,19 +229,16 @@ function AuthButton({ inverted }: { inverted: boolean }) {
       .catch(() => {
         // Silently ignore profile creation errors (important-comment)
       });
-  }, [isAuthenticated, currentUser, profileEnsured, ensureCurrentUserProfile]);
+  }, [isAuthenticated, currentUser, ensureCurrentUserProfile, profileEnsured]);
 
   if (!isAuthenticated) {
-    const baseClasses =
-      "inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95";
-    const solidClasses =
-      "bg-red-600 !text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500";
-    const glassClasses =
-      "!text-white bg-white/20 ring-1 ring-inset ring-white/30 hover:bg-white/30 backdrop-blur-sm focus-visible:ring-white/60";
-
     return (
       <Link
-        className={`${baseClasses} ${inverted ? glassClasses : solidClasses}`}
+        className={`inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
+          inverted
+            ? "bg-white/15 text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 focus-visible:ring-white/60"
+            : "bg-red-600 text-white shadow-md shadow-red-600/25 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-lg focus-visible:ring-red-500"
+        }`}
         href="/signin"
       >
         Sign In
@@ -191,10 +253,10 @@ function AuthButton({ inverted }: { inverted: boolean }) {
 
   return (
     <button
-      className={`inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
+      className={`inline-flex h-9 items-center rounded-full px-5 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
         inverted
-          ? "!text-white bg-white/20 ring-1 ring-white/30 ring-inset backdrop-blur-sm hover:bg-white/30 focus-visible:ring-white/60"
-          : "!text-white bg-red-600 shadow-sm hover:bg-red-700 focus-visible:ring-red-500"
+          ? "bg-white/15 text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 focus-visible:ring-white/60"
+          : "bg-red-600 text-white shadow-md shadow-red-600/25 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-lg focus-visible:ring-red-500"
       }`}
       onClick={handleSignOut}
       type="button"
