@@ -285,6 +285,9 @@ export const getEvent = query({
           needsRide: v.boolean(),
           canDrive: v.boolean(),
           selfTransport: v.optional(v.boolean()),
+          campusLocation: v.optional(
+            v.union(v.literal("onCampus"), v.literal("offCampus"))
+          ),
           driverInfo: v.optional(
             v.object({
               carType: v.string(),
@@ -382,6 +385,9 @@ export const getEventBySlug = query({
           needsRide: v.boolean(),
           canDrive: v.boolean(),
           selfTransport: v.optional(v.boolean()),
+          campusLocation: v.optional(
+            v.union(v.literal("onCampus"), v.literal("offCampus"))
+          ),
           driverInfo: v.optional(
             v.object({
               carType: v.string(),
@@ -567,6 +573,9 @@ export const getShiftRsvps = query({
           needsRide: v.boolean(),
           canDrive: v.boolean(),
           selfTransport: v.optional(v.boolean()),
+          campusLocation: v.optional(
+            v.union(v.literal("onCampus"), v.literal("offCampus"))
+          ),
           driverInfo: v.optional(
             v.object({
               carType: v.string(),

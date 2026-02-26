@@ -19,6 +19,14 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
+type CampusLocation = "onCampus" | "offCampus";
+
+const formatCampusLocation = (campusLocation: CampusLocation) => {
+  if (campusLocation === "onCampus") {
+    return "On campus";
+  }
+  return "Off campus";
+};
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: page component with multiple loading/auth guard states and drag-and-drop logic
 export default function CarpoolManagementPage() {
@@ -67,6 +75,7 @@ export default function CarpoolManagementPage() {
     rsvpId: Id<"rsvps">;
     name: string;
     email: string;
+    campusLocation?: CampusLocation;
   } | null>(null);
 
   type Carpool = NonNullable<typeof carpools>[number];
@@ -229,6 +238,7 @@ export default function CarpoolManagementPage() {
         rsvpId: rider.rsvpId as Id<"rsvps">,
         name: rider.name,
         email: rider.email,
+        campusLocation: rider.campusLocation,
       });
     }
   };
@@ -538,6 +548,12 @@ export default function CarpoolManagementPage() {
                           <p className="text-slate-900 text-xs">
                             {rsvp.userEmail}
                           </p>
+                          {rsvp.campusLocation && (
+                            <p className="mt-1 text-indigo-700 text-xs">
+                              Pickup area:{" "}
+                              {formatCampusLocation(rsvp.campusLocation)}
+                            </p>
+                          )}
                           {shiftTimes && (
                             <p className="mt-1 text-slate-900 text-xs">
                               Shifts: {shiftTimes}
@@ -643,6 +659,12 @@ export default function CarpoolManagementPage() {
                       <p className="text-blue-700 text-sm">
                         {carpool.driver.email}
                       </p>
+                      {carpool.driver.campusLocation && (
+                        <p className="mt-2 text-blue-700 text-sm">
+                          Pickup area:{" "}
+                          {formatCampusLocation(carpool.driver.campusLocation)}
+                        </p>
+                      )}
                       <p className="mt-2 text-blue-700 text-sm">
                         Vehicle: {carpool.driver.carColor}{" "}
                         {carpool.driver.carType}
@@ -706,6 +728,12 @@ export default function CarpoolManagementPage() {
                                 <p className="text-slate-900 text-xs">
                                   {rider.email}
                                 </p>
+                                {rider.campusLocation && (
+                                  <p className="mt-1 text-indigo-700 text-xs">
+                                    Pickup area:{" "}
+                                    {formatCampusLocation(rider.campusLocation)}
+                                  </p>
+                                )}
                                 {shiftTimes && (
                                   <p className="mt-1 text-slate-900 text-xs">
                                     Shifts: {shiftTimes}
@@ -729,6 +757,12 @@ export default function CarpoolManagementPage() {
                     {activeRider.name}
                   </p>
                   <p className="text-slate-900 text-xs">{activeRider.email}</p>
+                  {activeRider.campusLocation && (
+                    <p className="mt-1 text-indigo-700 text-xs">
+                      Pickup area:{" "}
+                      {formatCampusLocation(activeRider.campusLocation)}
+                    </p>
+                  )}
                 </div>
               )}
             </DragOverlay>
