@@ -14,32 +14,33 @@ This website provides information about the Cal Poly Red Cross Club, including:
 
 ## Technology Stack
 
-- **Frontend**: Next.js 15 with App Router, React 19, Tailwind CSS 4
+- **Frontend**: Next.js 16 with App Router, React 19, Tailwind CSS 4
 - **Backend**: Convex (backend-as-a-service)
 - **Authentication**: Convex Auth with password strategy
-- **Package Manager**: pnpm
-- **Code Quality**: Biome, ESLint, Ultracite presets
+- **Package Manager**: Bun
+- **Code Quality**: Biome + Ultracite presets
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 20 or later
-- pnpm package manager
+- Bun 1.3+
 
 ### Installation
 
 1. Clone the repository
 2. Install dependencies:
    ```bash
-   pnpm install
+   bun install
    ```
 
 3. Set up environment variables:
    Create a `.env.local` file with:
    ```
    NEXT_PUBLIC_CONVEX_URL=your_convex_url
-   OPENAI_API_KEY=your_openai_key (optional, for chat demo)
+   NEXT_PUBLIC_POSTHOG_KEY=your_posthog_project_key (optional)
+   RESEND_API_KEY=your_resend_api_key (optional, for carpool emails)
    ```
 
 4. Set up Convex authentication:
@@ -50,7 +51,12 @@ This website provides information about the Cal Poly Red Cross Club, including:
 
 5. Run the development server:
    ```bash
-   pnpm dev
+   bun run dev
+   ```
+
+   If you only want the frontend without a connected Convex backend:
+   ```bash
+   bun run dev:frontend
    ```
 
 The app will be available at [http://localhost:3000](http://localhost:3000).
@@ -87,10 +93,11 @@ This project uses strict code quality standards:
 
 ### Available Scripts
 
-- `pnpm dev` - Start development server (runs both Next.js and Convex)
-- `pnpm build` - Build for production
-- `pnpm start` - Start production server
-- `pnpm lint` - Run ESLint
+- `bun run dev` - Start development server (runs both Next.js and Convex)
+- `bun run dev:frontend` - Start frontend only (no Convex login required)
+- `bun run build` - Build for production
+- `bun run start` - Start production server
+- `bun run lint` - Run Ultracite lint checks
 
 ## Features
 
