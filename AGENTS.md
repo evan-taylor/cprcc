@@ -254,3 +254,9 @@ There is no test script or test framework configured in `package.json`.
 | `NEXT_PUBLIC_CONVEX_URL` | Yes | Set by `npx convex dev` or manually in `.env.local` |
 | `NEXT_PUBLIC_POSTHOG_KEY` | No | Analytics; gracefully degrades |
 | `RESEND_API_KEY` | No | Email notifications for carpools |
+
+### Admin / test account
+- **Admin login**: `etaylo28@calpoly.edu` / `password` — auto-promoted to "board" role via `ADMIN_EMAIL` env var in `convex/users.ts`.
+- Board members see an "Admin" link in the nav that leads to `/admin` (user management: list users, promote to board).
+- Board members can also create events at `/events/create` and edit them at `/events/[eventId]/edit`.
+- Non-board users see "Access Denied" on `/admin` and are redirected from create/edit pages.
