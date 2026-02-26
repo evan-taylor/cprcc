@@ -224,3 +224,33 @@ Use Next.js `<Image>` comp vs `<img>` el
 Use Next.js `next/head` or App Router metadata API vs `<head>` el
 No importing `next/document` in page files
 No importing `next/head` in `_document.tsx`. Use `<Head>` from `next/document` instead
+
+## Cursor Cloud specific instructions
+
+### Project overview
+Cal Poly Red Cross Club website — Next.js 16 (App Router) + Convex (cloud BaaS) + Tailwind CSS 4. The backend is entirely cloud-hosted on Convex; there is no local database.
+
+### Package manager
+The canonical lockfile is `bun.lock`. Use `bun install` to install dependencies. Bun must be installed first (`curl -fsSL https://bun.sh/install | bash`).
+
+### Running services
+- **Frontend only** (no Convex account): `bun run dev:frontend` starts Next.js on port 3000. Static/informational pages work; dynamic features (events, auth, gallery) require a connected Convex backend.
+- **Full stack** (requires Convex project): `bun run dev` runs both Next.js and `convex dev` in parallel via `npm-run-all`. The `predev` script handles initial Convex setup, auth env config, and opens the Convex dashboard. This requires `npx convex login` first.
+- `NEXT_PUBLIC_CONVEX_URL` must be set in `.env.local` for the app to start (even a placeholder works for frontend-only dev).
+
+### Lint & code quality
+- `bun run lint` — ESLint (has 1 pre-existing error in `app/events/[eventId]/edit/page.tsx`)
+- `npx ultracite check` — Biome-based linting (passes clean)
+
+### Build
+- `bun run build` — Next.js production build (works with a placeholder Convex URL)
+
+### No automated tests
+There is no test script or test framework configured in `package.json`.
+
+### Environment variables
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_CONVEX_URL` | Yes | Set by `npx convex dev` or manually in `.env.local` |
+| `NEXT_PUBLIC_POSTHOG_KEY` | No | Analytics; gracefully degrades |
+| `RESEND_API_KEY` | No | Email notifications for carpools |
