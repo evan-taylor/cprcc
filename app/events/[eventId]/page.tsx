@@ -298,7 +298,7 @@ export default function EventDetailPage() {
         return;
       }
 
-      if (event.isOffsite && !campusLocation) {
+      if (event.isOffsite && (needsRide || canDrive) && !campusLocation) {
         setError("Please tell us whether you're on campus or off campus");
         setIsSubmitting(false);
         return;
@@ -338,7 +338,7 @@ export default function EventDetailPage() {
             needsRide: event.isOffsite ? needsRide : false,
             canDrive: event.isOffsite ? canDrive : false,
             selfTransport: event.isOffsite ? selfTransport : false,
-            campusLocation: event.isOffsite
+            campusLocation: event.isOffsite && (needsRide || canDrive)
               ? (campusLocation ?? undefined)
               : undefined,
             driverInfo: canDrive ? { carType, carColor, capacity } : undefined,
@@ -767,46 +767,6 @@ export default function EventDetailPage() {
 
                   {event.isOffsite && (
                     <div className="space-y-4">
-                      <fieldset className="space-y-2">
-                        <legend className="font-semibold text-slate-900 text-sm">
-                          Are you on campus or off campus?
-                        </legend>
-                        <label
-                          className="flex cursor-pointer select-none items-center gap-3"
-                          htmlFor="campusLocationOn"
-                        >
-                          <input
-                            checked={campusLocation === "onCampus"}
-                            className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
-                            id="campusLocationOn"
-                            name="campusLocation"
-                            onChange={() => setCampusLocation("onCampus")}
-                            type="radio"
-                            value="onCampus"
-                          />
-                          <span className="text-slate-900 text-sm leading-5">
-                            I&apos;m on campus
-                          </span>
-                        </label>
-                        <label
-                          className="flex cursor-pointer select-none items-center gap-3"
-                          htmlFor="campusLocationOff"
-                        >
-                          <input
-                            checked={campusLocation === "offCampus"}
-                            className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
-                            id="campusLocationOff"
-                            name="campusLocation"
-                            onChange={() => setCampusLocation("offCampus")}
-                            type="radio"
-                            value="offCampus"
-                          />
-                          <span className="text-slate-900 text-sm leading-5">
-                            I&apos;m off campus
-                          </span>
-                        </label>
-                      </fieldset>
-
                       <p className="font-semibold text-slate-900 text-sm">
                         Transportation
                       </p>
@@ -865,6 +825,7 @@ export default function EventDetailPage() {
                             if (e.target.checked) {
                               setNeedsRide(false);
                               setCanDrive(false);
+                              setCampusLocation(null);
                             }
                           }}
                           type="checkbox"
@@ -873,6 +834,48 @@ export default function EventDetailPage() {
                           I will transport myself
                         </span>
                       </label>
+
+                      {(needsRide || canDrive) && (
+                        <fieldset className="space-y-2">
+                          <legend className="font-semibold text-slate-900 text-sm">
+                            Are you on campus or off campus?
+                          </legend>
+                          <label
+                            className="flex cursor-pointer select-none items-center gap-3"
+                            htmlFor="campusLocationOn"
+                          >
+                            <input
+                              checked={campusLocation === "onCampus"}
+                              className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                              id="campusLocationOn"
+                              name="campusLocation"
+                              onChange={() => setCampusLocation("onCampus")}
+                              type="radio"
+                              value="onCampus"
+                            />
+                            <span className="text-slate-900 text-sm leading-5">
+                              I&apos;m on campus
+                            </span>
+                          </label>
+                          <label
+                            className="flex cursor-pointer select-none items-center gap-3"
+                            htmlFor="campusLocationOff"
+                          >
+                            <input
+                              checked={campusLocation === "offCampus"}
+                              className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                              id="campusLocationOff"
+                              name="campusLocation"
+                              onChange={() => setCampusLocation("offCampus")}
+                              type="radio"
+                              value="offCampus"
+                            />
+                            <span className="text-slate-900 text-sm leading-5">
+                              I&apos;m off campus
+                            </span>
+                          </label>
+                        </fieldset>
+                      )}
 
                       {canDrive && (
                         <div className="editorial-card-soft mt-4 space-y-3 rounded-lg p-4">

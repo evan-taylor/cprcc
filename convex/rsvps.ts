@@ -83,13 +83,15 @@ export const createRsvp = mutation({
       throw new Error("Event not found");
     }
 
-    if (event.isOffsite && !args.campusLocation) {
+    validateTransportOptions(args);
+
+    const requiresCampusLocation =
+      event.isOffsite && (args.needsRide || args.canDrive);
+    if (requiresCampusLocation && !args.campusLocation) {
       throw new Error("Please tell us whether you're on or off campus");
     }
 
-    validateTransportOptions(args);
-
-    const rsvpCampusLocation = event.isOffsite
+    const rsvpCampusLocation = requiresCampusLocation
       ? args.campusLocation
       : undefined;
 
