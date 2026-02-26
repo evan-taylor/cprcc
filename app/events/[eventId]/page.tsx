@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useRef, useState } from "react";
 import SiteHeader from "@/components/site-header";
+import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -169,9 +170,11 @@ export default function EventDetailPage() {
     return (
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
-        <div className="flex items-center justify-center pt-20">
-          <p className="text-slate-900">Loading...</p>
-        </div>
+        <PageLoader
+          detail="Loading event details, shifts, and RSVP status."
+          fullScreen={false}
+          message="Loading event..."
+        />
       </div>
     );
   }

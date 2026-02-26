@@ -40,7 +40,7 @@ export default function EventsPage() {
         {currentUser?.role === "board" && (
           <div className="mb-8 flex justify-end">
             <Link href="/events/create">
-              <Button size="lg">
+              <Button className="interactive-lift" size="lg">
                 <svg
                   className="h-4 w-4"
                   fill="none"
@@ -82,21 +82,21 @@ function LoadingSkeleton() {
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }, (_, i) => (
         <div
-          className="editorial-card animate-pulse rounded-2xl p-6"
+          className="editorial-card rounded-2xl p-6"
           key={`skeleton-${i.toString()}`}
         >
           <div className="mb-4 flex items-start justify-between">
-            <div className="h-5 w-16 rounded-full bg-slate-100" />
-            <div className="h-14 w-12 rounded-lg bg-slate-100" />
+            <div className="shimmer-surface h-5 w-16 rounded-full" />
+            <div className="shimmer-surface h-14 w-12 rounded-lg" />
           </div>
-          <div className="mb-2 h-6 w-3/4 rounded bg-slate-100" />
+          <div className="shimmer-surface mb-2 h-6 w-3/4 rounded-lg" />
           <div className="mb-4 space-y-2">
-            <div className="h-4 w-full rounded bg-slate-50" />
-            <div className="h-4 w-2/3 rounded bg-slate-50" />
+            <div className="shimmer-surface h-4 w-full rounded-lg" />
+            <div className="shimmer-surface h-4 w-2/3 rounded-lg" />
           </div>
           <div className="border-slate-50 border-t pt-4">
-            <div className="mb-2 h-4 w-1/2 rounded bg-slate-50" />
-            <div className="h-4 w-2/3 rounded bg-slate-50" />
+            <div className="shimmer-surface mb-2 h-4 w-1/2 rounded-lg" />
+            <div className="shimmer-surface h-4 w-2/3 rounded-lg" />
           </div>
         </div>
       ))}
@@ -181,7 +181,7 @@ function EventCard({ event }: { event: EventData }) {
       className="group block"
       href={`/events/${event.slug?.trim() || event._id}`}
     >
-      <article className="editorial-card relative h-full overflow-hidden rounded-2xl p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+      <article className="editorial-card interactive-lift relative h-full overflow-hidden rounded-2xl p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex flex-wrap gap-2">
             {event.eventType === "boothing" && (

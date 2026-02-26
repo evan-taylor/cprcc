@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useState } from "react";
 import SiteHeader from "@/components/site-header";
+import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 
 export default function CreateEventPage() {
@@ -43,9 +44,11 @@ export default function CreateEventPage() {
     return (
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
-        <div className="flex items-center justify-center pt-20">
-          <p className="text-slate-900">Loading...</p>
-        </div>
+        <PageLoader
+          detail="Loading your board permissions and event tools."
+          fullScreen={false}
+          message="Loading event creator..."
+        />
       </div>
     );
   }

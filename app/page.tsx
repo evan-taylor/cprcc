@@ -43,7 +43,7 @@ const contentKeyPrefixLength = 12;
 export default async function HomePage() {
   "use cache";
   return (
-    <div className="min-h-screen bg-[color:var(--color-bg)] text-[color:var(--color-text)]">
+    <div className="relative min-h-screen overflow-x-clip bg-[color:var(--color-bg)] text-[color:var(--color-text)]">
       <SiteHeader variant="inverted" />
       <HeroSection />
       <main>
@@ -66,7 +66,7 @@ export default async function HomePage() {
 
 function HeroSection() {
   return (
-    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden text-center text-white">
+    <section className="relative isolate flex min-h-[100svh] items-center justify-center overflow-hidden text-center text-white">
       <Image
         alt="Cal Poly Red Cross Club tabling at an event"
         className="object-cover"
@@ -76,6 +76,8 @@ function HeroSection() {
         src={heroImage}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/70" />
+      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,rgb(255_255_255_/_0.14),transparent_60%)]" />
+      <div className="-top-32 pointer-events-none absolute left-1/2 z-0 h-80 w-80 -translate-x-1/2 rounded-full bg-red-500/20 blur-[90px]" />
       <div className="relative z-10 mx-auto max-w-3xl px-6">
         <div className="animate-fade-up">
           <p className="mb-4 font-medium text-sm text-white/70 uppercase tracking-[0.25em]">
@@ -91,13 +93,13 @@ function HeroSection() {
         </p>
         <div className="stagger-4 mt-8 flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            className="inline-flex h-12 items-center rounded-full bg-red-600 px-8 font-semibold text-base text-white shadow-lg shadow-red-600/30 transition-all duration-200 hover:bg-red-700 hover:shadow-red-600/40 hover:shadow-xl active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-full bg-red-600 px-8 font-semibold text-base text-white shadow-lg shadow-red-600/30 hover:bg-red-700 hover:shadow-red-600/40 hover:shadow-xl active:scale-[0.97]"
             href="/events"
           >
             View Upcoming Events
           </Link>
           <Link
-            className="inline-flex h-12 items-center rounded-full bg-white/15 px-8 font-semibold text-base text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm transition-all duration-200 hover:bg-white/25 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-full bg-white/15 px-8 font-semibold text-base text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 active:scale-[0.97]"
             href="/volunteer-connection"
           >
             Get Involved
@@ -132,20 +134,25 @@ function QuickStats() {
   ];
 
   return (
-    <section className="border-[color:var(--color-border)]/60 border-b bg-[color:var(--color-bg-subtle)]/60">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        {stats.map((stat) => (
-          <div
-            className="flex flex-col items-center gap-1 px-6 py-8 text-center sm:py-10"
+    <section className="border-[color:var(--color-border)]/60 border-b bg-[color:var(--color-bg-subtle)]/40 py-10">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 px-6 sm:grid-cols-3">
+        {stats.map((stat, index) => (
+          <article
+            className={`editorial-card-soft interactive-lift flex flex-col items-center gap-1 rounded-2xl px-6 py-7 text-center animate-fade-up ${
+              index === 1 ? "stagger-1" : ""
+            } ${index === 2 ? "stagger-2" : ""}`}
             key={stat.label}
           >
-            <span className="font-display font-semibold text-3xl text-red-600 sm:text-4xl">
+            <span
+              className="font-display font-semibold text-3xl text-red-600 sm:text-4xl"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
               {stat.value}
             </span>
             <span className="text-[color:var(--color-text-muted)] text-sm">
               {stat.label}
             </span>
-          </div>
+          </article>
         ))}
       </div>
     </section>
@@ -195,13 +202,13 @@ function CTASection() {
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            className="inline-flex h-12 items-center rounded-full bg-red-600 px-8 font-semibold text-base text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-full bg-red-600 px-8 font-semibold text-base text-white shadow-md shadow-red-600/20 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
             href="/volunteer-connection"
           >
             Start Volunteering
           </Link>
           <Link
-            className="inline-flex h-12 items-center rounded-full border border-slate-200 bg-white px-8 font-semibold text-base text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-full border border-slate-200 bg-white px-8 font-semibold text-base text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.97]"
             href="/contact"
           >
             Contact Us

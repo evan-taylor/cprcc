@@ -4,6 +4,7 @@ import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { Suspense } from "react";
 import ConvexClientProvider from "@/components/convex-client-provider";
+import { PageLoader } from "@/components/ui/page-loader";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -129,9 +130,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body
-        className={`${inter.variable} ${fraunces.variable} bg-white text-slate-900 antialiased`}
-      >
+      <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires dangerouslySetInnerHTML per Next.js convention
           dangerouslySetInnerHTML={{
@@ -141,13 +140,16 @@ export default function RootLayout({
         />
         <Suspense
           fallback={
-            <div className="flex min-h-screen items-center justify-center bg-white text-slate-900">
-              <p aria-live="polite">Preparing your session…</p>
-            </div>
+            <PageLoader
+              detail="Checking your session and syncing volunteer data."
+              message="Loading Cal Poly Red Cross Club..."
+            />
           }
         >
           <ConvexAuthNextjsServerProvider>
-            <ConvexClientProvider>{children}</ConvexClientProvider>
+            <ConvexClientProvider>
+              <div className="app-chrome">{children}</div>
+            </ConvexClientProvider>
           </ConvexAuthNextjsServerProvider>
         </Suspense>
       </body>
