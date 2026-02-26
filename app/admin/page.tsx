@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import SiteHeader from "@/components/site-header";
+import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -54,12 +55,10 @@ export default function AdminPage() {
     (shouldFetchUsers && allUsers === undefined)
   ) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="flex items-center gap-3 text-slate-500">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-red-600" />
-          <span className="text-sm">Loading…</span>
-        </div>
-      </div>
+      <PageLoader
+        detail="Loading board members and role permissions."
+        message="Loading admin tools..."
+      />
     );
   }
 

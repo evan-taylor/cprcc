@@ -75,6 +75,18 @@
   --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  /* Motion durations */
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+
+  /* Ambient surfaces */
+  --surface-glass: rgb(255 255 255 / 0.72);
+  --surface-glass-strong: rgb(255 255 255 / 0.88);
+  --glow-primary: color-mix(in oklab, var(--color-primary-light) 68%, white);
+  --glow-accent: color-mix(in oklab, var(--color-accent-light) 58%, white);
 
   @media (resolution >= 2dppx) {
     --border-hairline: 0.5px;
@@ -113,16 +125,63 @@ body {
   --font-family-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
   --font-family-display:
     var(--font-fraunces), var(--font-inter), system-ui, sans-serif;
+  min-height: 100svh;
   font-family: var(--font-family-sans);
   font-size: 1rem;
   line-height: 1.6;
   color: var(--color-text);
   letter-spacing: -0.008em;
-  background: var(--color-bg);
+  background-color: var(--color-bg);
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+.app-chrome {
+  position: relative;
+  min-height: 100svh;
+  isolation: isolate;
+}
+
+.app-chrome::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(
+      110% 95% at 0% -8%,
+      color-mix(in oklab, var(--color-primary-light) 58%, white) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      85% 80% at 100% 0%,
+      color-mix(in oklab, var(--color-accent-light) 44%, white) 0%,
+      transparent 56%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-bg) 86%, white) 0%,
+      var(--color-bg) 22%,
+      color-mix(in oklab, var(--color-bg) 94%, white) 100%
+    );
+}
+
+.app-chrome::after {
+  position: fixed;
+  inset: -8rem;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(36rem 36rem at 6% 8%, var(--glow-primary), transparent 64%),
+    radial-gradient(34rem 34rem at 92% 30%, var(--glow-accent), transparent 62%);
+  opacity: 0.38;
+  filter: blur(70px);
+  transform: translate3d(0, 0, 0);
+  animation: ambient-drift 22s var(--ease-in-out-cubic) infinite;
 }
 
 * {
@@ -201,6 +260,8 @@ h4 {
 }
 
 @utility editorial-card {
+  position: relative;
+  overflow: hidden;
   background:
     radial-gradient(
       120% 100% at 100% 0%,
@@ -211,9 +272,16 @@ h4 {
   border: var(--border-hairline) solid
     color-mix(in oklab, var(--color-border) 88%, white);
   box-shadow: var(--shadow-md);
+  isolation: isolate;
+  transition:
+    transform var(--motion-base) var(--ease-out-quart),
+    box-shadow var(--motion-base) var(--ease-out-quart),
+    border-color var(--motion-fast) ease;
 }
 
 @utility editorial-card-soft {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(
     160deg,
     color-mix(in oklab, var(--color-primary-light) 26%, white),
@@ -222,6 +290,11 @@ h4 {
   border: var(--border-hairline) solid
     color-mix(in oklab, var(--color-border) 90%, white);
   box-shadow: var(--shadow-sm);
+  isolation: isolate;
+  transition:
+    transform var(--motion-base) var(--ease-out-quart),
+    box-shadow var(--motion-base) var(--ease-out-quart),
+    border-color var(--motion-fast) ease;
 }
 
 @utility editorial-pill {
@@ -231,7 +304,70 @@ h4 {
   border-radius: var(--radius-full);
 }
 
+@utility interactive-lift {
+  transition:
+    transform var(--motion-base) var(--ease-out-quart),
+    box-shadow var(--motion-base) var(--ease-out-quart),
+    border-color var(--motion-fast) ease;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .interactive-lift:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
+  }
+}
+
+@utility shimmer-surface {
+  position: relative;
+  overflow: hidden;
+  background-color: color-mix(in oklab, var(--color-bg-subtle) 92%, white);
+}
+
+.shimmer-surface::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.68) 45%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: shimmer 1.25s var(--ease-in-out-cubic) infinite;
+}
+
 /* Stagger animation utility for child elements */
+@keyframes ambient-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2.5rem, -1.5rem, 0) scale(1.07);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -287,23 +423,31 @@ h4 {
 }
 
 @utility animate-fade-up {
-  animation: fade-up 0.5s var(--ease-out-quint) both;
+  animation: fade-up 0.42s var(--ease-out-quint) both;
+  will-change: transform, opacity;
 }
 
 @utility animate-fade-in {
-  animation: fade-in 0.4s var(--ease-out-quart) both;
+  animation: fade-in 0.36s var(--ease-out-quart) both;
+  will-change: opacity;
 }
 
 @utility animate-scale-in {
   animation: scale-in 0.4s var(--ease-out-quint) both;
+  will-change: transform, opacity;
 }
 
 @utility animate-slide-down {
-  animation: slide-down 0.3s var(--ease-out-quart) both;
+  animation: slide-down 0.24s var(--ease-out-quart) both;
+  will-change: transform, opacity;
 }
 
 @utility animate-scroll-hint {
   animation: scroll-hint 2s ease-in-out infinite;
+}
+
+@utility animate-soft-pulse {
+  animation: soft-pulse 1.8s var(--ease-in-out-cubic) infinite;
 }
 
 @utility stagger-1 {
@@ -330,12 +474,17 @@ h4 {
   :where(a) {
     color: inherit;
     text-decoration: none;
-    transition: color 150ms ease;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.22em;
+    transition:
+      color var(--motion-fast) ease,
+      text-decoration-color var(--motion-fast) ease;
   }
 
   @media (hover: hover) and (pointer: fine) {
     :where(a:hover) {
       text-decoration: underline;
+      text-decoration-color: currentColor;
     }
   }
 
@@ -457,11 +606,13 @@ h4 {
 
   button,
   a,
+  [role="button"],
   input,
   select,
   textarea {
+    touch-action: manipulation;
     transition-timing-function: var(--ease-out-quart);
-    transition-duration: 150ms;
+    transition-duration: var(--motion-fast);
     transition-property:
       color, background-color, border-color, box-shadow, opacity, transform;
   }
@@ -474,6 +625,13 @@ h4 {
       animation-iteration-count: 1;
       transition-duration: 0.01ms;
       scroll-behavior: auto;
+    }
+
+    .app-chrome::before,
+    .app-chrome::after,
+    .shimmer-surface::after {
+      transform: none;
+      animation: none;
     }
   }
 }
