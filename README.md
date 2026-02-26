@@ -18,7 +18,7 @@ This website provides information about the Cal Poly Red Cross Club, including:
 - **Backend**: Convex (backend-as-a-service)
 - **Authentication**: Convex Auth with password strategy
 - **Package Manager**: Bun
-- **Code Quality**: Biome, ESLint, Ultracite presets
+- **Code Quality**: Biome + Ultracite presets
 
 ## Getting Started
 
@@ -97,7 +97,7 @@ This project uses strict code quality standards:
 - `bun run dev:frontend` - Start frontend only (no Convex login required)
 - `bun run build` - Build for production
 - `bun run start` - Start production server
-- `bun run lint` - Run ESLint
+- `bun run lint` - Run Ultracite lint checks
 
 ## Features
 
