@@ -131,6 +131,25 @@ body {
   line-height: 1.6;
   color: var(--color-text);
   letter-spacing: -0.008em;
+  background-color: var(--color-bg);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.app-chrome {
+  position: relative;
+  min-height: 100svh;
+  isolation: isolate;
+}
+
+.app-chrome::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  content: "";
   background:
     radial-gradient(
       110% 95% at 0% -8%,
@@ -148,47 +167,21 @@ body {
       var(--color-bg) 22%,
       color-mix(in oklab, var(--color-bg) 94%, white) 100%
     );
-  background-attachment: fixed;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
-.app-chrome {
-  position: relative;
-  min-height: 100svh;
-  isolation: isolate;
-}
-
-.app-chrome::before,
 .app-chrome::after {
   position: fixed;
+  inset: -8rem;
   z-index: -1;
   pointer-events: none;
   content: "";
-  border-radius: 9999px;
+  background:
+    radial-gradient(36rem 36rem at 6% 8%, var(--glow-primary), transparent 64%),
+    radial-gradient(34rem 34rem at 92% 30%, var(--glow-accent), transparent 62%);
   opacity: 0.38;
   filter: blur(70px);
   transform: translate3d(0, 0, 0);
-}
-
-.app-chrome::before {
-  top: -14rem;
-  left: -12rem;
-  width: 34rem;
-  height: 34rem;
-  background: var(--glow-primary);
-  animation: ambient-drift 18s var(--ease-in-out-cubic) infinite;
-}
-
-.app-chrome::after {
-  top: 16rem;
-  right: -14rem;
-  width: 30rem;
-  height: 30rem;
-  background: var(--glow-accent);
-  animation: ambient-drift 22s var(--ease-in-out-cubic) infinite reverse;
+  animation: ambient-drift 22s var(--ease-in-out-cubic) infinite;
 }
 
 * {
