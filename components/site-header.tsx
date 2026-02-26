@@ -164,7 +164,7 @@ export default function SiteHeader({
       {/* Mobile menu panel */}
       <nav
         aria-label="Mobile navigation"
-        className={`fixed top-[72px] right-4 left-4 z-50 rounded-2xl border-[color:var(--color-border)]/70 border bg-[color:var(--surface-glass-strong)] shadow-lg backdrop-blur-xl transition-all duration-[250ms] md:hidden ${
+        className={`fixed top-[72px] right-4 left-4 z-50 rounded-2xl border border-[color:var(--color-border)]/70 bg-[color:var(--surface-glass-strong)] shadow-lg backdrop-blur-xl transition-all duration-[250ms] md:hidden ${
           mobileMenuOpen
             ? "translate-y-0 opacity-100"
             : "pointer-events-none -translate-y-2 opacity-0"

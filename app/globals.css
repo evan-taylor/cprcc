@@ -157,19 +157,19 @@ html {
 
 .app-chrome {
   position: relative;
-  isolation: isolate;
   min-height: 100svh;
+  isolation: isolate;
 }
 
 .app-chrome::before,
 .app-chrome::after {
   position: fixed;
   z-index: -1;
-  border-radius: 9999px;
-  filter: blur(70px);
-  content: "";
   pointer-events: none;
+  content: "";
+  border-radius: 9999px;
   opacity: 0.38;
+  filter: blur(70px);
   transform: translate3d(0, 0, 0);
 }
 
@@ -268,7 +268,6 @@ h4 {
 
 @utility editorial-card {
   position: relative;
-  isolation: isolate;
   overflow: hidden;
   background:
     radial-gradient(
@@ -280,6 +279,7 @@ h4 {
   border: var(--border-hairline) solid
     color-mix(in oklab, var(--color-border) 88%, white);
   box-shadow: var(--shadow-md);
+  isolation: isolate;
   transition:
     transform var(--motion-base) var(--ease-out-quart),
     box-shadow var(--motion-base) var(--ease-out-quart),
@@ -288,7 +288,6 @@ h4 {
 
 @utility editorial-card-soft {
   position: relative;
-  isolation: isolate;
   overflow: hidden;
   background: linear-gradient(
     160deg,
@@ -298,6 +297,7 @@ h4 {
   border: var(--border-hairline) solid
     color-mix(in oklab, var(--color-border) 90%, white);
   box-shadow: var(--shadow-sm);
+  isolation: isolate;
   transition:
     transform var(--motion-base) var(--ease-out-quart),
     box-shadow var(--motion-base) var(--ease-out-quart),
@@ -321,8 +321,8 @@ h4 {
 
 @media (hover: hover) and (pointer: fine) {
   .interactive-lift:hover {
-    transform: translateY(-3px);
     box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
   }
 }
 
@@ -332,18 +332,18 @@ h4 {
   background-color: color-mix(in oklab, var(--color-bg-subtle) 92%, white);
 }
 
-@utility shimmer-surface::after {
+.shimmer-surface::after {
   position: absolute;
   inset: 0;
-  transform: translateX(-100%);
+  content: "";
   background: linear-gradient(
     110deg,
     transparent 0%,
     rgb(255 255 255 / 0.68) 45%,
     transparent 100%
   );
+  transform: translateX(-100%);
   animation: shimmer 1.25s var(--ease-in-out-cubic) infinite;
-  content: "";
 }
 
 /* Stagger animation utility for child elements */
@@ -637,8 +637,8 @@ h4 {
     .app-chrome::before,
     .app-chrome::after,
     .shimmer-surface::after {
-      animation: none;
       transform: none;
+      animation: none;
     }
   }
 }

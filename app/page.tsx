@@ -77,7 +77,7 @@ function HeroSection() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/70" />
       <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,rgb(255_255_255_/_0.14),transparent_60%)]" />
-      <div className="-top-32 pointer-events-none absolute left-1/2 z-0 h-80 w-80 -translate-x-1/2 rounded-full bg-red-500/20 blur-[90px]" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 z-0 h-80 w-80 -translate-x-1/2 rounded-full bg-red-500/20 blur-[90px]" />
       <div className="relative z-10 mx-auto max-w-3xl px-6">
         <div className="animate-fade-up">
           <p className="mb-4 font-medium text-sm text-white/70 uppercase tracking-[0.25em]">
@@ -138,7 +138,7 @@ function QuickStats() {
       <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 px-6 sm:grid-cols-3">
         {stats.map((stat, index) => (
           <article
-            className={`editorial-card-soft interactive-lift flex flex-col items-center gap-1 rounded-2xl px-6 py-7 text-center animate-fade-up ${
+            className={`editorial-card-soft interactive-lift flex animate-fade-up flex-col items-center gap-1 rounded-2xl px-6 py-7 text-center ${
               index === 1 ? "stagger-1" : ""
             } ${index === 2 ? "stagger-2" : ""}`}
             key={stat.label}
