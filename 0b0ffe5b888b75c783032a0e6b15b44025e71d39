@@ -1,0 +1,41 @@
+.agents/skills/emil-design-engineering/ui-polish.md
+  1758da2082ef7d7b 1-303
+.agents/skills/emil-design-engineering/component-design.md
+  1758da2082ef7d7b 1-382
+.agents/skills/emil-design-engineering/forms-controls.md
+  1758da2082ef7d7b 1-261
+.agents/skills/emil-design-engineering/marketing.md
+  1758da2082ef7d7b 1-160
+.agents/skills/emil-design-engineering/SKILL.md
+  1758da2082ef7d7b 1-108
+.agents/skills/emil-design-engineering/animations.md
+  1758da2082ef7d7b 1-266
+.agents/skills/emil-design-engineering/performance.md
+  1758da2082ef7d7b 1-222
+.agents/skills/web-animation-design/SKILL.md
+  1758da2082ef7d7b 1-325
+.agents/skills/emil-design-engineering/touch-accessibility.md
+  1758da2082ef7d7b 1-236
+.agents/skills/web-animation-design/PRACTICAL-TIPS.md
+  1758da2082ef7d7b 1-304
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "0b0ffe5b888b75c783032a0e6b15b44025e71d39",
+  "prompts": {
+    "1758da2082ef7d7b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8389746a-0fad-41ff-9f17-1cecad6ca65f",
+        "model": "gpt-5.3-codex-xhigh"
+      },
+      "human_author": "Evan Taylor <eltaylor1104@gmail.com>",
+      "messages": [],
+      "total_additions": 2610,
+      "total_deletions": 19,
+      "accepted_lines": 2602,
+      "overriden_lines": 0
+    }
+  }
+}
