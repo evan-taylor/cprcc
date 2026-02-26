@@ -63,6 +63,9 @@ export const createRsvp = mutation({
     needsRide: v.boolean(),
     canDrive: v.boolean(),
     selfTransport: v.boolean(),
+    campusLocation: v.optional(
+      v.union(v.literal("onCampus"), v.literal("offCampus"))
+    ),
     driverInfo: v.optional(
       v.object({
         carType: v.string(),
@@ -80,7 +83,15 @@ export const createRsvp = mutation({
       throw new Error("Event not found");
     }
 
+    if (event.isOffsite && !args.campusLocation) {
+      throw new Error("Please tell us whether you're on or off campus");
+    }
+
     validateTransportOptions(args);
+
+    const rsvpCampusLocation = event.isOffsite
+      ? args.campusLocation
+      : undefined;
 
     if (args.shiftId) {
       await validateShiftCapacity(
@@ -104,6 +115,7 @@ export const createRsvp = mutation({
         needsRide: args.needsRide,
         canDrive: args.canDrive,
         selfTransport: args.selfTransport,
+        campusLocation: rsvpCampusLocation,
         driverInfo: args.driverInfo,
       });
       return;
@@ -116,6 +128,7 @@ export const createRsvp = mutation({
       needsRide: args.needsRide,
       canDrive: args.canDrive,
       selfTransport: args.selfTransport,
+      campusLocation: rsvpCampusLocation,
       driverInfo: args.driverInfo,
       createdAt: Date.now(),
     });
@@ -158,6 +171,9 @@ export const getUserRsvps = query({
       needsRide: v.boolean(),
       canDrive: v.boolean(),
       selfTransport: v.optional(v.boolean()),
+      campusLocation: v.optional(
+        v.union(v.literal("onCampus"), v.literal("offCampus"))
+      ),
       driverInfo: v.optional(
         v.object({
           carType: v.string(),

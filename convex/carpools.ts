@@ -145,6 +145,9 @@ export const getCarpools = query({
         name: v.string(),
         email: v.string(),
         phoneNumber: v.optional(v.string()),
+        campusLocation: v.optional(
+          v.union(v.literal("onCampus"), v.literal("offCampus"))
+        ),
         carType: v.string(),
         carColor: v.string(),
         capacity: v.number(),
@@ -155,6 +158,9 @@ export const getCarpools = query({
           name: v.string(),
           email: v.string(),
           phoneNumber: v.optional(v.string()),
+          campusLocation: v.optional(
+            v.union(v.literal("onCampus"), v.literal("offCampus"))
+          ),
         })
       ),
     })
@@ -190,6 +196,7 @@ export const getCarpools = query({
               name: profile?.name ?? "Unknown",
               email: profile?.email ?? "",
               phoneNumber: profile?.phoneNumber,
+              campusLocation: rsvp?.campusLocation,
             };
           })
         );
@@ -201,6 +208,7 @@ export const getCarpools = query({
             name: string;
             email: string;
             phoneNumber?: string;
+            campusLocation?: "onCampus" | "offCampus";
             createdAt: number;
           }
         >();
@@ -215,6 +223,7 @@ export const getCarpools = query({
               name: rider.name,
               email: rider.email,
               phoneNumber: rider.phoneNumber,
+              campusLocation: rider.campusLocation,
               createdAt: rider.createdAt,
             });
           }
@@ -225,6 +234,7 @@ export const getCarpools = query({
           name: rider.name,
           email: rider.email,
           phoneNumber: rider.phoneNumber,
+          campusLocation: rider.campusLocation,
         }));
 
         return {
@@ -235,6 +245,7 @@ export const getCarpools = query({
             name: driverProfile?.name ?? "Unknown",
             email: driverProfile?.email ?? "",
             phoneNumber: driverProfile?.phoneNumber,
+            campusLocation: driverRsvp?.campusLocation,
             carType: driverRsvp?.driverInfo?.carType ?? "",
             carColor: driverRsvp?.driverInfo?.carColor ?? "",
             capacity: driverRsvp?.driverInfo?.capacity ?? 0,

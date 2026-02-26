@@ -9,6 +9,14 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
+type CampusLocation = "onCampus" | "offCampus";
+
+const formatCampusLocation = (campusLocation: CampusLocation) => {
+  if (campusLocation === "onCampus") {
+    return "On campus";
+  }
+  return "Off campus";
+};
 
 interface RsvpStatusProps {
   event: {
@@ -21,6 +29,7 @@ interface RsvpStatusProps {
   userRsvps: Array<{
     _id: Id<"rsvps">;
     canDrive: boolean;
+    campusLocation?: CampusLocation;
     driverInfo?: { carColor: string; carType: string };
     needsRide: boolean;
     selfTransport?: boolean;
@@ -82,6 +91,11 @@ function RsvpStatusSection({
               )}
               {rsvp.selfTransport && (
                 <p className="mt-1 text-green-700 text-sm">Transporting self</p>
+              )}
+              {rsvp.campusLocation && (
+                <p className="mt-1 text-green-700 text-sm">
+                  Pickup area: {formatCampusLocation(rsvp.campusLocation)}
+                </p>
               )}
             </div>
             <button
@@ -160,9 +174,11 @@ export default function EventDetailPage() {
   const [carColor, setCarColor] = useState("");
   const [capacity, setCapacity] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [campusLocation, setCampusLocation] = useState<CampusLocation | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
   const rsvpFormRef = useRef<HTMLDivElement>(null);
 
   if (!eventIdOrSlug || event === undefined || currentUser === undefined) {
@@ -282,10 +298,25 @@ export default function EventDetailPage() {
         return;
       }
 
+      if (event.isOffsite && !campusLocation) {
+        setError("Please tell us whether you're on campus or off campus");
+        setIsSubmitting(false);
+        return;
+      }
+
       if (canDrive && !(carType && carColor)) {
         setError("Please provide your car information");
         setIsSubmitting(false);
         return;
+      }
+
+      const trimmedPhoneNumber = phoneNumber.trim();
+      if (
+        event.isOffsite &&
+        !currentUser.phoneNumber &&
+        trimmedPhoneNumber.length > 0
+      ) {
+        await updatePhoneNumber({ phoneNumber: trimmedPhoneNumber });
       }
 
       const shiftsToRsvp =
@@ -307,6 +338,9 @@ export default function EventDetailPage() {
             needsRide: event.isOffsite ? needsRide : false,
             canDrive: event.isOffsite ? canDrive : false,
             selfTransport: event.isOffsite ? selfTransport : false,
+            campusLocation: event.isOffsite
+              ? (campusLocation ?? undefined)
+              : undefined,
             driverInfo: canDrive ? { carType, carColor, capacity } : undefined,
           });
           results.push({ shiftId, success: true });
@@ -347,6 +381,8 @@ export default function EventDetailPage() {
         setCarType("");
         setCarColor("");
         setCapacity(4);
+        setCampusLocation(null);
+        setPhoneNumber("");
         setSelectedShiftIds(new Set());
       } else if (successCount > 0) {
         posthog.capture("event_rsvp_submitted", {
@@ -416,27 +452,6 @@ export default function EventDetailPage() {
         err instanceof Error ? err : new Error("Cancel RSVP failed")
       );
       setError(err instanceof Error ? err.message : "Failed to cancel RSVP");
-    }
-  };
-
-  const handleUpdatePhoneNumber = async () => {
-    if (!phoneNumber || phoneNumber.trim().length === 0) {
-      setError("Please enter a phone number");
-      return;
-    }
-
-    setIsUpdatingPhone(true);
-    setError(null);
-
-    try {
-      await updatePhoneNumber({ phoneNumber: phoneNumber.trim() });
-      setPhoneNumber("");
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update phone number"
-      );
-    } finally {
-      setIsUpdatingPhone(false);
     }
   };
 
@@ -725,46 +740,73 @@ export default function EventDetailPage() {
                   {event.isOffsite && !currentUser?.phoneNumber && (
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                       <p className="mb-2 font-semibold text-blue-900 text-sm">
-                        Phone Number Required for Carpools
+                        Add a Phone Number for Carpool Coordination
                       </p>
-                      <p className="mb-3 text-blue-800 text-xs">
-                        Please add your phone number to coordinate with drivers
-                        and riders.
+                      <p className="mb-3 text-blue-800 text-xs leading-5">
+                        We&apos;ll save this to your profile when you submit
+                        your RSVP.
                       </p>
-                      <div className="flex gap-2">
-                        <div className="flex-1">
-                          <label className="sr-only" htmlFor="phoneNumber">
-                            Phone Number
-                          </label>
-                          <input
-                            autoComplete="tel"
-                            className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm placeholder:text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            id="phoneNumber"
-                            inputMode="tel"
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            placeholder="(555) 123-4567"
-                            type="tel"
-                            value={phoneNumber}
-                          />
-                        </div>
-                        <button
-                          className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-700 disabled:bg-slate-400"
-                          disabled={
-                            isUpdatingPhone ||
-                            !phoneNumber ||
-                            phoneNumber.trim().length === 0
-                          }
-                          onClick={handleUpdatePhoneNumber}
-                          type="button"
-                        >
-                          {isUpdatingPhone ? "Saving..." : "Save"}
-                        </button>
-                      </div>
+                      <label
+                        className="mb-1 block font-semibold text-blue-900 text-xs"
+                        htmlFor="phoneNumber"
+                      >
+                        Phone number (optional)
+                      </label>
+                      <input
+                        autoComplete="tel"
+                        className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm placeholder:text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="phoneNumber"
+                        inputMode="tel"
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="(555) 123-4567"
+                        type="tel"
+                        value={phoneNumber}
+                      />
                     </div>
                   )}
 
                   {event.isOffsite && (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      <fieldset className="space-y-2">
+                        <legend className="font-semibold text-slate-900 text-sm">
+                          Are you on campus or off campus?
+                        </legend>
+                        <label
+                          className="flex cursor-pointer select-none items-center gap-3"
+                          htmlFor="campusLocationOn"
+                        >
+                          <input
+                            checked={campusLocation === "onCampus"}
+                            className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                            id="campusLocationOn"
+                            name="campusLocation"
+                            onChange={() => setCampusLocation("onCampus")}
+                            type="radio"
+                            value="onCampus"
+                          />
+                          <span className="text-slate-900 text-sm leading-5">
+                            I&apos;m on campus
+                          </span>
+                        </label>
+                        <label
+                          className="flex cursor-pointer select-none items-center gap-3"
+                          htmlFor="campusLocationOff"
+                        >
+                          <input
+                            checked={campusLocation === "offCampus"}
+                            className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                            id="campusLocationOff"
+                            name="campusLocation"
+                            onChange={() => setCampusLocation("offCampus")}
+                            type="radio"
+                            value="offCampus"
+                          />
+                          <span className="text-slate-900 text-sm leading-5">
+                            I&apos;m off campus
+                          </span>
+                        </label>
+                      </fieldset>
+
                       <p className="font-semibold text-slate-900 text-sm">
                         Transportation
                       </p>
@@ -908,6 +950,8 @@ export default function EventDetailPage() {
                       onClick={() => {
                         setShowRsvpForm(false);
                         setSelectedShiftIds(new Set());
+                        setCampusLocation(null);
+                        setPhoneNumber("");
                         setError(null);
                       }}
                       type="button"
@@ -1002,6 +1046,12 @@ export default function EventDetailPage() {
                         {rsvp.selfTransport && (
                           <p className="mt-1 text-green-700 text-xs">
                             Self-transport
+                          </p>
+                        )}
+                        {rsvp.campusLocation && (
+                          <p className="mt-1 text-indigo-700 text-xs">
+                            Pickup area:{" "}
+                            {formatCampusLocation(rsvp.campusLocation)}
                           </p>
                         )}
                       </div>

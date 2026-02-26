@@ -47,6 +47,9 @@ export default defineSchema({
     needsRide: v.boolean(),
     canDrive: v.boolean(),
     selfTransport: v.optional(v.boolean()),
+    campusLocation: v.optional(
+      v.union(v.literal("onCampus"), v.literal("offCampus"))
+    ),
     driverInfo: v.optional(
       v.object({
         carType: v.string(),
