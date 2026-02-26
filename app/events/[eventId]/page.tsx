@@ -338,9 +338,10 @@ export default function EventDetailPage() {
             needsRide: event.isOffsite ? needsRide : false,
             canDrive: event.isOffsite ? canDrive : false,
             selfTransport: event.isOffsite ? selfTransport : false,
-            campusLocation: event.isOffsite && (needsRide || canDrive)
-              ? (campusLocation ?? undefined)
-              : undefined,
+            campusLocation:
+              event.isOffsite && (needsRide || canDrive)
+                ? (campusLocation ?? undefined)
+                : undefined,
             driverInfo: canDrive ? { carType, carColor, capacity } : undefined,
           });
           results.push({ shiftId, success: true });
