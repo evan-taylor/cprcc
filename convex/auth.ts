@@ -53,8 +53,22 @@ function createPasswordResetProvider(): EmailConfig | undefined {
       });
 
       if (!response.ok) {
+        let errorDetails = "";
+        try {
+          const contentType = response.headers.get("content-type") ?? "";
+          if (contentType.includes("application/json")) {
+            errorDetails = JSON.stringify(await response.json());
+          } else {
+            errorDetails = await response.text();
+          }
+        } catch {
+          errorDetails = "";
+        }
+
+        const detailSuffix =
+          errorDetails.length > 0 ? `: ${errorDetails}` : "";
         throw new Error(
-          `Failed to send password reset email (${response.status})`
+          `Failed to send password reset email (${response.status} ${response.statusText})${detailSuffix}`
         );
       }
     },

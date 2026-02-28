@@ -3,7 +3,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { Suspense, type FormEvent, useState } from "react";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -30,7 +30,7 @@ function getResetErrorMessage(error: unknown): string {
   return "Unable to reset your password right now. Please try again.";
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const { signIn } = useAuthActions();
   const searchParams = useSearchParams();
   const token = (searchParams.get("token") ?? "").trim();
@@ -230,5 +230,27 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ResetPasswordPageFallback() {
+  return (
+    <div className="flex min-h-[100svh] items-center justify-center bg-[color:var(--color-bg-subtle)] px-4 py-12">
+      <div className="w-full max-w-sm">
+        <div className="editorial-card rounded-2xl p-6 text-center sm:p-8">
+          <p className="font-medium text-[color:var(--color-text-emphasis)] text-sm">
+            Loading password reset details...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<ResetPasswordPageFallback />}>
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }
