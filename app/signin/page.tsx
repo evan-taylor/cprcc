@@ -237,6 +237,16 @@ export default function SignIn() {
                   Must be at least 8 characters
                 </p>
               )}
+              {flow === "signIn" && (
+                <div className="mt-1.5 text-right">
+                  <Link
+                    className="font-medium text-red-600 text-xs transition-colors duration-150 hover:text-red-700"
+                    href="/forgot-password"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              )}
             </div>
 
             {error && (
