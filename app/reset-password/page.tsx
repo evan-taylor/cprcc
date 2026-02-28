@@ -3,7 +3,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, type FormEvent, useState } from "react";
+import { type FormEvent, Suspense, useState } from "react";
 
 const MIN_PASSWORD_LENGTH = 8;
 

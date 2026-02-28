@@ -65,8 +65,7 @@ function createPasswordResetProvider(): EmailConfig | undefined {
           errorDetails = "";
         }
 
-        const detailSuffix =
-          errorDetails.length > 0 ? `: ${errorDetails}` : "";
+        const detailSuffix = errorDetails.length > 0 ? `: ${errorDetails}` : "";
         throw new Error(
           `Failed to send password reset email (${response.status} ${response.statusText})${detailSuffix}`
         );
