@@ -13,6 +13,7 @@ import type * as carpools from "../carpools.js";
 import type * as emails from "../emails.js";
 import type * as emails_carpool_driver_email from "../emails/carpool_driver_email.js";
 import type * as emails_carpool_rider_email from "../emails/carpool_rider_email.js";
+import type * as emails_password_reset_email from "../emails/password_reset_email.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   emails: typeof emails;
   "emails/carpool_driver_email": typeof emails_carpool_driver_email;
   "emails/carpool_rider_email": typeof emails_carpool_rider_email;
+  "emails/password_reset_email": typeof emails_password_reset_email;
   events: typeof events;
   http: typeof http;
   "lib/auth": typeof lib_auth;

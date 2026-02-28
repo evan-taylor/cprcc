@@ -40,7 +40,7 @@ This website provides information about the Cal Poly Red Cross Club, including:
    ```
    NEXT_PUBLIC_CONVEX_URL=your_convex_url
    NEXT_PUBLIC_POSTHOG_KEY=your_posthog_project_key (optional)
-   RESEND_API_KEY=your_resend_api_key (optional, for carpool emails)
+   RESEND_API_KEY=your_resend_api_key (optional, required for password reset and carpool emails)
    ```
 
 4. Set up Convex authentication:
@@ -107,6 +107,7 @@ This project uses strict code quality standards:
 - Step-by-step volunteer onboarding guides
 - Contact information and social media links
 - Authentication system for future member features
+- Forgot/reset password flow for password-based accounts
 - Responsive design with Tailwind CSS
 
 ### Planned Features
