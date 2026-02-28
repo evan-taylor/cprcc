@@ -4,7 +4,7 @@ import {
   generatePasswordResetEmailHtml,
   generatePasswordResetEmailSubject,
   generatePasswordResetEmailText,
-} from "./emails/password-reset-email";
+} from "./emails/password_reset_email";
 
 const PASSWORD_RESET_FROM =
   "Cal Poly Red Cross Club <notifications@calpolyredcross.org>";
