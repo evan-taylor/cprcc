@@ -3,10 +3,29 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation } from "convex/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
+
+const HOME_PATH = "/";
+const SIGN_IN_PATH = "/signin";
+
+const getSafeRedirectPath = (path: string | null) => {
+  if (!path?.startsWith("/")) {
+    return HOME_PATH;
+  }
+
+  if (path.startsWith("//")) {
+    return HOME_PATH;
+  }
+
+  if (path === SIGN_IN_PATH || path.startsWith(`${SIGN_IN_PATH}?`)) {
+    return HOME_PATH;
+  }
+
+  return path;
+};
 
 export default function SignIn() {
   const { signIn } = useAuthActions();
@@ -19,6 +38,8 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const createdRef = useRef(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
 
   useEffect(() => {
     if (isAuthenticated && !createdRef.current) {
@@ -68,7 +89,7 @@ export default function SignIn() {
           has_phone_number: !!localPhone,
         });
 
-        router.push("/");
+        router.push(redirectPath);
         setLoading(false);
       } else {
         formData.set("flow", "signIn");
@@ -77,7 +98,7 @@ export default function SignIn() {
         posthog.identify(email, { email });
         posthog.capture("user_signed_in");
 
-        router.push("/");
+        router.push(redirectPath);
         setLoading(false);
       }
     } catch (authError) {
