@@ -1,7 +1,6 @@
 "use node";
 
 import { v } from "convex/values";
-import { Resend } from "resend";
 import { api } from "./_generated/api";
 import { action } from "./_generated/server";
 import {
@@ -12,6 +11,7 @@ import {
   generateRiderEmailHtml,
   generateRiderEmailSubject,
 } from "./emails/carpool_rider_email";
+import { resend } from "./resend";
 
 export const sendCarpoolEmails = action({
   args: {
@@ -47,12 +47,9 @@ export const sendCarpoolEmails = action({
       eventId: args.eventId,
     });
 
-    const resendApiKey = process.env.RESEND_API_KEY;
-    if (!resendApiKey) {
+    if (!process.env.RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY not configured");
     }
-
-    const resend = new Resend(resendApiKey);
 
     const emailsSent: string[] = [];
     const emailsFailed: string[] = [];
@@ -93,10 +90,10 @@ export const sendCarpoolEmails = action({
       });
 
       try {
-        await resend.emails.send({
+        await resend.sendEmail(ctx, {
           from: "Cal Poly Red Cross Club <notifications@calpolyredcross.org>",
           to: [driverEmail],
-          replyTo: "redcrossclub@calpoly.edu",
+          replyTo: ["redcrossclub@calpoly.edu"],
           subject: generateDriverEmailSubject(event.title),
           html: driverEmailHtml,
         });
@@ -125,10 +122,10 @@ export const sendCarpoolEmails = action({
         });
 
         try {
-          await resend.emails.send({
+          await resend.sendEmail(ctx, {
             from: "Cal Poly Red Cross Club <notifications@calpolyredcross.org>",
             to: [rider.email],
-            replyTo: "redcrossclub@calpoly.edu",
+            replyTo: ["redcrossclub@calpoly.edu"],
             subject: generateRiderEmailSubject(event.title),
             html: riderEmailHtml,
           });
