@@ -44,10 +44,16 @@ export default function AdminPage() {
   }, [currentUser, profileEnsured, ensureCurrentUserProfile]);
 
   useEffect(() => {
-    if (!isAuthenticated || currentUser === null) {
-      router.push("/signin");
+    if (authLoading || currentUser === undefined) {
+      return;
     }
-  }, [isAuthenticated, currentUser, router]);
+
+    if (!isAuthenticated || currentUser === null) {
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      const redirectQuery = encodeURIComponent(currentPath);
+      router.replace(`/signin?redirect=${redirectQuery}`);
+    }
+  }, [authLoading, isAuthenticated, currentUser, router]);
 
   if (
     authLoading ||
