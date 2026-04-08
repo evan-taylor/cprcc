@@ -7,7 +7,6 @@ import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { describeRecurrence } from "@/lib/recurrence";
 
 const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
 
@@ -225,21 +224,6 @@ export default function EditEventPage() {
             Update event details. Note: Event type and shifts cannot be changed
             after creation.
           </p>
-          {event.recurrencePattern && (
-            <p className="mt-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-900 text-sm">
-              This occurrence is part of a{" "}
-              {describeRecurrence(event.recurrencePattern).toLowerCase()} series
-              that runs through{" "}
-              {event.recurrenceEndsOn
-                ? new Date(event.recurrenceEndsOn).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : "a future date"}
-              . Changes on this page only update this occurrence.
-            </p>
-          )}
         </header>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
@@ -409,32 +393,6 @@ export default function EditEventPage() {
                   </p>
                 </div>
               </div>
-
-              {event.recurrencePattern && (
-                <div>
-                  <p className="mb-2 block font-semibold text-slate-900 text-sm">
-                    Recurrence
-                  </p>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-slate-900 text-sm">
-                      {describeRecurrence(event.recurrencePattern)} through{" "}
-                      {event.recurrenceEndsOn
-                        ? new Date(event.recurrenceEndsOn).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "long",
-                              day: "numeric",
-                              year: "numeric",
-                            }
-                          )
-                        : "the current series end date"}
-                    </p>
-                    <p className="mt-1 text-slate-900 text-xs">
-                      Recurrence settings are fixed when the series is created.
-                    </p>
-                  </div>
-                </div>
-              )}
 
               <div className="flex items-center gap-2">
                 <input

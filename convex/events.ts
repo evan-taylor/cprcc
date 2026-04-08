@@ -1,16 +1,9 @@
 import { v } from "convex/values";
-import { MAX_RECURRING_OCCURRENCES } from "../lib/recurrence";
+import { MAX_SELECTED_EVENT_DATES } from "../lib/event-dates";
 import type { Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUserProfile, requireBoardMember } from "./lib/auth";
-
-const recurrencePatternValidator = v.union(
-  v.literal("daily"),
-  v.literal("weekly"),
-  v.literal("biweekly"),
-  v.literal("monthly")
-);
 
 const eventSummaryValidator = v.object({
   _id: v.id("events"),
@@ -23,9 +16,6 @@ const eventSummaryValidator = v.object({
   eventType: v.union(v.literal("regular"), v.literal("boothing")),
   isOffsite: v.boolean(),
   slug: v.optional(v.string()),
-  recurrencePattern: v.optional(recurrencePatternValidator),
-  recurrenceGroupId: v.optional(v.string()),
-  recurrenceEndsOn: v.optional(v.number()),
   createdBy: v.id("userProfiles"),
   createdAt: v.number(),
 });
@@ -132,12 +122,6 @@ export const createEvent = mutation({
         ),
       })
     ),
-    recurrence: v.optional(
-      v.object({
-        pattern: recurrencePatternValidator,
-        endsOn: v.number(),
-      })
-    ),
   },
   returns: v.object({
     createdCount: v.number(),
@@ -150,17 +134,13 @@ export const createEvent = mutation({
       throw new Error("Please include at least one event occurrence");
     }
 
-    if (args.occurrences.length > MAX_RECURRING_OCCURRENCES) {
+    if (args.occurrences.length > MAX_SELECTED_EVENT_DATES) {
       throw new Error(
-        `Recurring events are limited to ${MAX_RECURRING_OCCURRENCES} occurrences`
+        `You can select up to ${MAX_SELECTED_EVENT_DATES} dates at a time`
       );
     }
 
     const baseSlug = args.slug || generateSlugFromTitle(args.title);
-    const hasRecurringSeries = args.recurrence !== undefined;
-    const recurrenceGroupId = hasRecurringSeries
-      ? `${baseSlug}-${Date.now()}`
-      : undefined;
     const eventIds: Id<"events">[] = [];
 
     for (const occurrence of args.occurrences) {
@@ -169,7 +149,7 @@ export const createEvent = mutation({
       }
 
       const occurrenceSlugBase =
-        hasRecurringSeries || args.occurrences.length > 1
+        args.occurrences.length > 1
           ? `${baseSlug}-${formatSlugDate(occurrence.startTime)}`
           : baseSlug;
       const uniqueSlug = await generateUniqueSlug(ctx, occurrenceSlugBase);
@@ -183,9 +163,6 @@ export const createEvent = mutation({
         eventType: args.eventType,
         isOffsite: args.isOffsite,
         slug: uniqueSlug,
-        recurrencePattern: args.recurrence?.pattern,
-        recurrenceGroupId,
-        recurrenceEndsOn: args.recurrence?.endsOn,
         createdBy: userProfile._id,
         createdAt: Date.now(),
       });

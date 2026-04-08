@@ -28,16 +28,6 @@ export default defineSchema({
     eventType: v.union(v.literal("regular"), v.literal("boothing")),
     isOffsite: v.boolean(),
     slug: v.optional(v.string()),
-    recurrencePattern: v.optional(
-      v.union(
-        v.literal("daily"),
-        v.literal("weekly"),
-        v.literal("biweekly"),
-        v.literal("monthly")
-      )
-    ),
-    recurrenceGroupId: v.optional(v.string()),
-    recurrenceEndsOn: v.optional(v.number()),
     createdBy: v.id("userProfiles"),
     createdAt: v.number(),
   })

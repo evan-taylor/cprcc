@@ -7,10 +7,6 @@ import SiteHeader from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
-import {
-  describeRecurrence,
-  type StoredRecurrencePattern,
-} from "@/lib/recurrence";
 
 export default function EventsPage() {
   const [requestTime] = useState(() => Date.now());
@@ -171,7 +167,6 @@ interface EventData {
   eventType?: string;
   isOffsite?: boolean;
   location: string;
-  recurrencePattern?: StoredRecurrencePattern;
   slug?: string;
   startTime: number;
   title: string;
@@ -193,11 +188,6 @@ function EventCard({ event }: { event: EventData }) {
               <Badge variant="primary">Shifts</Badge>
             )}
             {event.isOffsite && <Badge variant="secondary">Offsite</Badge>}
-            {event.recurrencePattern && (
-              <Badge variant="info">
-                {describeRecurrence(event.recurrencePattern)}
-              </Badge>
-            )}
           </div>
           <div className="flex-shrink-0 rounded-xl bg-red-50 px-3.5 py-2 text-center">
             <div

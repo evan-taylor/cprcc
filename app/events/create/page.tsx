@@ -9,18 +9,14 @@ import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 import {
-  buildScheduledOccurrences,
+  buildOccurrencesForSelectedDates,
   combineDateAndTime,
-  describeRecurrence,
   formatDateInput,
-  getDefaultRecurrenceEndDate,
   getMonthStart,
-  isValidDateValue,
-  MAX_RECURRING_OCCURRENCES,
-  RECURRENCE_OPTIONS,
-  type RecurrencePattern,
-  type StoredRecurrencePattern,
-} from "@/lib/recurrence";
+  MAX_SELECTED_EVENT_DATES,
+  sortDateValues,
+  toggleDateSelection,
+} from "@/lib/event-dates";
 
 interface ShiftDraft {
   endTime: string;
@@ -38,18 +34,14 @@ export default function CreateEventPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
-  const [startDate, setStartDate] = useState("");
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [startTime, setStartTime] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
   const [eventType, setEventType] = useState<"regular" | "boothing">("regular");
   const [isOffsite, setIsOffsite] = useState(false);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [shifts, setShifts] = useState<ShiftDraft[]>([]);
-  const [recurrencePattern, setRecurrencePattern] =
-    useState<RecurrencePattern>("none");
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(() =>
     getMonthStart(new Date())
   );
@@ -61,17 +53,10 @@ export default function CreateEventPage() {
     title ? { title } : "skip"
   );
 
-  const selectedRecurrencePattern =
-    recurrencePattern === "none" ? undefined : recurrencePattern;
-
-  const selectedDateLabel = startDate
-    ? new Date(`${startDate}T00:00:00`).toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "No date selected yet";
+  const selectedDatesLabel =
+    selectedDates.length === 0
+      ? "No dates selected yet"
+      : `${selectedDates.length} date${selectedDates.length === 1 ? "" : "s"} selected`;
 
   const eventCountsByDate = useMemo(() => {
     if (!eventsForCalendar) {
@@ -88,67 +73,34 @@ export default function CreateEventPage() {
     return counts;
   }, [eventsForCalendar]);
 
-  const occurrencePreview = useMemo(() => {
-    if (!(startDate && startTime && endDate && endTime)) {
-      return null;
+  const formattedSelectedDates = useMemo(
+    () =>
+      sortDateValues(selectedDates).map((dateValue) => ({
+        dateValue,
+        label: new Date(`${dateValue}T00:00:00`).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        }),
+      })),
+    [selectedDates]
+  );
+
+  const dateSelectionSummary = useMemo(() => {
+    if (selectedDates.length === 0) {
+      return "Choose one or more calendar days for this event.";
     }
 
-    return buildScheduledOccurrences({
-      startDate,
-      startTime,
-      endDate,
-      endTime,
-      recurrencePattern,
-      recurrenceEndDate:
-        recurrencePattern === "none" ? undefined : recurrenceEndDate,
-    });
-  }, [
-    endDate,
-    endTime,
-    recurrenceEndDate,
-    recurrencePattern,
-    startDate,
-    startTime,
-  ]);
-
-  const recurrenceSummary = useMemo(() => {
-    if (!startDate) {
-      return "Pick a date on the calendar to start scheduling.";
+    if (selectedDates.length === 1) {
+      return "This will create one event on the selected day.";
     }
 
-    if (recurrencePattern === "none") {
-      return "This will create one event on the selected date.";
-    }
-
-    if (!recurrenceEndDate) {
-      return "Choose the last date in the series to preview recurring events.";
-    }
-
-    if (!occurrencePreview || occurrencePreview.occurrences.length === 0) {
-      return "Add valid start and end times to preview the recurring series.";
-    }
-
-    if (occurrencePreview.exceedsLimit) {
-      return `This series exceeds the ${MAX_RECURRING_OCCURRENCES} occurrence limit.`;
-    }
-
-    return `This will create ${
-      occurrencePreview.occurrences.length
-    } ${describeRecurrence(recurrencePattern).toLowerCase()} event${
-      occurrencePreview.occurrences.length === 1 ? "" : "s"
-    } through ${new Date(`${recurrenceEndDate}T00:00:00`).toLocaleDateString(
-      "en-US",
-      {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      }
-    )}.`;
-  }, [occurrencePreview, recurrenceEndDate, recurrencePattern, startDate]);
+    return `This will create ${selectedDates.length} separate events with the same details and time on each selected day.`;
+  }, [selectedDates.length]);
 
   let submitLabel = "Create Event";
-  if (selectedRecurrencePattern) {
-    submitLabel = "Create Recurring Events";
+  if (selectedDates.length > 1) {
+    submitLabel = `Create ${selectedDates.length} Events`;
   }
   if (isSubmitting) {
     submitLabel = "Creating...";
@@ -185,49 +137,21 @@ export default function CreateEventPage() {
     );
   }
 
-  const applySelectedDate = (nextDate: string) => {
-    setStartDate(nextDate);
-
-    if (!isValidDateValue(nextDate)) {
-      return;
-    }
-
-    setCalendarMonth(getMonthStart(new Date(`${nextDate}T00:00:00`)));
-    setEndDate((currentEndDate) =>
-      !currentEndDate || currentEndDate < nextDate ? nextDate : currentEndDate
+  const handleToggleDate = (nextDate: string) => {
+    setSelectedDates((currentDates) =>
+      toggleDateSelection(currentDates, nextDate)
     );
+    setCalendarMonth(getMonthStart(new Date(`${nextDate}T00:00:00`)));
+  };
 
-    if (!selectedRecurrencePattern) {
-      return;
-    }
-
-    setRecurrenceEndDate((currentRecurrenceEndDate) =>
-      currentRecurrenceEndDate && currentRecurrenceEndDate >= nextDate
-        ? currentRecurrenceEndDate
-        : getDefaultRecurrenceEndDate(nextDate, selectedRecurrencePattern)
+  const handleRemoveDate = (dateValue: string) => {
+    setSelectedDates((currentDates) =>
+      currentDates.filter((currentDate) => currentDate !== dateValue)
     );
   };
 
-  const handleRecurrencePatternChange = (nextPattern: RecurrencePattern) => {
-    setRecurrencePattern(nextPattern);
-
-    if (nextPattern === "none") {
-      setRecurrenceEndDate("");
-      return;
-    }
-
-    if (!startDate) {
-      return;
-    }
-
-    setRecurrenceEndDate((currentRecurrenceEndDate) =>
-      currentRecurrenceEndDate && currentRecurrenceEndDate >= startDate
-        ? currentRecurrenceEndDate
-        : getDefaultRecurrenceEndDate(
-            startDate,
-            nextPattern as StoredRecurrencePattern
-          )
-    );
+  const handleClearDates = () => {
+    setSelectedDates([]);
   };
 
   const addShift = () => {
@@ -260,33 +184,37 @@ export default function CreateEventPage() {
     );
   };
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: event scheduling includes recurrence validation, occurrence generation, and analytics
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: event scheduling includes multi-date validation, shift mapping, and analytics
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
-      const startDateTime = combineDateAndTime(startDate, startTime).getTime();
-      const endDateTime = combineDateAndTime(endDate, endTime).getTime();
+      if (selectedDates.length === 0) {
+        setError("Select at least one date on the calendar");
+        setIsSubmitting(false);
+        return;
+      }
 
-      if (startDateTime >= endDateTime) {
+      if (selectedDates.length > MAX_SELECTED_EVENT_DATES) {
+        setError(
+          `You can select up to ${MAX_SELECTED_EVENT_DATES} dates at a time`
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      const startTimeValue = new Date(`2000-01-01T${startTime}`).getTime();
+      const endTimeValue = new Date(`2000-01-01T${endTime}`).getTime();
+
+      if (startTimeValue >= endTimeValue) {
         setError("End time must be after start time");
         setIsSubmitting(false);
         return;
       }
 
-      if (recurrencePattern !== "none" && !recurrenceEndDate) {
-        setError("Choose when the recurring series should end");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (recurrencePattern !== "none" && recurrenceEndDate < startDate) {
-        setError("Recurring series must end on or after the start date");
-        setIsSubmitting(false);
-        return;
-      }
+      const primaryDate = sortDateValues(selectedDates)[0];
 
       for (const shift of shifts) {
         if (!(shift.startTime && shift.endTime)) {
@@ -295,8 +223,8 @@ export default function CreateEventPage() {
           return;
         }
 
-        const shiftStartTime = combineDateAndTime(startDate, shift.startTime);
-        const shiftEndTime = combineDateAndTime(startDate, shift.endTime);
+        const shiftStartTime = combineDateAndTime(primaryDate, shift.startTime);
+        const shiftEndTime = combineDateAndTime(primaryDate, shift.endTime);
         if (shiftStartTime.getTime() >= shiftEndTime.getTime()) {
           setError("Each shift must end after it starts");
           setIsSubmitting(false);
@@ -304,31 +232,13 @@ export default function CreateEventPage() {
         }
       }
 
-      const scheduledOccurrences = buildScheduledOccurrences({
-        startDate,
+      const occurrences = buildOccurrencesForSelectedDates({
+        selectedDates,
         startTime,
-        endDate,
         endTime,
-        recurrencePattern,
-        recurrenceEndDate:
-          recurrencePattern === "none" ? undefined : recurrenceEndDate,
       });
 
-      if (scheduledOccurrences.occurrences.length === 0) {
-        setError("Please choose a valid event schedule");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (scheduledOccurrences.exceedsLimit) {
-        setError(
-          `Recurring events are limited to ${MAX_RECURRING_OCCURRENCES} occurrences`
-        );
-        setIsSubmitting(false);
-        return;
-      }
-
-      const occurrences = scheduledOccurrences.occurrences.map((occurrence) => {
+      const occurrencePayload = occurrences.map((occurrence) => {
         const occurrenceDate = formatDateInput(new Date(occurrence.startTime));
 
         return {
@@ -358,17 +268,7 @@ export default function CreateEventPage() {
         eventType,
         isOffsite,
         slug: slugTouched ? slug : undefined,
-        occurrences,
-        recurrence:
-          recurrencePattern === "none"
-            ? undefined
-            : {
-                pattern: recurrencePattern,
-                endsOn: combineDateAndTime(
-                  recurrenceEndDate,
-                  "23:59"
-                ).getTime(),
-              },
+        occurrences: occurrencePayload,
       });
 
       posthog.capture("event_created", {
@@ -377,10 +277,9 @@ export default function CreateEventPage() {
         has_shifts: eventType === "boothing" && shifts.length > 0,
         shifts_count: shifts.length,
         has_custom_slug: slugTouched && !!slug,
-        has_recurrence: recurrencePattern !== "none",
-        recurrence_pattern:
-          recurrencePattern === "none" ? "one_time" : recurrencePattern,
-        occurrence_count: occurrences.length,
+        has_multiple_dates: selectedDates.length > 1,
+        selected_date_count: selectedDates.length,
+        occurrence_count: occurrencePayload.length,
       });
 
       router.push("/events");
@@ -391,8 +290,7 @@ export default function CreateEventPage() {
       posthog.capture("event_creation_failed", {
         event_type: eventType,
         is_offsite: isOffsite,
-        recurrence_pattern:
-          recurrencePattern === "none" ? "one_time" : recurrencePattern,
+        selected_date_count: selectedDates.length,
         error: err instanceof Error ? err.message : "Unknown error",
       });
       setError(err instanceof Error ? err.message : "Failed to create event");
@@ -499,46 +397,71 @@ export default function CreateEventPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-semibold text-slate-900 text-sm">
-                      Calendar Date Picker
+                      Dates
                     </p>
                     <p className="mt-1 text-slate-900 text-sm">
-                      Selected date: {selectedDateLabel}
+                      {selectedDatesLabel}
                     </p>
                   </div>
-                  <div className="rounded-full bg-white px-4 py-2 text-slate-900 text-sm shadow-sm">
-                    {eventsForCalendar === undefined
-                      ? "Loading event dates..."
-                      : `${Object.keys(eventCountsByDate).length} dates with events`}
-                  </div>
+                  {selectedDates.length > 0 ? (
+                    <button
+                      className="rounded-full border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
+                      onClick={handleClearDates}
+                      type="button"
+                    >
+                      Clear dates
+                    </button>
+                  ) : null}
                 </div>
 
                 <MonthCalendar
                   eventCountsByDate={eventCountsByDate}
                   onMonthChange={setCalendarMonth}
-                  onSelectDate={applySelectedDate}
-                  selectedDate={startDate}
+                  onToggleDate={handleToggleDate}
+                  selectedDates={selectedDates}
                   visibleMonth={calendarMonth}
                 />
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-slate-900 text-sm">
+                      Selected Days
+                    </p>
+                    <p className="text-slate-900 text-xs">
+                      {eventsForCalendar === undefined
+                        ? "Loading existing event markers..."
+                        : `${Object.keys(eventCountsByDate).length} dates already have events`}
+                    </p>
+                  </div>
+
+                  {formattedSelectedDates.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {formattedSelectedDates.map((selectedDate) => (
+                        <button
+                          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-left text-red-700 text-sm transition hover:bg-red-100"
+                          key={selectedDate.dateValue}
+                          onClick={() =>
+                            handleRemoveDate(selectedDate.dateValue)
+                          }
+                          type="button"
+                        >
+                          <span>{selectedDate.label}</span>
+                          <span aria-hidden="true">&times;</span>
+                          <span className="sr-only">
+                            Remove {selectedDate.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-slate-900 text-sm">
+                      Pick one or more dates above. Each selected day will
+                      create its own event entry.
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label
-                    className="block font-semibold text-slate-900 text-sm"
-                    htmlFor="startDate"
-                  >
-                    Start Date
-                  </label>
-                  <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                    id="startDate"
-                    onChange={(e) => applySelectedDate(e.target.value)}
-                    required
-                    type="date"
-                    value={startDate}
-                  />
-                </div>
-
                 <div>
                   <label
                     className="block font-semibold text-slate-900 text-sm"
@@ -553,23 +476,6 @@ export default function CreateEventPage() {
                     required
                     type="time"
                     value={startTime}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    className="block font-semibold text-slate-900 text-sm"
-                    htmlFor="endDate"
-                  >
-                    End Date
-                  </label>
-                  <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                    id="endDate"
-                    onChange={(e) => setEndDate(e.target.value)}
-                    required
-                    type="date"
-                    value={endDate}
                   />
                 </div>
 
@@ -591,65 +497,13 @@ export default function CreateEventPage() {
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] p-5">
-                <div>
-                  <label
-                    className="block font-semibold text-slate-900 text-sm"
-                    htmlFor="recurrencePattern"
-                  >
-                    Repeat
-                  </label>
-                  <select
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                    id="recurrencePattern"
-                    onChange={(e) =>
-                      handleRecurrencePatternChange(
-                        e.target.value as RecurrencePattern
-                      )
-                    }
-                    value={recurrencePattern}
-                  >
-                    {RECURRENCE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {selectedRecurrencePattern && (
-                  <div>
-                    <label
-                      className="block font-semibold text-slate-900 text-sm"
-                      htmlFor="recurrenceEndDate"
-                    >
-                      Repeat Until
-                    </label>
-                    <input
-                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                      id="recurrenceEndDate"
-                      min={startDate || undefined}
-                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                      required
-                      type="date"
-                      value={recurrenceEndDate}
-                    />
-                  </div>
-                )}
-
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <p className="font-semibold text-slate-900 text-sm">
-                    Recurrence Preview
-                  </p>
-                  <p className="mt-1 text-slate-900 text-sm">
-                    {recurrenceSummary}
-                  </p>
-                  <p className="mt-2 text-slate-900 text-xs">
-                    Recurring events are saved as separate event entries so each
-                    occurrence can be edited later without affecting the rest of
-                    the series.
-                  </p>
-                </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <p className="font-semibold text-slate-900 text-sm">
+                  Time Applies to Every Selected Date
+                </p>
+                <p className="mt-1 text-slate-900 text-sm">
+                  {dateSelectionSummary}
+                </p>
               </div>
 
               <div>
@@ -697,15 +551,11 @@ export default function CreateEventPage() {
                   <h2 className="font-semibold text-slate-900 text-xl">
                     Shifts
                   </h2>
-                  {selectedRecurrencePattern && (
+                  {selectedDates.length > 1 ? (
                     <p className="mt-1 text-slate-900 text-sm">
-                      These shift times will repeat for every{" "}
-                      {describeRecurrence(
-                        selectedRecurrencePattern
-                      ).toLowerCase()}{" "}
-                      occurrence in the series.
+                      These shift times will be created on each selected date.
                     </p>
-                  )}
+                  ) : null}
                 </div>
                 <button
                   className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"

@@ -8,7 +8,6 @@ import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { describeRecurrence } from "@/lib/recurrence";
 
 const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
 type CampusLocation = "onCampus" | "offCampus";
@@ -492,11 +491,6 @@ export default function EventDetailPage() {
                       Offsite
                     </span>
                   )}
-                  {event.recurrencePattern && (
-                    <span className="rounded-full bg-sky-100 px-3 py-1 font-semibold text-sky-700 text-xs uppercase tracking-wide">
-                      {describeRecurrence(event.recurrencePattern)}
-                    </span>
-                  )}
                 </div>
                 <p className="mt-4 text-slate-900">{event.description}</p>
               </div>
@@ -564,25 +558,6 @@ export default function EventDetailPage() {
                   {uniqueRsvpUserIds.size} people
                 </p>
               </div>
-              {event.recurrencePattern && event.recurrenceEndsOn && (
-                <div className="sm:col-span-2">
-                  <p className="font-semibold text-slate-900 text-sm">Series</p>
-                  <p className="mt-1 text-slate-900">
-                    This event repeats{" "}
-                    {describeRecurrence(event.recurrencePattern).toLowerCase()}{" "}
-                    through{" "}
-                    {new Date(event.recurrenceEndsOn).toLocaleDateString(
-                      "en-US",
-                      {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      }
-                    )}
-                    .
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
