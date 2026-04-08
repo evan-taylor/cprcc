@@ -3,35 +3,48 @@
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { MonthCalendar } from "@/components/events/month-calendar";
 import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
+import {
+  buildOccurrencesForSelectedDates,
+  combineDateAndTime,
+  formatDateInput,
+  getMonthStart,
+  MAX_SELECTED_EVENT_DATES,
+  sortDateValues,
+  toggleDateSelection,
+} from "@/lib/event-dates";
+
+interface ShiftDraft {
+  endTime: string;
+  id: string;
+  requiredPeople: number;
+  startTime: string;
+}
 
 export default function CreateEventPage() {
   const router = useRouter();
   const currentUser = useQuery(api.users.getCurrentUser);
   const createEvent = useMutation(api.events.createEvent);
+  const eventsForCalendar = useQuery(api.events.listEvents);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
-  const [startDate, setStartDate] = useState("");
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [startTime, setStartTime] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
   const [eventType, setEventType] = useState<"regular" | "boothing">("regular");
   const [isOffsite, setIsOffsite] = useState(false);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
-  const [shifts, setShifts] = useState<
-    Array<{
-      id: string;
-      startTime: string;
-      endTime: string;
-      requiredPeople: number;
-    }>
-  >([]);
+  const [shifts, setShifts] = useState<ShiftDraft[]>([]);
+  const [calendarMonth, setCalendarMonth] = useState(() =>
+    getMonthStart(new Date())
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +52,59 @@ export default function CreateEventPage() {
     api.events.generateSlugSuggestion,
     title ? { title } : "skip"
   );
+
+  const selectedDatesLabel =
+    selectedDates.length === 0
+      ? "No dates selected yet"
+      : `${selectedDates.length} date${selectedDates.length === 1 ? "" : "s"} selected`;
+
+  const eventCountsByDate = useMemo(() => {
+    if (!eventsForCalendar) {
+      return {};
+    }
+
+    const counts: Record<string, number> = {};
+
+    for (const event of eventsForCalendar) {
+      const dateKey = formatDateInput(new Date(event.startTime));
+      counts[dateKey] = (counts[dateKey] ?? 0) + 1;
+    }
+
+    return counts;
+  }, [eventsForCalendar]);
+
+  const formattedSelectedDates = useMemo(
+    () =>
+      sortDateValues(selectedDates).map((dateValue) => ({
+        dateValue,
+        label: new Date(`${dateValue}T00:00:00`).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        }),
+      })),
+    [selectedDates]
+  );
+
+  const dateSelectionSummary = useMemo(() => {
+    if (selectedDates.length === 0) {
+      return "Choose one or more calendar days for this event.";
+    }
+
+    if (selectedDates.length === 1) {
+      return "This will create one event on the selected day.";
+    }
+
+    return `This will create ${selectedDates.length} separate events with the same details and time on each selected day.`;
+  }, [selectedDates.length]);
+
+  let submitLabel = "Create Event";
+  if (selectedDates.length > 1) {
+    submitLabel = `Create ${selectedDates.length} Events`;
+  }
+  if (isSubmitting) {
+    submitLabel = "Creating...";
+  }
 
   if (currentUser === undefined) {
     return (
@@ -71,11 +137,28 @@ export default function CreateEventPage() {
     );
   }
 
+  const handleToggleDate = (nextDate: string) => {
+    setSelectedDates((currentDates) =>
+      toggleDateSelection(currentDates, nextDate)
+    );
+    setCalendarMonth(getMonthStart(new Date(`${nextDate}T00:00:00`)));
+  };
+
+  const handleRemoveDate = (dateValue: string) => {
+    setSelectedDates((currentDates) =>
+      currentDates.filter((currentDate) => currentDate !== dateValue)
+    );
+  };
+
+  const handleClearDates = () => {
+    setSelectedDates([]);
+  };
+
   const addShift = () => {
-    setShifts([
-      ...shifts,
+    setShifts((currentShifts) => [
+      ...currentShifts,
       {
-        id: `shift-${Date.now()}-${Math.random()}`,
+        id: crypto.randomUUID(),
         startTime: "",
         endTime: "",
         requiredPeople: 3,
@@ -84,62 +167,119 @@ export default function CreateEventPage() {
   };
 
   const removeShift = (index: number) => {
-    setShifts(shifts.filter((_, i) => i !== index));
+    setShifts((currentShifts) =>
+      currentShifts.filter((_, shiftIndex) => shiftIndex !== index)
+    );
   };
 
-  const updateShift = (
+  const updateShift = <K extends keyof Omit<ShiftDraft, "id">>(
     index: number,
-    field: string,
-    value: string | number
+    field: K,
+    value: ShiftDraft[K]
   ) => {
-    const newShifts = [...shifts];
-    newShifts[index] = { ...newShifts[index], [field]: value };
-    setShifts(newShifts);
+    setShifts((currentShifts) =>
+      currentShifts.map((shift, shiftIndex) =>
+        shiftIndex === index ? { ...shift, [field]: value } : shift
+      )
+    );
   };
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: form submission with validation, shift mapping, and PostHog capture
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: event scheduling includes multi-date validation, shift mapping, and analytics
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
-      const startDateTime = new Date(`${startDate}T${startTime}`).getTime();
-      const endDateTime = new Date(`${endDate}T${endTime}`).getTime();
+      if (selectedDates.length === 0) {
+        setError("Select at least one date on the calendar");
+        setIsSubmitting(false);
+        return;
+      }
 
-      if (startDateTime >= endDateTime) {
+      if (selectedDates.length > MAX_SELECTED_EVENT_DATES) {
+        setError(
+          `You can select up to ${MAX_SELECTED_EVENT_DATES} dates at a time`
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      const startTimeValue = new Date(`2000-01-01T${startTime}`).getTime();
+      const endTimeValue = new Date(`2000-01-01T${endTime}`).getTime();
+
+      if (startTimeValue >= endTimeValue) {
         setError("End time must be after start time");
         setIsSubmitting(false);
         return;
       }
 
-      const eventShifts =
-        eventType === "boothing"
-          ? shifts.map((shift) => ({
-              startTime: new Date(`${startDate}T${shift.startTime}`).getTime(),
-              endTime: new Date(`${startDate}T${shift.endTime}`).getTime(),
-              requiredPeople: shift.requiredPeople,
-            }))
-          : undefined;
+      const primaryDate = sortDateValues(selectedDates)[0];
+
+      for (const shift of shifts) {
+        if (!(shift.startTime && shift.endTime)) {
+          setError("Each shift needs a start and end time");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const shiftStartTime = combineDateAndTime(primaryDate, shift.startTime);
+        const shiftEndTime = combineDateAndTime(primaryDate, shift.endTime);
+        if (shiftStartTime.getTime() >= shiftEndTime.getTime()) {
+          setError("Each shift must end after it starts");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const occurrences = buildOccurrencesForSelectedDates({
+        selectedDates,
+        startTime,
+        endTime,
+      });
+
+      const occurrencePayload = occurrences.map((occurrence) => {
+        const occurrenceDate = formatDateInput(new Date(occurrence.startTime));
+
+        return {
+          startTime: occurrence.startTime,
+          endTime: occurrence.endTime,
+          shifts:
+            eventType === "boothing"
+              ? shifts.map((shift) => ({
+                  startTime: combineDateAndTime(
+                    occurrenceDate,
+                    shift.startTime
+                  ).getTime(),
+                  endTime: combineDateAndTime(
+                    occurrenceDate,
+                    shift.endTime
+                  ).getTime(),
+                  requiredPeople: shift.requiredPeople,
+                }))
+              : undefined,
+        };
+      });
 
       await createEvent({
         title,
         description,
         location,
-        startTime: startDateTime,
-        endTime: endDateTime,
         eventType,
         isOffsite,
         slug: slugTouched ? slug : undefined,
-        shifts: eventShifts,
+        occurrences: occurrencePayload,
       });
 
       posthog.capture("event_created", {
         event_type: eventType,
         is_offsite: isOffsite,
-        has_shifts: eventShifts ? eventShifts.length > 0 : false,
-        shifts_count: eventShifts?.length ?? 0,
+        has_shifts: eventType === "boothing" && shifts.length > 0,
+        shifts_count: shifts.length,
         has_custom_slug: slugTouched && !!slug,
+        has_multiple_dates: selectedDates.length > 1,
+        selected_date_count: selectedDates.length,
+        occurrence_count: occurrencePayload.length,
       });
 
       router.push("/events");
@@ -150,6 +290,7 @@ export default function CreateEventPage() {
       posthog.capture("event_creation_failed", {
         event_type: eventType,
         is_offsite: isOffsite,
+        selected_date_count: selectedDates.length,
         error: err instanceof Error ? err.message : "Unknown error",
       });
       setError(err instanceof Error ? err.message : "Failed to create event");
@@ -252,24 +393,75 @@ export default function CreateEventPage() {
                 />
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label
-                    className="block font-semibold text-slate-900 text-sm"
-                    htmlFor="startDate"
-                  >
-                    Start Date
-                  </label>
-                  <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                    id="startDate"
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
-                    type="date"
-                    value={startDate}
-                  />
+              <div className="space-y-4 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-semibold text-slate-900 text-sm">
+                      Dates
+                    </p>
+                    <p className="mt-1 text-slate-900 text-sm">
+                      {selectedDatesLabel}
+                    </p>
+                  </div>
+                  {selectedDates.length > 0 ? (
+                    <button
+                      className="rounded-full border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
+                      onClick={handleClearDates}
+                      type="button"
+                    >
+                      Clear dates
+                    </button>
+                  ) : null}
                 </div>
 
+                <MonthCalendar
+                  eventCountsByDate={eventCountsByDate}
+                  onMonthChange={setCalendarMonth}
+                  onToggleDate={handleToggleDate}
+                  selectedDates={selectedDates}
+                  visibleMonth={calendarMonth}
+                />
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-slate-900 text-sm">
+                      Selected Days
+                    </p>
+                    <p className="text-slate-900 text-xs">
+                      {eventsForCalendar === undefined
+                        ? "Loading existing event markers..."
+                        : `${Object.keys(eventCountsByDate).length} dates already have events`}
+                    </p>
+                  </div>
+
+                  {formattedSelectedDates.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {formattedSelectedDates.map((selectedDate) => (
+                        <button
+                          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-left text-red-700 text-sm transition hover:bg-red-100"
+                          key={selectedDate.dateValue}
+                          onClick={() =>
+                            handleRemoveDate(selectedDate.dateValue)
+                          }
+                          type="button"
+                        >
+                          <span>{selectedDate.label}</span>
+                          <span aria-hidden="true">&times;</span>
+                          <span className="sr-only">
+                            Remove {selectedDate.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-slate-900 text-sm">
+                      Pick one or more dates above. Each selected day will
+                      create its own event entry.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label
                     className="block font-semibold text-slate-900 text-sm"
@@ -290,23 +482,6 @@ export default function CreateEventPage() {
                 <div>
                   <label
                     className="block font-semibold text-slate-900 text-sm"
-                    htmlFor="endDate"
-                  >
-                    End Date
-                  </label>
-                  <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                    id="endDate"
-                    onChange={(e) => setEndDate(e.target.value)}
-                    required
-                    type="date"
-                    value={endDate}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    className="block font-semibold text-slate-900 text-sm"
                     htmlFor="endTime"
                   >
                     End Time
@@ -320,6 +495,15 @@ export default function CreateEventPage() {
                     value={endTime}
                   />
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <p className="font-semibold text-slate-900 text-sm">
+                  Time Applies to Every Selected Date
+                </p>
+                <p className="mt-1 text-slate-900 text-sm">
+                  {dateSelectionSummary}
+                </p>
               </div>
 
               <div>
@@ -363,7 +547,16 @@ export default function CreateEventPage() {
           {eventType === "boothing" && (
             <div className="editorial-card rounded-3xl p-8">
               <div className="mb-6 flex items-center justify-between">
-                <h2 className="font-semibold text-slate-900 text-xl">Shifts</h2>
+                <div>
+                  <h2 className="font-semibold text-slate-900 text-xl">
+                    Shifts
+                  </h2>
+                  {selectedDates.length > 1 ? (
+                    <p className="mt-1 text-slate-900 text-sm">
+                      These shift times will be created on each selected date.
+                    </p>
+                  ) : null}
+                </div>
                 <button
                   className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
                   onClick={addShift}
@@ -484,7 +677,7 @@ export default function CreateEventPage() {
               disabled={isSubmitting}
               type="submit"
             >
-              {isSubmitting ? "Creating..." : "Create Event"}
+              {submitLabel}
             </button>
           </div>
         </form>

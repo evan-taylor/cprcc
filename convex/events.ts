@@ -1,7 +1,64 @@
 import { v } from "convex/values";
+import { MAX_SELECTED_EVENT_DATES } from "../lib/event-dates";
+import type { Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUserProfile, requireBoardMember } from "./lib/auth";
+
+const eventSummaryValidator = v.object({
+  _id: v.id("events"),
+  _creationTime: v.number(),
+  title: v.string(),
+  description: v.string(),
+  location: v.string(),
+  startTime: v.number(),
+  endTime: v.number(),
+  eventType: v.union(v.literal("regular"), v.literal("boothing")),
+  isOffsite: v.boolean(),
+  slug: v.optional(v.string()),
+  createdBy: v.id("userProfiles"),
+  createdAt: v.number(),
+});
+
+const shiftValidator = v.object({
+  _id: v.id("shifts"),
+  _creationTime: v.number(),
+  eventId: v.id("events"),
+  startTime: v.number(),
+  endTime: v.number(),
+  requiredPeople: v.number(),
+});
+
+const rsvpDetailValidator = v.object({
+  _id: v.id("rsvps"),
+  _creationTime: v.number(),
+  eventId: v.id("events"),
+  userProfileId: v.id("userProfiles"),
+  shiftId: v.optional(v.id("shifts")),
+  needsRide: v.boolean(),
+  canDrive: v.boolean(),
+  selfTransport: v.optional(v.boolean()),
+  campusLocation: v.optional(
+    v.union(v.literal("onCampus"), v.literal("offCampus"))
+  ),
+  driverInfo: v.optional(
+    v.object({
+      carType: v.string(),
+      carColor: v.string(),
+      capacity: v.number(),
+    })
+  ),
+  createdAt: v.number(),
+  userName: v.string(),
+  userEmail: v.optional(v.string()),
+  userPhoneNumber: v.optional(v.string()),
+});
+
+const eventDetailValidator = v.object({
+  ...eventSummaryValidator.fields,
+  shifts: v.array(shiftValidator),
+  rsvps: v.array(rsvpDetailValidator),
+});
 
 function generateSlugFromTitle(title: string): string {
   return title
@@ -34,58 +91,101 @@ async function generateUniqueSlug(
   }
 }
 
+function formatSlugDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export const createEvent = mutation({
   args: {
     title: v.string(),
     description: v.string(),
     location: v.string(),
-    startTime: v.number(),
-    endTime: v.number(),
     eventType: v.union(v.literal("regular"), v.literal("boothing")),
     isOffsite: v.boolean(),
     slug: v.optional(v.string()),
-    shifts: v.optional(
-      v.array(
-        v.object({
-          startTime: v.number(),
-          endTime: v.number(),
-          requiredPeople: v.number(),
-        })
-      )
+    occurrences: v.array(
+      v.object({
+        startTime: v.number(),
+        endTime: v.number(),
+        shifts: v.optional(
+          v.array(
+            v.object({
+              startTime: v.number(),
+              endTime: v.number(),
+              requiredPeople: v.number(),
+            })
+          )
+        ),
+      })
     ),
   },
-  returns: v.id("events"),
+  returns: v.object({
+    createdCount: v.number(),
+    eventIds: v.array(v.id("events")),
+  }),
   handler: async (ctx, args) => {
     const userProfile = await requireBoardMember(ctx);
 
-    const baseSlug = args.slug || generateSlugFromTitle(args.title);
-    const uniqueSlug = await generateUniqueSlug(ctx, baseSlug);
-
-    const eventId = await ctx.db.insert("events", {
-      title: args.title,
-      description: args.description,
-      location: args.location,
-      startTime: args.startTime,
-      endTime: args.endTime,
-      eventType: args.eventType,
-      isOffsite: args.isOffsite,
-      slug: uniqueSlug,
-      createdBy: userProfile._id,
-      createdAt: Date.now(),
-    });
-
-    if (args.eventType === "boothing" && args.shifts) {
-      for (const shift of args.shifts) {
-        await ctx.db.insert("shifts", {
-          eventId,
-          startTime: shift.startTime,
-          endTime: shift.endTime,
-          requiredPeople: shift.requiredPeople,
-        });
-      }
+    if (args.occurrences.length === 0) {
+      throw new Error("Please include at least one event occurrence");
     }
 
-    return eventId;
+    if (args.occurrences.length > MAX_SELECTED_EVENT_DATES) {
+      throw new Error(
+        `You can select up to ${MAX_SELECTED_EVENT_DATES} dates at a time`
+      );
+    }
+
+    const baseSlug = args.slug || generateSlugFromTitle(args.title);
+    const eventIds: Id<"events">[] = [];
+
+    for (const occurrence of args.occurrences) {
+      if (occurrence.startTime >= occurrence.endTime) {
+        throw new Error("Each occurrence must end after it starts");
+      }
+
+      const occurrenceSlugBase =
+        args.occurrences.length > 1
+          ? `${baseSlug}-${formatSlugDate(occurrence.startTime)}`
+          : baseSlug;
+      const uniqueSlug = await generateUniqueSlug(ctx, occurrenceSlugBase);
+
+      const eventId = await ctx.db.insert("events", {
+        title: args.title,
+        description: args.description,
+        location: args.location,
+        startTime: occurrence.startTime,
+        endTime: occurrence.endTime,
+        eventType: args.eventType,
+        isOffsite: args.isOffsite,
+        slug: uniqueSlug,
+        createdBy: userProfile._id,
+        createdAt: Date.now(),
+      });
+
+      if (args.eventType === "boothing" && occurrence.shifts) {
+        for (const shift of occurrence.shifts) {
+          if (shift.startTime >= shift.endTime) {
+            throw new Error("Each shift must end after it starts");
+          }
+
+          await ctx.db.insert("shifts", {
+            eventId,
+            startTime: shift.startTime,
+            endTime: shift.endTime,
+            requiredPeople: shift.requiredPeople,
+          });
+        }
+      }
+
+      eventIds.push(eventId);
+    }
+
+    return { createdCount: eventIds.length, eventIds };
   },
 });
 
@@ -189,22 +289,7 @@ export const deleteEvent = mutation({
 
 export const listEvents = query({
   args: {},
-  returns: v.array(
-    v.object({
-      _id: v.id("events"),
-      _creationTime: v.number(),
-      title: v.string(),
-      description: v.string(),
-      location: v.string(),
-      startTime: v.number(),
-      endTime: v.number(),
-      eventType: v.union(v.literal("regular"), v.literal("boothing")),
-      isOffsite: v.boolean(),
-      slug: v.optional(v.string()),
-      createdBy: v.id("userProfiles"),
-      createdAt: v.number(),
-    })
-  ),
+  returns: v.array(eventSummaryValidator),
   handler: async (ctx) => {
     const events = await ctx.db
       .query("events")
@@ -220,22 +305,7 @@ export const listUpcomingEvents = query({
   args: {
     now: v.number(),
   },
-  returns: v.array(
-    v.object({
-      _id: v.id("events"),
-      _creationTime: v.number(),
-      title: v.string(),
-      description: v.string(),
-      location: v.string(),
-      startTime: v.number(),
-      endTime: v.number(),
-      eventType: v.union(v.literal("regular"), v.literal("boothing")),
-      isOffsite: v.boolean(),
-      slug: v.optional(v.string()),
-      createdBy: v.id("userProfiles"),
-      createdAt: v.number(),
-    })
-  ),
+  returns: v.array(eventSummaryValidator),
   handler: async (ctx, args) => {
     const events = await ctx.db
       .query("events")
@@ -251,59 +321,7 @@ export const getEvent = query({
   args: {
     eventId: v.id("events"),
   },
-  returns: v.union(
-    v.object({
-      _id: v.id("events"),
-      _creationTime: v.number(),
-      title: v.string(),
-      description: v.string(),
-      location: v.string(),
-      startTime: v.number(),
-      endTime: v.number(),
-      eventType: v.union(v.literal("regular"), v.literal("boothing")),
-      isOffsite: v.boolean(),
-      slug: v.optional(v.string()),
-      createdBy: v.id("userProfiles"),
-      createdAt: v.number(),
-      shifts: v.array(
-        v.object({
-          _id: v.id("shifts"),
-          _creationTime: v.number(),
-          eventId: v.id("events"),
-          startTime: v.number(),
-          endTime: v.number(),
-          requiredPeople: v.number(),
-        })
-      ),
-      rsvps: v.array(
-        v.object({
-          _id: v.id("rsvps"),
-          _creationTime: v.number(),
-          eventId: v.id("events"),
-          userProfileId: v.id("userProfiles"),
-          shiftId: v.optional(v.id("shifts")),
-          needsRide: v.boolean(),
-          canDrive: v.boolean(),
-          selfTransport: v.optional(v.boolean()),
-          campusLocation: v.optional(
-            v.union(v.literal("onCampus"), v.literal("offCampus"))
-          ),
-          driverInfo: v.optional(
-            v.object({
-              carType: v.string(),
-              carColor: v.string(),
-              capacity: v.number(),
-            })
-          ),
-          createdAt: v.number(),
-          userName: v.string(),
-          userEmail: v.optional(v.string()),
-          userPhoneNumber: v.optional(v.string()),
-        })
-      ),
-    }),
-    v.null()
-  ),
+  returns: v.union(eventDetailValidator, v.null()),
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.eventId);
     if (!event) {
@@ -341,7 +359,7 @@ export const getEvent = query({
 
     return {
       ...event,
-      shifts: shifts.sort((a, b) => a.startTime - b.startTime),
+      shifts: shifts.slice().sort((a, b) => a.startTime - b.startTime),
       rsvps: rsvpDetails,
     };
   },
@@ -351,59 +369,7 @@ export const getEventBySlug = query({
   args: {
     slug: v.string(),
   },
-  returns: v.union(
-    v.object({
-      _id: v.id("events"),
-      _creationTime: v.number(),
-      title: v.string(),
-      description: v.string(),
-      location: v.string(),
-      startTime: v.number(),
-      endTime: v.number(),
-      eventType: v.union(v.literal("regular"), v.literal("boothing")),
-      isOffsite: v.boolean(),
-      slug: v.optional(v.string()),
-      createdBy: v.id("userProfiles"),
-      createdAt: v.number(),
-      shifts: v.array(
-        v.object({
-          _id: v.id("shifts"),
-          _creationTime: v.number(),
-          eventId: v.id("events"),
-          startTime: v.number(),
-          endTime: v.number(),
-          requiredPeople: v.number(),
-        })
-      ),
-      rsvps: v.array(
-        v.object({
-          _id: v.id("rsvps"),
-          _creationTime: v.number(),
-          eventId: v.id("events"),
-          userProfileId: v.id("userProfiles"),
-          shiftId: v.optional(v.id("shifts")),
-          needsRide: v.boolean(),
-          canDrive: v.boolean(),
-          selfTransport: v.optional(v.boolean()),
-          campusLocation: v.optional(
-            v.union(v.literal("onCampus"), v.literal("offCampus"))
-          ),
-          driverInfo: v.optional(
-            v.object({
-              carType: v.string(),
-              carColor: v.string(),
-              capacity: v.number(),
-            })
-          ),
-          createdAt: v.number(),
-          userName: v.string(),
-          userEmail: v.optional(v.string()),
-          userPhoneNumber: v.optional(v.string()),
-        })
-      ),
-    }),
-    v.null()
-  ),
+  returns: v.union(eventDetailValidator, v.null()),
   handler: async (ctx, args) => {
     const event = await ctx.db
       .query("events")
@@ -445,7 +411,7 @@ export const getEventBySlug = query({
 
     return {
       ...event,
-      shifts: shifts.sort((a, b) => a.startTime - b.startTime),
+      shifts: shifts.slice().sort((a, b) => a.startTime - b.startTime),
       rsvps: rsvpDetails,
     };
   },
