@@ -3,15 +3,37 @@
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { MonthCalendar } from "@/components/events/month-calendar";
 import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
+import {
+  buildScheduledOccurrences,
+  combineDateAndTime,
+  describeRecurrence,
+  formatDateInput,
+  getDefaultRecurrenceEndDate,
+  getMonthStart,
+  isValidDateValue,
+  MAX_RECURRING_OCCURRENCES,
+  RECURRENCE_OPTIONS,
+  type RecurrencePattern,
+  type StoredRecurrencePattern,
+} from "@/lib/recurrence";
+
+type ShiftDraft = {
+  endTime: string;
+  id: string;
+  requiredPeople: number;
+  startTime: string;
+};
 
 export default function CreateEventPage() {
   const router = useRouter();
   const currentUser = useQuery(api.users.getCurrentUser);
   const createEvent = useMutation(api.events.createEvent);
+  const eventsForCalendar = useQuery(api.events.listEvents);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -24,14 +46,13 @@ export default function CreateEventPage() {
   const [isOffsite, setIsOffsite] = useState(false);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
-  const [shifts, setShifts] = useState<
-    Array<{
-      id: string;
-      startTime: string;
-      endTime: string;
-      requiredPeople: number;
-    }>
-  >([]);
+  const [shifts, setShifts] = useState<ShiftDraft[]>([]);
+  const [recurrencePattern, setRecurrencePattern] =
+    useState<RecurrencePattern>("none");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
+  const [calendarMonth, setCalendarMonth] = useState(() =>
+    getMonthStart(new Date())
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +60,106 @@ export default function CreateEventPage() {
     api.events.generateSlugSuggestion,
     title ? { title } : "skip"
   );
+
+  const selectedRecurrencePattern =
+    recurrencePattern === "none" ? undefined : recurrencePattern;
+
+  const selectedDateLabel = startDate
+    ? new Date(`${startDate}T00:00:00`).toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "No date selected yet";
+
+  const eventCountsByDate = useMemo(() => {
+    if (!eventsForCalendar) {
+      return {};
+    }
+
+    const counts: Record<string, number> = {};
+
+    for (const event of eventsForCalendar) {
+      const dateKey = formatDateInput(new Date(event.startTime));
+      counts[dateKey] = (counts[dateKey] ?? 0) + 1;
+    }
+
+    return counts;
+  }, [eventsForCalendar]);
+
+  const occurrencePreview = useMemo(() => {
+    if (!(startDate && startTime && endDate && endTime)) {
+      return null;
+    }
+
+    return buildScheduledOccurrences({
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      recurrencePattern,
+      recurrenceEndDate:
+        recurrencePattern === "none" ? undefined : recurrenceEndDate,
+    });
+  }, [
+    endDate,
+    endTime,
+    recurrenceEndDate,
+    recurrencePattern,
+    startDate,
+    startTime,
+  ]);
+
+  const recurrenceSummary = useMemo(() => {
+    if (!startDate) {
+      return "Pick a date on the calendar to start scheduling.";
+    }
+
+    if (recurrencePattern === "none") {
+      return "This will create one event on the selected date.";
+    }
+
+    if (!recurrenceEndDate) {
+      return "Choose the last date in the series to preview recurring events.";
+    }
+
+    if (!occurrencePreview || occurrencePreview.occurrences.length === 0) {
+      return "Add valid start and end times to preview the recurring series.";
+    }
+
+    if (occurrencePreview.exceedsLimit) {
+      return `This series exceeds the ${MAX_RECURRING_OCCURRENCES} occurrence limit.`;
+    }
+
+    return `This will create ${
+      occurrencePreview.occurrences.length
+    } ${describeRecurrence(
+      recurrencePattern
+    ).toLowerCase()} event${
+      occurrencePreview.occurrences.length === 1 ? "" : "s"
+    } through ${new Date(`${recurrenceEndDate}T00:00:00`).toLocaleDateString(
+      "en-US",
+      {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }
+    )}.`;
+  }, [
+    occurrencePreview,
+    recurrenceEndDate,
+    recurrencePattern,
+    startDate,
+  ]);
+
+  let submitLabel = "Create Event";
+  if (selectedRecurrencePattern) {
+    submitLabel = "Create Recurring Events";
+  }
+  if (isSubmitting) {
+    submitLabel = "Creating...";
+  }
 
   if (currentUser === undefined) {
     return (
@@ -71,11 +192,56 @@ export default function CreateEventPage() {
     );
   }
 
+  const applySelectedDate = (nextDate: string) => {
+    setStartDate(nextDate);
+
+    if (!isValidDateValue(nextDate)) {
+      return;
+    }
+
+    setCalendarMonth(getMonthStart(new Date(`${nextDate}T00:00:00`)));
+    setEndDate((currentEndDate) =>
+      !currentEndDate || currentEndDate < nextDate ? nextDate : currentEndDate
+    );
+
+    if (!selectedRecurrencePattern) {
+      return;
+    }
+
+    setRecurrenceEndDate((currentRecurrenceEndDate) =>
+      currentRecurrenceEndDate && currentRecurrenceEndDate >= nextDate
+        ? currentRecurrenceEndDate
+        : getDefaultRecurrenceEndDate(nextDate, selectedRecurrencePattern)
+    );
+  };
+
+  const handleRecurrencePatternChange = (nextPattern: RecurrencePattern) => {
+    setRecurrencePattern(nextPattern);
+
+    if (nextPattern === "none") {
+      setRecurrenceEndDate("");
+      return;
+    }
+
+    if (!startDate) {
+      return;
+    }
+
+    setRecurrenceEndDate((currentRecurrenceEndDate) =>
+      currentRecurrenceEndDate && currentRecurrenceEndDate >= startDate
+        ? currentRecurrenceEndDate
+        : getDefaultRecurrenceEndDate(
+            startDate,
+            nextPattern as StoredRecurrencePattern
+          )
+    );
+  };
+
   const addShift = () => {
-    setShifts([
-      ...shifts,
+    setShifts((currentShifts) => [
+      ...currentShifts,
       {
-        id: `shift-${Date.now()}-${Math.random()}`,
+        id: crypto.randomUUID(),
         startTime: "",
         endTime: "",
         requiredPeople: 3,
@@ -84,28 +250,32 @@ export default function CreateEventPage() {
   };
 
   const removeShift = (index: number) => {
-    setShifts(shifts.filter((_, i) => i !== index));
+    setShifts((currentShifts) =>
+      currentShifts.filter((_, shiftIndex) => shiftIndex !== index)
+    );
   };
 
-  const updateShift = (
+  const updateShift = <K extends keyof Omit<ShiftDraft, "id">>(
     index: number,
-    field: string,
-    value: string | number
+    field: K,
+    value: ShiftDraft[K]
   ) => {
-    const newShifts = [...shifts];
-    newShifts[index] = { ...newShifts[index], [field]: value };
-    setShifts(newShifts);
+    setShifts((currentShifts) =>
+      currentShifts.map((shift, shiftIndex) =>
+        shiftIndex === index ? { ...shift, [field]: value } : shift
+      )
+    );
   };
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: form submission with validation, shift mapping, and PostHog capture
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: event scheduling includes recurrence validation, occurrence generation, and analytics
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
-      const startDateTime = new Date(`${startDate}T${startTime}`).getTime();
-      const endDateTime = new Date(`${endDate}T${endTime}`).getTime();
+      const startDateTime = combineDateAndTime(startDate, startTime).getTime();
+      const endDateTime = combineDateAndTime(endDate, endTime).getTime();
 
       if (startDateTime >= endDateTime) {
         setError("End time must be after start time");
@@ -113,33 +283,108 @@ export default function CreateEventPage() {
         return;
       }
 
-      const eventShifts =
-        eventType === "boothing"
-          ? shifts.map((shift) => ({
-              startTime: new Date(`${startDate}T${shift.startTime}`).getTime(),
-              endTime: new Date(`${startDate}T${shift.endTime}`).getTime(),
-              requiredPeople: shift.requiredPeople,
-            }))
-          : undefined;
+      if (recurrencePattern !== "none" && !recurrenceEndDate) {
+        setError("Choose when the recurring series should end");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (recurrencePattern !== "none" && recurrenceEndDate < startDate) {
+        setError("Recurring series must end on or after the start date");
+        setIsSubmitting(false);
+        return;
+      }
+
+      for (const shift of shifts) {
+        if (!(shift.startTime && shift.endTime)) {
+          setError("Each shift needs a start and end time");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const shiftStartTime = combineDateAndTime(startDate, shift.startTime);
+        const shiftEndTime = combineDateAndTime(startDate, shift.endTime);
+        if (shiftStartTime.getTime() >= shiftEndTime.getTime()) {
+          setError("Each shift must end after it starts");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const scheduledOccurrences = buildScheduledOccurrences({
+        startDate,
+        startTime,
+        endDate,
+        endTime,
+        recurrencePattern,
+        recurrenceEndDate:
+          recurrencePattern === "none" ? undefined : recurrenceEndDate,
+      });
+
+      if (scheduledOccurrences.occurrences.length === 0) {
+        setError("Please choose a valid event schedule");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (scheduledOccurrences.exceedsLimit) {
+        setError(
+          `Recurring events are limited to ${MAX_RECURRING_OCCURRENCES} occurrences`
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      const occurrences = scheduledOccurrences.occurrences.map((occurrence) => {
+        const occurrenceDate = formatDateInput(new Date(occurrence.startTime));
+
+        return {
+          startTime: occurrence.startTime,
+          endTime: occurrence.endTime,
+          shifts:
+            eventType === "boothing"
+              ? shifts.map((shift) => ({
+                  startTime: combineDateAndTime(
+                    occurrenceDate,
+                    shift.startTime
+                  ).getTime(),
+                  endTime: combineDateAndTime(
+                    occurrenceDate,
+                    shift.endTime
+                  ).getTime(),
+                  requiredPeople: shift.requiredPeople,
+                }))
+              : undefined,
+        };
+      });
 
       await createEvent({
         title,
         description,
         location,
-        startTime: startDateTime,
-        endTime: endDateTime,
         eventType,
         isOffsite,
         slug: slugTouched ? slug : undefined,
-        shifts: eventShifts,
+        occurrences,
+        recurrence:
+          recurrencePattern === "none"
+            ? undefined
+            : {
+                pattern: recurrencePattern,
+                endsOn: combineDateAndTime(recurrenceEndDate, "23:59").getTime(),
+              },
       });
 
       posthog.capture("event_created", {
         event_type: eventType,
         is_offsite: isOffsite,
-        has_shifts: eventShifts ? eventShifts.length > 0 : false,
-        shifts_count: eventShifts?.length ?? 0,
+        has_shifts: eventType === "boothing" && shifts.length > 0,
+        shifts_count: shifts.length,
         has_custom_slug: slugTouched && !!slug,
+        has_recurrence: recurrencePattern !== "none",
+        recurrence_pattern:
+          recurrencePattern === "none" ? "one_time" : recurrencePattern,
+        occurrence_count: occurrences.length,
       });
 
       router.push("/events");
@@ -150,6 +395,8 @@ export default function CreateEventPage() {
       posthog.capture("event_creation_failed", {
         event_type: eventType,
         is_offsite: isOffsite,
+        recurrence_pattern:
+          recurrencePattern === "none" ? "one_time" : recurrencePattern,
         error: err instanceof Error ? err.message : "Unknown error",
       });
       setError(err instanceof Error ? err.message : "Failed to create event");
@@ -252,6 +499,32 @@ export default function CreateEventPage() {
                 />
               </div>
 
+              <div className="space-y-4 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-semibold text-slate-900 text-sm">
+                      Calendar Date Picker
+                    </p>
+                    <p className="mt-1 text-slate-900 text-sm">
+                      Selected date: {selectedDateLabel}
+                    </p>
+                  </div>
+                  <div className="rounded-full bg-white px-4 py-2 text-slate-900 text-sm shadow-sm">
+                    {eventsForCalendar === undefined
+                      ? "Loading event dates..."
+                      : `${Object.keys(eventCountsByDate).length} dates with events`}
+                  </div>
+                </div>
+
+                <MonthCalendar
+                  eventCountsByDate={eventCountsByDate}
+                  onMonthChange={setCalendarMonth}
+                  onSelectDate={applySelectedDate}
+                  selectedDate={startDate}
+                  visibleMonth={calendarMonth}
+                />
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label
@@ -263,7 +536,7 @@ export default function CreateEventPage() {
                   <input
                     className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="startDate"
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => applySelectedDate(e.target.value)}
                     required
                     type="date"
                     value={startDate}
@@ -322,6 +595,67 @@ export default function CreateEventPage() {
                 </div>
               </div>
 
+              <div className="space-y-4 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] p-5">
+                <div>
+                  <label
+                    className="block font-semibold text-slate-900 text-sm"
+                    htmlFor="recurrencePattern"
+                  >
+                    Repeat
+                  </label>
+                  <select
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    id="recurrencePattern"
+                    onChange={(e) =>
+                      handleRecurrencePatternChange(
+                        e.target.value as RecurrencePattern
+                      )
+                    }
+                    value={recurrencePattern}
+                  >
+                    {RECURRENCE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedRecurrencePattern && (
+                  <div>
+                    <label
+                      className="block font-semibold text-slate-900 text-sm"
+                      htmlFor="recurrenceEndDate"
+                    >
+                      Repeat Until
+                    </label>
+                    <input
+                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      id="recurrenceEndDate"
+                      min={startDate || undefined}
+                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                      required
+                      type="date"
+                      value={recurrenceEndDate}
+                    />
+                  </div>
+                )}
+
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <p className="font-semibold text-slate-900 text-sm">
+                    Recurrence Preview
+                  </p>
+                  <p className="mt-1 text-slate-900 text-sm">
+                    {recurrenceSummary}
+                  </p>
+                  <p className="mt-2 text-slate-900 text-xs">
+                    Recurring events are saved as separate event entries so each
+                    occurrence can be edited later without affecting the rest of
+                    the series.
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <label
                   className="block font-semibold text-slate-900 text-sm"
@@ -363,7 +697,18 @@ export default function CreateEventPage() {
           {eventType === "boothing" && (
             <div className="editorial-card rounded-3xl p-8">
               <div className="mb-6 flex items-center justify-between">
-                <h2 className="font-semibold text-slate-900 text-xl">Shifts</h2>
+                <div>
+                  <h2 className="font-semibold text-slate-900 text-xl">
+                    Shifts
+                  </h2>
+                  {selectedRecurrencePattern && (
+                    <p className="mt-1 text-slate-900 text-sm">
+                      These shift times will repeat for every{" "}
+                      {describeRecurrence(selectedRecurrencePattern).toLowerCase()}{" "}
+                      occurrence in the series.
+                    </p>
+                  )}
+                </div>
                 <button
                   className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
                   onClick={addShift}
@@ -484,7 +829,7 @@ export default function CreateEventPage() {
               disabled={isSubmitting}
               type="submit"
             >
-              {isSubmitting ? "Creating..." : "Create Event"}
+              {submitLabel}
             </button>
           </div>
         </form>
