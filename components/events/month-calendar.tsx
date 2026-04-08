@@ -7,13 +7,13 @@ import {
   WEEKDAY_LABELS,
 } from "@/lib/recurrence";
 
-type MonthCalendarProps = {
+interface MonthCalendarProps {
   eventCountsByDate?: Record<string, number>;
   onMonthChange: (month: Date) => void;
   onSelectDate: (date: string) => void;
   selectedDate?: string;
   visibleMonth: Date;
-};
+}
 
 function getDayButtonClass({
   isCurrentMonth,
@@ -51,11 +51,15 @@ export function MonthCalendar({
   const today = formatDateInput(new Date());
 
   const goToPreviousMonth = () => {
-    onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1));
+    onMonthChange(
+      new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1)
+    );
   };
 
   const goToNextMonth = () => {
-    onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1));
+    onMonthChange(
+      new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1)
+    );
   };
 
   return (
@@ -116,11 +120,13 @@ export function MonthCalendar({
           return (
             <button
               aria-pressed={isSelected}
-              className={`min-h-20 rounded-2xl border px-2 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${getDayButtonClass({
-                isCurrentMonth,
-                isSelected,
-                isToday,
-              })}`}
+              className={`min-h-20 rounded-2xl border px-2 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${getDayButtonClass(
+                {
+                  isCurrentMonth,
+                  isSelected,
+                  isToday,
+                }
+              )}`}
               key={dateValue}
               onClick={() => onSelectDate(dateValue)}
               type="button"
@@ -134,7 +140,7 @@ export function MonthCalendar({
                 </span>
                 {hasEvents ? (
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    className={`rounded-full px-2 py-0.5 font-semibold text-[10px] ${
                       isSelected
                         ? "bg-white/20 text-white"
                         : "bg-slate-100 text-slate-600"

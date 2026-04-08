@@ -7,7 +7,10 @@ import SiteHeader from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
-import { describeRecurrence, type StoredRecurrencePattern } from "@/lib/recurrence";
+import {
+  describeRecurrence,
+  type StoredRecurrencePattern,
+} from "@/lib/recurrence";
 
 export default function EventsPage() {
   const [requestTime] = useState(() => Date.now());

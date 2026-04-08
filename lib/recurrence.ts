@@ -13,10 +13,10 @@ export const STORED_RECURRENCE_OPTIONS = RECURRENCE_OPTIONS.filter(
 export type RecurrencePattern = (typeof RECURRENCE_OPTIONS)[number]["value"];
 export type StoredRecurrencePattern = Exclude<RecurrencePattern, "none">;
 
-export type ScheduledOccurrence = {
+export interface ScheduledOccurrence {
   endTime: number;
   startTime: number;
-};
+}
 
 export const MAX_RECURRING_OCCURRENCES = 60;
 

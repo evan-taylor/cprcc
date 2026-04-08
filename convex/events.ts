@@ -1,8 +1,9 @@
 import { v } from "convex/values";
+import { MAX_RECURRING_OCCURRENCES } from "../lib/recurrence";
+import type { Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUserProfile, requireBoardMember } from "./lib/auth";
-import { MAX_RECURRING_OCCURRENCES } from "../lib/recurrence";
 
 const recurrencePatternValidator = v.union(
   v.literal("daily"),
@@ -160,7 +161,7 @@ export const createEvent = mutation({
     const recurrenceGroupId = hasRecurringSeries
       ? `${baseSlug}-${Date.now()}`
       : undefined;
-    const eventIds = [];
+    const eventIds: Id<"events">[] = [];
 
     for (const occurrence of args.occurrences) {
       if (occurrence.startTime >= occurrence.endTime) {
@@ -381,7 +382,7 @@ export const getEvent = query({
 
     return {
       ...event,
-      shifts: shifts.toSorted((a, b) => a.startTime - b.startTime),
+      shifts: shifts.slice().sort((a, b) => a.startTime - b.startTime),
       rsvps: rsvpDetails,
     };
   },
@@ -433,7 +434,7 @@ export const getEventBySlug = query({
 
     return {
       ...event,
-      shifts: shifts.toSorted((a, b) => a.startTime - b.startTime),
+      shifts: shifts.slice().sort((a, b) => a.startTime - b.startTime),
       rsvps: rsvpDetails,
     };
   },

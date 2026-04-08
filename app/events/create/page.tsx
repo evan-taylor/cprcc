@@ -22,12 +22,12 @@ import {
   type StoredRecurrencePattern,
 } from "@/lib/recurrence";
 
-type ShiftDraft = {
+interface ShiftDraft {
   endTime: string;
   id: string;
   requiredPeople: number;
   startTime: string;
-};
+}
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -134,9 +134,7 @@ export default function CreateEventPage() {
 
     return `This will create ${
       occurrencePreview.occurrences.length
-    } ${describeRecurrence(
-      recurrencePattern
-    ).toLowerCase()} event${
+    } ${describeRecurrence(recurrencePattern).toLowerCase()} event${
       occurrencePreview.occurrences.length === 1 ? "" : "s"
     } through ${new Date(`${recurrenceEndDate}T00:00:00`).toLocaleDateString(
       "en-US",
@@ -146,12 +144,7 @@ export default function CreateEventPage() {
         year: "numeric",
       }
     )}.`;
-  }, [
-    occurrencePreview,
-    recurrenceEndDate,
-    recurrencePattern,
-    startDate,
-  ]);
+  }, [occurrencePreview, recurrenceEndDate, recurrencePattern, startDate]);
 
   let submitLabel = "Create Event";
   if (selectedRecurrencePattern) {
@@ -371,7 +364,10 @@ export default function CreateEventPage() {
             ? undefined
             : {
                 pattern: recurrencePattern,
-                endsOn: combineDateAndTime(recurrenceEndDate, "23:59").getTime(),
+                endsOn: combineDateAndTime(
+                  recurrenceEndDate,
+                  "23:59"
+                ).getTime(),
               },
       });
 
@@ -704,7 +700,9 @@ export default function CreateEventPage() {
                   {selectedRecurrencePattern && (
                     <p className="mt-1 text-slate-900 text-sm">
                       These shift times will repeat for every{" "}
-                      {describeRecurrence(selectedRecurrencePattern).toLowerCase()}{" "}
+                      {describeRecurrence(
+                        selectedRecurrencePattern
+                      ).toLowerCase()}{" "}
                       occurrence in the series.
                     </p>
                   )}
