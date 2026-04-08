@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
 };
 
-const heroImage = "/hero.jpg";
+const heroImage = "/hero-home-bg.jpg";
 
 const missionCopy = [
   `"Our mission is more than words. We always aim to prevent and relieve suffering with every action. The Red Cross shelters, feeds and provides comfort to people affected by disasters; supplies about 40% of the nation\u2019s blood; teaches skills that save lives; distributes international humanitarian aid; and supports veterans, military members and their families.`,
