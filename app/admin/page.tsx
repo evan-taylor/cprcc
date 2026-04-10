@@ -28,6 +28,10 @@ export default function AdminPage() {
     api.users.listAllUsers,
     shouldFetchUsers ? {} : "skip"
   );
+  const newsletterOverview = useQuery(
+    api.newsletters.getNewsletterAdminOverview,
+    shouldFetchUsers ? {} : "skip"
+  );
 
   useEffect(() => {
     if (currentUser === undefined || currentUser === null || profileEnsured) {
@@ -52,7 +56,8 @@ export default function AdminPage() {
   if (
     authLoading ||
     currentUser === undefined ||
-    (shouldFetchUsers && allUsers === undefined)
+    (shouldFetchUsers &&
+      (allUsers === undefined || newsletterOverview === undefined))
   ) {
     return (
       <PageLoader
@@ -158,6 +163,63 @@ export default function AdminPage() {
         )}
 
         <div className="space-y-10">
+          <section className="editorial-card rounded-3xl p-6 sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="editorial-kicker">Newsletters</p>
+                <h2 className="mt-3 font-display font-semibold text-2xl text-slate-900 sm:text-3xl">
+                  Send club-wide email campaigns
+                </h2>
+                <p className="mt-2 max-w-2xl text-[color:var(--color-text-muted)]">
+                  Compose rich-text updates, send them to subscribed members,
+                  and keep a history of recent campaigns inside the app.
+                </p>
+              </div>
+              <button
+                className="inline-flex h-11 items-center justify-center rounded-full bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
+                onClick={() => router.push("/admin/newsletter")}
+                type="button"
+              >
+                Open newsletter manager
+              </button>
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+                <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
+                  Subscribed
+                </p>
+                <p
+                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {newsletterOverview?.subscribedMembersCount ?? 0}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+                <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
+                  Unsubscribed
+                </p>
+                <p
+                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {newsletterOverview?.unsubscribedMembersCount ?? 0}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+                <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
+                  Recent campaigns
+                </p>
+                <p
+                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {newsletterOverview?.recentCampaigns.length ?? 0}
+                </p>
+              </div>
+            </div>
+          </section>
+
           <UserSection
             badge="Board"
             badgeClasses="bg-red-50 text-red-700"

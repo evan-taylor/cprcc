@@ -17,6 +17,7 @@ export default function SignIn() {
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true);
   const createdRef = useRef(false);
   const router = useRouter();
 
@@ -61,11 +62,15 @@ export default function SignIn() {
 
         await signIn("password", formData);
 
-        await ensureCurrentUserProfile({ phoneNumber: localPhone });
+        await ensureCurrentUserProfile({
+          newsletterOptIn,
+          phoneNumber: localPhone,
+        });
 
         posthog.identify(email, { email, name: name.trim() });
         posthog.capture("user_signed_up", {
           has_phone_number: !!localPhone,
+          newsletter_opt_in: newsletterOptIn,
         });
 
         router.push("/");
@@ -196,6 +201,29 @@ export default function SignIn() {
                     Optional — recommended for carpool coordination
                   </p>
                 </div>
+                <label
+                  className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  htmlFor="newsletterOptIn"
+                >
+                  <input
+                    checked={newsletterOptIn}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                    id="newsletterOptIn"
+                    onChange={(event) =>
+                      setNewsletterOptIn(event.target.checked)
+                    }
+                    type="checkbox"
+                  />
+                  <span className="min-w-0">
+                    <span className="block font-medium text-slate-900 text-sm">
+                      Email me club news and newsletters
+                    </span>
+                    <span className="mt-1 block text-slate-500 text-xs">
+                      Get event announcements, volunteer updates, and chapter
+                      highlights. You can unsubscribe at any time.
+                    </span>
+                  </span>
+                </label>
               </>
             )}
 

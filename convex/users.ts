@@ -6,6 +6,58 @@ import {
   requireAuth,
   requireBoardMember,
 } from "./lib/auth";
+import {
+  createNewsletterUnsubscribeToken,
+  resolveNewsletterStatus,
+} from "./lib/newsletters";
+
+interface NewsletterProfileUpdates {
+  newsletterStatus?: "subscribed" | "unsubscribed";
+  newsletterStatusUpdatedAt?: number;
+  newsletterUnsubscribeToken?: string;
+  phoneNumber?: string;
+  role?: "member" | "board";
+}
+
+function buildNewsletterProfileUpdates({
+  desiredNewsletterStatus,
+  existingNewsletterStatus,
+  hasUnsubscribeToken,
+  isAdmin,
+  role,
+  now,
+}: {
+  desiredNewsletterStatus?: "subscribed" | "unsubscribed";
+  existingNewsletterStatus?: "subscribed" | "unsubscribed";
+  hasUnsubscribeToken: boolean;
+  isAdmin: boolean;
+  role: "member" | "board";
+  now: number;
+}): NewsletterProfileUpdates {
+  const updates: NewsletterProfileUpdates = {};
+
+  if (isAdmin && role !== "board") {
+    updates.role = "board";
+  }
+
+  if (
+    desiredNewsletterStatus &&
+    existingNewsletterStatus !== desiredNewsletterStatus
+  ) {
+    updates.newsletterStatus = desiredNewsletterStatus;
+    updates.newsletterStatusUpdatedAt = now;
+  }
+
+  if (!hasUnsubscribeToken) {
+    updates.newsletterUnsubscribeToken = createNewsletterUnsubscribeToken();
+  }
+
+  return updates;
+}
+
+function hasProfileUpdates(updates: NewsletterProfileUpdates) {
+  return Object.keys(updates).length > 0;
+}
 
 /**
  * Normalize phone number to E.164 format (or close to it)
@@ -65,6 +117,11 @@ export const getCurrentUser = query({
       email: v.string(),
       phoneNumber: v.optional(v.string()),
       role: v.union(v.literal("member"), v.literal("board")),
+      newsletterStatus: v.optional(
+        v.union(v.literal("subscribed"), v.literal("unsubscribed"))
+      ),
+      newsletterStatusUpdatedAt: v.optional(v.number()),
+      newsletterUnsubscribeToken: v.optional(v.string()),
       userId: v.id("users"),
     }),
     v.null()
@@ -76,6 +133,7 @@ export const getCurrentUser = query({
 
 export const ensureCurrentUserProfile = mutation({
   args: {
+    newsletterOptIn: v.optional(v.boolean()),
     phoneNumber: v.optional(v.string()),
   },
   returns: v.id("userProfiles"),
@@ -101,14 +159,29 @@ export const ensureCurrentUserProfile = mutation({
     const adminEmail = process.env.ADMIN_EMAIL || "etaylo28@calpoly.edu";
     const isAdmin = email.trim().toLowerCase() === adminEmail.toLowerCase();
     const role = isAdmin ? "board" : "member";
+    const desiredNewsletterStatus =
+      typeof args.newsletterOptIn === "boolean"
+        ? resolveNewsletterStatus(args.newsletterOptIn)
+        : undefined;
+    const now = Date.now();
 
     if (existingProfile) {
-      if (isAdmin && existingProfile.role !== "board") {
-        await ctx.db.patch(existingProfile._id, { role: "board" });
-      }
+      const updates = buildNewsletterProfileUpdates({
+        desiredNewsletterStatus,
+        existingNewsletterStatus: existingProfile.newsletterStatus,
+        hasUnsubscribeToken: !!existingProfile.newsletterUnsubscribeToken,
+        isAdmin,
+        now,
+        role: existingProfile.role,
+      });
+
       if (args.phoneNumber && !existingProfile.phoneNumber) {
         const normalized = normalizePhoneNumber(args.phoneNumber);
-        await ctx.db.patch(existingProfile._id, { phoneNumber: normalized });
+        updates.phoneNumber = normalized;
+      }
+
+      if (hasProfileUpdates(updates)) {
+        await ctx.db.patch(existingProfile._id, updates);
       }
       return existingProfile._id;
     }
@@ -116,10 +189,14 @@ export const ensureCurrentUserProfile = mutation({
     const phoneNumber = args.phoneNumber
       ? normalizePhoneNumber(args.phoneNumber)
       : undefined;
+    const newsletterStatus = desiredNewsletterStatus;
 
     const profileId = await ctx.db.insert("userProfiles", {
       name,
       email,
+      newsletterStatus,
+      newsletterStatusUpdatedAt: newsletterStatus ? now : undefined,
+      newsletterUnsubscribeToken: createNewsletterUnsubscribeToken(),
       phoneNumber,
       role,
       userId: authUserId,
@@ -133,6 +210,7 @@ export const createUserProfile = mutation({
   args: {
     name: v.string(),
     email: v.string(),
+    newsletterOptIn: v.optional(v.boolean()),
   },
   returns: v.id("userProfiles"),
   handler: async (ctx, args) => {
@@ -155,10 +233,24 @@ export const createUserProfile = mutation({
     const adminEmail = process.env.ADMIN_EMAIL || "etaylo28@calpoly.edu";
     const isAdmin = authEmail.trim().toLowerCase() === adminEmail.toLowerCase();
     const role = isAdmin ? "board" : "member";
+    const desiredNewsletterStatus =
+      typeof args.newsletterOptIn === "boolean"
+        ? resolveNewsletterStatus(args.newsletterOptIn)
+        : undefined;
+    const now = Date.now();
 
     if (existingProfile) {
-      if (isAdmin && existingProfile.role !== "board") {
-        await ctx.db.patch(existingProfile._id, { role: "board" });
+      const updates = buildNewsletterProfileUpdates({
+        desiredNewsletterStatus,
+        existingNewsletterStatus: existingProfile.newsletterStatus,
+        hasUnsubscribeToken: !!existingProfile.newsletterUnsubscribeToken,
+        isAdmin,
+        now,
+        role: existingProfile.role,
+      });
+
+      if (hasProfileUpdates(updates)) {
+        await ctx.db.patch(existingProfile._id, updates);
       }
       return existingProfile._id;
     }
@@ -166,6 +258,9 @@ export const createUserProfile = mutation({
     const profileId = await ctx.db.insert("userProfiles", {
       name: args.name,
       email: authEmail,
+      newsletterStatus: desiredNewsletterStatus,
+      newsletterStatusUpdatedAt: desiredNewsletterStatus ? now : undefined,
+      newsletterUnsubscribeToken: createNewsletterUnsubscribeToken(),
       role,
       userId: authUserId,
     });
@@ -198,6 +293,11 @@ export const listAllUsers = query({
       email: v.string(),
       phoneNumber: v.optional(v.string()),
       role: v.union(v.literal("member"), v.literal("board")),
+      newsletterStatus: v.optional(
+        v.union(v.literal("subscribed"), v.literal("unsubscribed"))
+      ),
+      newsletterStatusUpdatedAt: v.optional(v.number()),
+      newsletterUnsubscribeToken: v.optional(v.string()),
       userId: v.id("users"),
     })
   ),

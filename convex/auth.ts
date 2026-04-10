@@ -5,10 +5,10 @@ import {
   generatePasswordResetEmailSubject,
   generatePasswordResetEmailText,
 } from "./emails/password_reset_email";
+import { CLUB_EMAIL_FROM, CLUB_EMAIL_REPLY_TO } from "./lib/email";
 import { resend } from "./resend";
 
-const PASSWORD_RESET_FROM =
-  "Cal Poly Red Cross Club <notifications@calpolyredcross.org>";
+const PASSWORD_RESET_FROM = CLUB_EMAIL_FROM;
 const PASSWORD_RESET_MAX_AGE_SECONDS = 60 * 60;
 const PASSWORD_RESET_EXPIRATION_MINUTES = PASSWORD_RESET_MAX_AGE_SECONDS / 60;
 type PasswordResetSendParams = Parameters<
@@ -45,6 +45,7 @@ function createPasswordResetProvider(): EmailConfig | undefined {
       await resend.sendEmail(sendContext, {
         from: provider.from ?? PASSWORD_RESET_FROM,
         to: identifier,
+        replyTo: [CLUB_EMAIL_REPLY_TO],
         subject: generatePasswordResetEmailSubject(),
         html: generatePasswordResetEmailHtml({
           expiresInMinutes: PASSWORD_RESET_EXPIRATION_MINUTES,

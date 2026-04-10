@@ -129,6 +129,14 @@ export default function SiteHeader({
                   {item.label}
                 </Link>
               ))}
+              {isAuthenticated ? (
+                <Link
+                  className={`rounded-full px-3.5 py-2 font-medium text-sm transition-all duration-150 ${desktopNavLinkClass("/newsletter")}`}
+                  href="/newsletter"
+                >
+                  Newsletter
+                </Link>
+              ) : null}
               {isAuthenticated && currentUser?.role === "board" && (
                 <Link
                   className={`rounded-full px-3.5 py-2 font-medium text-sm transition-all duration-150 ${desktopNavLinkClass("/admin")}`}
@@ -187,6 +195,17 @@ export default function SiteHeader({
               {item.label}
             </Link>
           ))}
+          {isAuthenticated ? (
+            <Link
+              className={`rounded-xl px-4 py-3 font-medium text-sm transition-colors duration-150 ${mobileNavLinkClass(
+                "/newsletter"
+              )}`}
+              href="/newsletter"
+              onClick={closeMobileMenu}
+            >
+              Newsletter
+            </Link>
+          ) : null}
           {isAuthenticated && currentUser?.role === "board" && (
             <Link
               className={`rounded-xl px-4 py-3 font-medium text-sm transition-colors duration-150 ${mobileNavLinkClass(
