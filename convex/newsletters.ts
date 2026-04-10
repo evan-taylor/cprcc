@@ -1,5 +1,8 @@
+import { vOnEmailEventArgs, type EmailEvent } from "@convex-dev/resend";
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import {
+  type MutationCtx,
   internalMutation,
   internalQuery,
   mutation,
@@ -79,6 +82,94 @@ export const setCurrentUserNewsletterSubscription = mutation({
       newsletterStatus,
       newsletterStatusUpdatedAt,
     };
+  },
+});
+
+const normalizeEmailAddress = (value: string) => value.trim().toLowerCase();
+
+async function findProfilesByEmailAddress(
+  ctx: MutationCtx,
+  email: string
+) {
+  const normalizedEmail = normalizeEmailAddress(email);
+
+  const exactMatches = await ctx.db
+    .query("userProfiles")
+    .withIndex("by_email", (q) => q.eq("email", email))
+    .collect();
+
+  if (normalizedEmail === email) {
+    return exactMatches;
+  }
+
+  const normalizedMatches = await ctx.db
+    .query("userProfiles")
+    .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+    .collect();
+
+  if (exactMatches.length > 0 || normalizedMatches.length > 0) {
+    const uniqueProfiles = new Map<string, Doc<"userProfiles">>();
+    for (const profile of [...exactMatches, ...normalizedMatches]) {
+      uniqueProfiles.set(profile._id, profile);
+    }
+    return [...uniqueProfiles.values()];
+  }
+
+  const allProfiles = await ctx.db.query("userProfiles").collect();
+  return allProfiles.filter(
+    (profile) => normalizeEmailAddress(profile.email) === normalizedEmail
+  );
+}
+
+async function unsubscribeProfilesForBounce(
+  ctx: MutationCtx,
+  bouncedEmail: string
+) {
+  const matchingProfiles = await findProfilesByEmailAddress(ctx, bouncedEmail);
+  if (matchingProfiles.length === 0) {
+    return 0;
+  }
+
+  const newsletterStatusUpdatedAt = Date.now();
+  let unsubscribedProfiles = 0;
+
+  for (const profile of matchingProfiles) {
+    if (profile.newsletterStatus === NEWSLETTER_UNSUBSCRIBED) {
+      continue;
+    }
+
+    await ctx.db.patch(profile._id, {
+      newsletterStatus: NEWSLETTER_UNSUBSCRIBED,
+      newsletterStatusUpdatedAt,
+      newsletterUnsubscribeToken:
+        profile.newsletterUnsubscribeToken ??
+        createNewsletterUnsubscribeToken(),
+    });
+    unsubscribedProfiles += 1;
+  }
+
+  return unsubscribedProfiles;
+}
+
+function getEventRecipientEmails(event: EmailEvent) {
+  const recipients = event.data.to;
+  return Array.isArray(recipients) ? recipients : [recipients];
+}
+
+export const handleResendEmailEvent = internalMutation({
+  args: vOnEmailEventArgs,
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (args.event.type !== "email.bounced") {
+      return null;
+    }
+
+    const recipients = getEventRecipientEmails(args.event);
+    for (const recipient of recipients) {
+      await unsubscribeProfilesForBounce(ctx, recipient);
+    }
+
+    return null;
   },
 });
 
