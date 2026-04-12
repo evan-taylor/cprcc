@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useRef, useState } from "react";
+import { LinkifiedText } from "@/components/linkified-text";
 import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
@@ -573,7 +574,9 @@ export default function EventDetailPage() {
                     </span>
                   )}
                 </div>
-                <p className="mt-4 text-slate-900">{event.description}</p>
+                <p className="mt-4 whitespace-pre-wrap break-words text-slate-900">
+                  <LinkifiedText text={event.description} />
+                </p>
               </div>
               {currentUser?.role === "board" && (
                 <div className="flex flex-col gap-2">
