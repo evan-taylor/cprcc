@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { NewsletterEditor } from "@/components/newsletter-editor";
+import { NewsletterImportPanel } from "@/components/newsletter-import-panel";
 import SiteHeader from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,6 @@ export default function AdminNewsletterPage() {
   const sendNewsletterCampaign = useAction(
     api.newsletter.actions.sendNewsletterCampaign
   );
-
   const [profileEnsured, setProfileEnsured] = useState(false);
   const [subject, setSubject] = useState("");
   const [previewText, setPreviewText] = useState("");
@@ -214,7 +214,7 @@ export default function AdminNewsletterPage() {
               Only board members can manage club newsletters.
             </p>
             <button
-              className="mt-5 inline-flex h-10 items-center rounded-full bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
+              className="mt-5 inline-flex h-10 items-center rounded-lg bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
               onClick={() => router.push("/")}
               type="button"
             >
@@ -241,17 +241,21 @@ export default function AdminNewsletterPage() {
               review recent campaign history.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              label="Subscribed"
+              label="Total newsletter recipients"
+              value={overview?.totalNewsletterRecipients ?? 0}
+            />
+            <StatCard
+              label="Members subscribed"
               value={overview?.subscribedMembersCount ?? 0}
             />
             <StatCard
-              label="Unsubscribed"
-              value={overview?.unsubscribedMembersCount ?? 0}
+              label="Imported contacts"
+              value={overview?.importedSubscribersCount ?? 0}
             />
             <StatCard
-              label="Total members"
+              label="Member accounts"
               value={overview?.totalMembersCount ?? 0}
             />
           </div>
@@ -271,6 +275,8 @@ export default function AdminNewsletterPage() {
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
           <section className="space-y-6">
+            <NewsletterImportPanel isComposerBusy={isSending} />
+
             <Card className="rounded-[1.75rem]">
               <CardHeader>
                 <CardTitle>Compose a newsletter</CardTitle>
@@ -332,33 +338,71 @@ export default function AdminNewsletterPage() {
               <CardHeader>
                 <CardTitle>Audience preview</CardTitle>
                 <CardDescription>
-                  These members are currently subscribed and will receive the
-                  next send.
+                  Subscribed member accounts and imported contacts that will
+                  receive the next campaign (
+                  {overview?.totalNewsletterRecipients ?? 0} total).
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {overview?.subscribedMembersPreview.length ? (
-                  overview.subscribedMembersPreview.map((member) => (
-                    <div
-                      className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
-                      key={member._id}
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-slate-900 text-sm">
-                          {member.name}
-                        </p>
-                        <p className="truncate text-slate-500 text-xs">
-                          {member.email}
-                        </p>
-                      </div>
-                      <Badge variant="success">Subscribed</Badge>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-[color:var(--color-text-muted)] text-sm">
-                    No subscribed members yet.
+              <CardContent className="space-y-5">
+                <div>
+                  <p className="mb-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
+                    Member accounts
                   </p>
-                )}
+                  <div className="space-y-3">
+                    {overview?.subscribedMembersPreview.length ? (
+                      overview.subscribedMembersPreview.map((member) => (
+                        <div
+                          className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                          key={member._id}
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-slate-900 text-sm">
+                              {member.name}
+                            </p>
+                            <p className="truncate text-slate-500 text-xs">
+                              {member.email}
+                            </p>
+                          </div>
+                          <Badge variant="success">Subscribed</Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[color:var(--color-text-muted)] text-sm">
+                        No subscribed members yet.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
+                    Imported contacts
+                  </p>
+                  <div className="space-y-3">
+                    {overview?.importedSubscribersPreview.length ? (
+                      overview.importedSubscribersPreview.map((row) => (
+                        <div
+                          className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                          key={row._id}
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-slate-900 text-sm">
+                              {row.name}
+                            </p>
+                            <p className="truncate text-slate-500 text-xs">
+                              {row.email}
+                            </p>
+                          </div>
+                          <Badge variant="success">Imported</Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[color:var(--color-text-muted)] text-sm">
+                        No imported contacts yet. Use Import subscribers on the
+                        left.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
 

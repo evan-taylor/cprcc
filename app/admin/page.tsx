@@ -100,7 +100,7 @@ export default function AdminPage() {
               Only board members can access this page.
             </p>
             <button
-              className="mt-5 inline-flex h-10 items-center rounded-full bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
+              className="mt-5 inline-flex h-10 items-center rounded-lg bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
               onClick={() => router.push("/")}
               type="button"
             >
@@ -176,7 +176,7 @@ export default function AdminPage() {
                 </p>
               </div>
               <button
-                className="inline-flex h-11 items-center justify-center rounded-full bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
                 onClick={() => router.push("/admin/newsletter")}
                 type="button"
               >

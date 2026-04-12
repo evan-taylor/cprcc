@@ -24,7 +24,7 @@ interface Recipient {
   email: string;
   name: string;
   newsletterUnsubscribeToken: string;
-  userProfileId: Id<"userProfiles">;
+  userProfileId?: Id<"userProfiles">;
 }
 
 function getFailureMessage(failedEmails: string[], fallbackMessage?: string) {
@@ -82,16 +82,13 @@ async function sendNewsletterBatches(
   recipients: Recipient[],
   htmlContent: string,
   previewText: string | undefined,
-  subject: string
-): Promise<{
-  failedCount: number;
-  failedEmails: string[];
-  sentCount: number;
-}> {
-  let sentCount = 0;
-  let failedCount = 0;
-  const failedEmails: string[] = [];
-
+  subject: string,
+  progress: {
+    failedCount: number;
+    failedEmails: string[];
+    sentCount: number;
+  }
+): Promise<void> {
   for (
     let recipientIndex = 0;
     recipientIndex < recipients.length;
@@ -116,15 +113,13 @@ async function sendNewsletterBatches(
 
     for (const batchResult of batchResults) {
       if (batchResult.success) {
-        sentCount += 1;
+        progress.sentCount += 1;
       } else {
-        failedCount += 1;
-        failedEmails.push(batchResult.email);
+        progress.failedCount += 1;
+        progress.failedEmails.push(batchResult.email);
       }
     }
   }
-
-  return { failedCount, failedEmails, sentCount };
 }
 
 export const sendNewsletterCampaign = action({
@@ -184,25 +179,25 @@ export const sendNewsletterCampaign = action({
       }
     );
 
-    let sentCount = 0;
-    let failedCount = 0;
-    let failedEmails: string[] = [];
+    const progress = {
+      failedCount: 0,
+      failedEmails: [] as string[],
+      sentCount: 0,
+    };
 
     try {
-      const batchResult = await sendNewsletterBatches(
+      await sendNewsletterBatches(
         ctx,
         recipients,
         htmlContent,
         previewText,
-        subject
+        subject,
+        progress
       );
-      sentCount = batchResult.sentCount;
-      failedCount = batchResult.failedCount;
-      failedEmails = batchResult.failedEmails;
     } catch (error) {
       const failurePrefix =
         error instanceof Error ? error.message : "Failed to send newsletter";
-      const bounceDetails = getFailureMessage(failedEmails);
+      const bounceDetails = getFailureMessage(progress.failedEmails);
       const failureMessage = bounceDetails
         ? `${failurePrefix}. ${bounceDetails}`
         : failurePrefix;
@@ -210,15 +205,19 @@ export const sendNewsletterCampaign = action({
         internal.newsletters.finalizeNewsletterCampaignRecord,
         {
           campaignId,
-          failedCount,
+          failedCount: progress.failedCount,
           failureMessage,
-          sentAt: sentCount > 0 ? Date.now() : undefined,
-          sentCount,
-          status: sentCount > 0 ? "sent" : "failed",
+          sentAt: progress.sentCount > 0 ? Date.now() : undefined,
+          sentCount: progress.sentCount,
+          status: progress.sentCount > 0 ? "sent" : "failed",
         }
       );
       throw error;
     }
+
+    const sentCount = progress.sentCount;
+    const failedCount = progress.failedCount;
+    const failedEmails = progress.failedEmails;
 
     const status: "sent" | "failed" = sentCount > 0 ? "sent" : "failed";
     await ctx.runMutation(

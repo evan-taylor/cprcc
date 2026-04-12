@@ -297,7 +297,6 @@ export const listAllUsers = query({
         v.union(v.literal("subscribed"), v.literal("unsubscribed"))
       ),
       newsletterStatusUpdatedAt: v.optional(v.number()),
-      newsletterUnsubscribeToken: v.optional(v.string()),
       userId: v.id("users"),
     })
   ),
@@ -305,7 +304,17 @@ export const listAllUsers = query({
     await requireBoardMember(ctx);
 
     const userProfiles = await ctx.db.query("userProfiles").collect();
-    return userProfiles;
+    return userProfiles.map((profile) => ({
+      _creationTime: profile._creationTime,
+      _id: profile._id,
+      email: profile.email,
+      name: profile.name,
+      newsletterStatus: profile.newsletterStatus,
+      newsletterStatusUpdatedAt: profile.newsletterStatusUpdatedAt,
+      phoneNumber: profile.phoneNumber,
+      role: profile.role,
+      userId: profile.userId,
+    }));
   },
 });
 

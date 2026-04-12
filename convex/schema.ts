@@ -26,6 +26,20 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_newsletter_status", ["newsletterStatus"])
     .index("by_newsletter_unsubscribe_token", ["newsletterUnsubscribeToken"]),
+  newsletterExternalSubscribers: defineTable({
+    createdAt: v.number(),
+    email: v.string(),
+    name: v.string(),
+    newsletterStatus: v.union(
+      v.literal("subscribed"),
+      v.literal("unsubscribed")
+    ),
+    newsletterStatusUpdatedAt: v.number(),
+    newsletterUnsubscribeToken: v.string(),
+  })
+    .index("by_email", ["email"])
+    .index("by_newsletter_status", ["newsletterStatus"])
+    .index("by_newsletter_unsubscribe_token", ["newsletterUnsubscribeToken"]),
   newsletterCampaigns: defineTable({
     audience: v.literal("subscribedMembers"),
     createdAt: v.number(),

@@ -93,13 +93,13 @@ function HeroSection() {
         </p>
         <div className="stagger-4 mt-8 flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-full bg-red-600 px-8 font-semibold text-base text-white shadow-lg shadow-red-600/30 hover:bg-red-700 hover:shadow-red-600/40 hover:shadow-xl active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-lg bg-red-600 px-8 font-semibold text-base text-white shadow-lg shadow-red-600/30 hover:bg-red-700 hover:shadow-red-600/40 hover:shadow-xl active:scale-[0.97]"
             href="/events"
           >
             View Upcoming Events
           </Link>
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-full bg-white/15 px-8 font-semibold text-base text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-lg bg-white/15 px-8 font-semibold text-base text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 active:scale-[0.97]"
             href="/volunteer-connection"
           >
             Get Involved
@@ -202,13 +202,13 @@ function CTASection() {
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-full bg-red-600 px-8 font-semibold text-base text-white shadow-md shadow-red-600/20 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-lg bg-red-600 px-8 font-semibold text-base text-white shadow-md shadow-red-600/20 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
             href="/volunteer-connection"
           >
             Start Volunteering
           </Link>
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-full border border-slate-200 bg-white px-8 font-semibold text-base text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-lg border border-slate-200 bg-white px-8 font-semibold text-base text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.97]"
             href="/contact"
           >
             Contact Us

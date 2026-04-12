@@ -21,6 +21,17 @@ import {
   resolveNewsletterStatus,
 } from "./lib/newsletters";
 
+const IMPORT_EMAIL_SYNTAX_REGEX =
+  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const MAX_IMPORT_ENTRIES = 2000;
+
+function truncateImportDisplayName(name: string) {
+  if (name.length <= 120) {
+    return name;
+  }
+  return name.slice(0, 120).trimEnd();
+}
+
 export const getNewsletterSettings = query({
   args: {},
   returns: v.union(
@@ -148,6 +159,36 @@ async function unsubscribeProfilesForBounce(
   return unsubscribedProfiles;
 }
 
+async function unsubscribeExternalSubscriberForBounce(
+  ctx: MutationCtx,
+  bouncedEmail: string
+) {
+  const normalizedEmail = normalizeEmailAddress(bouncedEmail);
+  const externalSubscriber = await ctx.db
+    .query("newsletterExternalSubscribers")
+    .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+    .first();
+
+  if (!externalSubscriber) {
+    return 0;
+  }
+
+  if (externalSubscriber.newsletterStatus === NEWSLETTER_UNSUBSCRIBED) {
+    return 0;
+  }
+
+  const newsletterStatusUpdatedAt = Date.now();
+  await ctx.db.patch(externalSubscriber._id, {
+    newsletterStatus: NEWSLETTER_UNSUBSCRIBED,
+    newsletterStatusUpdatedAt,
+    newsletterUnsubscribeToken:
+      externalSubscriber.newsletterUnsubscribeToken ??
+      createNewsletterUnsubscribeToken(),
+  });
+
+  return 1;
+}
+
 function getEventRecipientEmails(event: EmailEvent) {
   const recipients = event.data.to;
   return Array.isArray(recipients) ? recipients : [recipients];
@@ -166,6 +207,7 @@ export const handleResendEmailEvent = internalMutation({
     const recipients = getEventRecipientEmails(args.event);
     for (const recipient of recipients) {
       await unsubscribeProfilesForBounce(ctx, recipient);
+      await unsubscribeExternalSubscriberForBounce(ctx, recipient);
     }
 
     return null;
@@ -196,17 +238,35 @@ export const getPublicSubscriptionByToken = query({
       )
       .unique();
 
-    if (!userProfile) {
+    if (userProfile) {
+      return {
+        email: userProfile.email,
+        name: userProfile.name,
+        newsletterStatus: getResolvedNewsletterStatus(
+          userProfile.newsletterStatus
+        ),
+        newsletterStatusUpdatedAt: userProfile.newsletterStatusUpdatedAt,
+      };
+    }
+
+    const externalSubscriber = await ctx.db
+      .query("newsletterExternalSubscribers")
+      .withIndex("by_newsletter_unsubscribe_token", (q) =>
+        q.eq("newsletterUnsubscribeToken", args.token)
+      )
+      .unique();
+
+    if (!externalSubscriber) {
       return null;
     }
 
     return {
-      email: userProfile.email,
-      name: userProfile.name,
+      email: externalSubscriber.email,
+      name: externalSubscriber.name,
       newsletterStatus: getResolvedNewsletterStatus(
-        userProfile.newsletterStatus
+        externalSubscriber.newsletterStatus
       ),
-      newsletterStatusUpdatedAt: userProfile.newsletterStatusUpdatedAt,
+      newsletterStatusUpdatedAt: externalSubscriber.newsletterStatusUpdatedAt,
     };
   },
 });
@@ -228,21 +288,45 @@ export const unsubscribeFromNewsletterByToken = mutation({
       )
       .unique();
 
-    if (!userProfile) {
+    const newsletterStatusUpdatedAt = Date.now();
+
+    if (userProfile) {
+      await ctx.db.patch(userProfile._id, {
+        newsletterStatus: NEWSLETTER_UNSUBSCRIBED,
+        newsletterStatusUpdatedAt,
+        newsletterUnsubscribeToken:
+          userProfile.newsletterUnsubscribeToken ??
+          createNewsletterUnsubscribeToken(),
+      });
+
+      return {
+        email: userProfile.email,
+        newsletterStatus: NEWSLETTER_UNSUBSCRIBED,
+        newsletterStatusUpdatedAt,
+      };
+    }
+
+    const externalSubscriber = await ctx.db
+      .query("newsletterExternalSubscribers")
+      .withIndex("by_newsletter_unsubscribe_token", (q) =>
+        q.eq("newsletterUnsubscribeToken", args.token)
+      )
+      .unique();
+
+    if (!externalSubscriber) {
       throw new Error("Invalid unsubscribe link");
     }
 
-    const newsletterStatusUpdatedAt = Date.now();
-    await ctx.db.patch(userProfile._id, {
+    await ctx.db.patch(externalSubscriber._id, {
       newsletterStatus: NEWSLETTER_UNSUBSCRIBED,
       newsletterStatusUpdatedAt,
       newsletterUnsubscribeToken:
-        userProfile.newsletterUnsubscribeToken ??
+        externalSubscriber.newsletterUnsubscribeToken ??
         createNewsletterUnsubscribeToken(),
     });
 
     return {
-      email: userProfile.email,
+      email: externalSubscriber.email,
       newsletterStatus: NEWSLETTER_UNSUBSCRIBED,
       newsletterStatusUpdatedAt,
     };
@@ -252,6 +336,14 @@ export const unsubscribeFromNewsletterByToken = mutation({
 export const getNewsletterAdminOverview = query({
   args: {},
   returns: v.object({
+    importedSubscribersCount: v.number(),
+    importedSubscribersPreview: v.array(
+      v.object({
+        _id: v.id("newsletterExternalSubscribers"),
+        email: v.string(),
+        name: v.string(),
+      })
+    ),
     recentCampaigns: v.array(
       v.object({
         _id: v.id("newsletterCampaigns"),
@@ -280,21 +372,29 @@ export const getNewsletterAdminOverview = query({
       })
     ),
     totalMembersCount: v.number(),
+    totalNewsletterRecipients: v.number(),
     unsubscribedMembersCount: v.number(),
   }),
   handler: async (ctx) => {
     await requireBoardMember(ctx);
 
-    const [allProfiles, subscribedProfiles, campaigns] = await Promise.all([
-      ctx.db.query("userProfiles").collect(),
-      ctx.db
-        .query("userProfiles")
-        .withIndex("by_newsletter_status", (q) =>
-          q.eq("newsletterStatus", NEWSLETTER_SUBSCRIBED)
-        )
-        .collect(),
-      ctx.db.query("newsletterCampaigns").collect(),
-    ]);
+    const [allProfiles, subscribedProfiles, campaigns, importedSubscribers] =
+      await Promise.all([
+        ctx.db.query("userProfiles").collect(),
+        ctx.db
+          .query("userProfiles")
+          .withIndex("by_newsletter_status", (q) =>
+            q.eq("newsletterStatus", NEWSLETTER_SUBSCRIBED)
+          )
+          .collect(),
+        ctx.db.query("newsletterCampaigns").collect(),
+        ctx.db
+          .query("newsletterExternalSubscribers")
+          .withIndex("by_newsletter_status", (q) =>
+            q.eq("newsletterStatus", NEWSLETTER_SUBSCRIBED)
+          )
+          .collect(),
+      ]);
 
     const profileNameById = new Map(
       allProfiles.map((profile) => [profile._id, profile.name])
@@ -330,11 +430,24 @@ export const getNewsletterAdminOverview = query({
         newsletterStatusUpdatedAt: profile.newsletterStatusUpdatedAt,
       }));
 
+    const importedSubscribersPreview = [...importedSubscribers]
+      .sort((left, right) => left.email.localeCompare(right.email))
+      .slice(0, 8)
+      .map((subscriber) => ({
+        _id: subscriber._id,
+        email: subscriber.email,
+        name: subscriber.name,
+      }));
+
     return {
+      importedSubscribersCount: importedSubscribers.length,
+      importedSubscribersPreview,
       recentCampaigns,
       subscribedMembersCount: subscribedProfiles.length,
       subscribedMembersPreview,
       totalMembersCount: allProfiles.length,
+      totalNewsletterRecipients:
+        subscribedProfiles.length + importedSubscribers.length,
       unsubscribedMembersCount: allProfiles.length - subscribedProfiles.length,
     };
   },
@@ -343,14 +456,22 @@ export const getNewsletterAdminOverview = query({
 export const getSubscribedRecipientsForSend = internalQuery({
   args: {},
   handler: async (ctx) => {
-    const subscribedProfiles = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_newsletter_status", (q) =>
-        q.eq("newsletterStatus", NEWSLETTER_SUBSCRIBED)
-      )
-      .collect();
+    const [subscribedProfiles, importedSubscribers] = await Promise.all([
+      ctx.db
+        .query("userProfiles")
+        .withIndex("by_newsletter_status", (q) =>
+          q.eq("newsletterStatus", NEWSLETTER_SUBSCRIBED)
+        )
+        .collect(),
+      ctx.db
+        .query("newsletterExternalSubscribers")
+        .withIndex("by_newsletter_status", (q) =>
+          q.eq("newsletterStatus", NEWSLETTER_SUBSCRIBED)
+        )
+        .collect(),
+    ]);
 
-    return subscribedProfiles
+    const profileRecipients = subscribedProfiles
       .filter((profile) => !!profile.newsletterUnsubscribeToken)
       .map((profile) => ({
         email: profile.email,
@@ -359,6 +480,132 @@ export const getSubscribedRecipientsForSend = internalQuery({
           profile.newsletterUnsubscribeToken as string,
         userProfileId: profile._id,
       }));
+
+    const profileEmails = new Set(
+      profileRecipients.map((recipient) =>
+        normalizeEmailAddress(recipient.email)
+      )
+    );
+
+    const externalRecipients = importedSubscribers
+      .filter((subscriber) => !!subscriber.newsletterUnsubscribeToken)
+      .filter(
+        (subscriber) =>
+          !profileEmails.has(normalizeEmailAddress(subscriber.email))
+      )
+      .map((subscriber) => ({
+        email: subscriber.email,
+        name: subscriber.name,
+        newsletterUnsubscribeToken:
+          subscriber.newsletterUnsubscribeToken as string,
+      }));
+
+    return [...profileRecipients, ...externalRecipients];
+  },
+});
+
+export const importNewsletterSubscribers = mutation({
+  args: {
+    entries: v.array(
+      v.object({
+        email: v.string(),
+        name: v.optional(v.string()),
+      })
+    ),
+  },
+  returns: v.object({
+    externalRemovedAsDuplicateCount: v.number(),
+    externalUpsertedCount: v.number(),
+    profileSubscribedCount: v.number(),
+    skippedInvalidCount: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    await requireBoardMember(ctx);
+
+    if (args.entries.length > MAX_IMPORT_ENTRIES) {
+      throw new Error(
+        `Too many rows at once. Maximum ${MAX_IMPORT_ENTRIES} per import.`
+      );
+    }
+
+    let profileSubscribedCount = 0;
+    let externalUpsertedCount = 0;
+    let externalRemovedAsDuplicateCount = 0;
+    let skippedInvalidCount = 0;
+    const now = Date.now();
+
+    for (const entry of args.entries) {
+      const normalizedEmail = normalizeEmailAddress(entry.email);
+      if (!IMPORT_EMAIL_SYNTAX_REGEX.test(normalizedEmail)) {
+        skippedInvalidCount += 1;
+        continue;
+      }
+
+      const nameRaw = entry.name?.trim();
+      const displayName = nameRaw
+        ? truncateImportDisplayName(nameRaw)
+        : "Newsletter subscriber";
+
+      const profiles = await findProfilesByEmailAddress(ctx, normalizedEmail);
+
+      if (profiles.length > 0) {
+        const profile = profiles[0];
+        await ctx.db.patch(profile._id, {
+          newsletterStatus: NEWSLETTER_SUBSCRIBED,
+          newsletterStatusUpdatedAt: now,
+          newsletterUnsubscribeToken:
+            profile.newsletterUnsubscribeToken ??
+            createNewsletterUnsubscribeToken(),
+        });
+        profileSubscribedCount += 1;
+
+        const externalAtEmail = await ctx.db
+          .query("newsletterExternalSubscribers")
+          .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+          .first();
+
+        if (externalAtEmail) {
+          await ctx.db.delete(externalAtEmail._id);
+          externalRemovedAsDuplicateCount += 1;
+        }
+        continue;
+      }
+
+      const existingExternal = await ctx.db
+        .query("newsletterExternalSubscribers")
+        .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+        .first();
+
+      if (existingExternal) {
+        await ctx.db.patch(existingExternal._id, {
+          name: displayName,
+          newsletterStatus: NEWSLETTER_SUBSCRIBED,
+          newsletterStatusUpdatedAt: now,
+          newsletterUnsubscribeToken:
+            existingExternal.newsletterUnsubscribeToken ??
+            createNewsletterUnsubscribeToken(),
+        });
+        externalUpsertedCount += 1;
+        continue;
+      }
+
+      await ctx.db.insert("newsletterExternalSubscribers", {
+        createdAt: now,
+        email: normalizedEmail,
+        name: displayName,
+        newsletterStatus: NEWSLETTER_SUBSCRIBED,
+        newsletterStatusUpdatedAt: now,
+        newsletterUnsubscribeToken: createNewsletterUnsubscribeToken(),
+      });
+      externalUpsertedCount += 1;
+    }
+
+    return {
+      externalRemovedAsDuplicateCount,
+      externalUpsertedCount,
+      profileSubscribedCount,
+      skippedInvalidCount,
+    };
   },
 });
 

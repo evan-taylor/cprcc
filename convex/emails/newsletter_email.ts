@@ -1,6 +1,7 @@
 import { CLUB_EMAIL_REPLY_TO, createPlainTextFromHtml } from "../lib/email";
 
-const STYLE_ATTR_REGEX = /\bstyle\s*=/i;
+/** Match real `style=` only — avoid false positives like `data-style=`. */
+const HTML_STYLE_ATTR_REGEX = /(^|[\s])style\s*=/i;
 
 interface NewsletterEmailParams {
   bodyHtml: string;
@@ -48,7 +49,7 @@ function applyNewsletterBodyStyles(html: string): string {
     result = result.replace(
       new RegExp(`<${tag}\\b([^>]*)>`, "gi"),
       (_match, attrs: string) => {
-        if (STYLE_ATTR_REGEX.test(attrs)) {
+        if (HTML_STYLE_ATTR_REGEX.test(attrs)) {
           return `<${tag}${attrs}>`;
         }
         return `<${tag} style="${style}"${attrs}>`;
@@ -57,7 +58,7 @@ function applyNewsletterBodyStyles(html: string): string {
   }
 
   result = result.replace(/<a\b([^>]*)>/gi, (_match, attrs: string) => {
-    if (STYLE_ATTR_REGEX.test(attrs)) {
+    if (HTML_STYLE_ATTR_REGEX.test(attrs)) {
       return `<a${attrs}>`;
     }
     return `<a style="color:#b91c1c;text-decoration:underline;"${attrs}>`;
