@@ -72,6 +72,11 @@ export function NewsletterImportPanel({
       if (result.skippedInvalidCount > 0) {
         parts.push(`${result.skippedInvalidCount} invalid row(s) skipped`);
       }
+      if (result.skippedAlreadyUnsubscribedCount > 0) {
+        parts.push(
+          `${result.skippedAlreadyUnsubscribedCount} row(s) skipped (already unsubscribed)`
+        );
+      }
       setImportMessage(`${parts.join(". ")}.`);
       setImportPasteText("");
       posthog.capture("newsletter_subscribers_imported", {
@@ -82,6 +87,7 @@ export function NewsletterImportPanel({
         profiles_subscribed: result.profileSubscribedCount,
         skipped_invalid: result.skippedInvalidCount,
         skipped_lines: importParse.skippedLineCount,
+        skipped_opted_out: result.skippedAlreadyUnsubscribedCount,
       });
     } catch (importErr) {
       posthog.captureException(

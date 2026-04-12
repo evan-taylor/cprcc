@@ -63,6 +63,32 @@ export const getNewsletterSettings = query({
   },
 });
 
+/**
+ * Returns a relative path for the token-based unsubscribe page. Call only from
+ * the newsletter preferences UI — not included in getCurrentUser (bearer token).
+ */
+export const getNewsletterUnsubscribePathForCurrentUser = query({
+  args: {},
+  returns: v.union(
+    v.object({
+      path: v.string(),
+    }),
+    v.null()
+  ),
+  handler: async (ctx) => {
+    const userProfile = await getCurrentUserProfile(ctx);
+    if (!userProfile?.newsletterUnsubscribeToken) {
+      return null;
+    }
+
+    return {
+      path: `/newsletter/unsubscribe?token=${encodeURIComponent(
+        userProfile.newsletterUnsubscribeToken
+      )}`,
+    };
+  },
+});
+
 export const setCurrentUserNewsletterSubscription = mutation({
   args: {
     subscribed: v.boolean(),
@@ -97,6 +123,84 @@ export const setCurrentUserNewsletterSubscription = mutation({
 });
 
 const normalizeEmailAddress = (value: string) => value.trim().toLowerCase();
+
+interface ImportCounters {
+  externalRemovedAsDuplicateCount: number;
+  externalUpsertedCount: number;
+  profileSubscribedCount: number;
+  skippedAlreadyUnsubscribedCount: number;
+}
+
+async function applyNewsletterImportRow(
+  ctx: MutationCtx,
+  counters: ImportCounters,
+  displayName: string,
+  normalizedEmail: string,
+  now: number,
+  profileByNormalizedEmail: Map<string, Doc<"userProfiles">>
+) {
+  const profile = profileByNormalizedEmail.get(normalizedEmail);
+
+  if (profile) {
+    if (profile.newsletterStatus === NEWSLETTER_UNSUBSCRIBED) {
+      counters.skippedAlreadyUnsubscribedCount += 1;
+      return;
+    }
+
+    await ctx.db.patch(profile._id, {
+      newsletterStatus: NEWSLETTER_SUBSCRIBED,
+      newsletterStatusUpdatedAt: now,
+      newsletterUnsubscribeToken:
+        profile.newsletterUnsubscribeToken ??
+        createNewsletterUnsubscribeToken(),
+    });
+    counters.profileSubscribedCount += 1;
+
+    const externalAtEmail = await ctx.db
+      .query("newsletterExternalSubscribers")
+      .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+      .first();
+
+    if (externalAtEmail) {
+      await ctx.db.delete(externalAtEmail._id);
+      counters.externalRemovedAsDuplicateCount += 1;
+    }
+    return;
+  }
+
+  const existingExternal = await ctx.db
+    .query("newsletterExternalSubscribers")
+    .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+    .first();
+
+  if (existingExternal) {
+    if (existingExternal.newsletterStatus === NEWSLETTER_UNSUBSCRIBED) {
+      counters.skippedAlreadyUnsubscribedCount += 1;
+      return;
+    }
+
+    await ctx.db.patch(existingExternal._id, {
+      name: displayName,
+      newsletterStatus: NEWSLETTER_SUBSCRIBED,
+      newsletterStatusUpdatedAt: now,
+      newsletterUnsubscribeToken:
+        existingExternal.newsletterUnsubscribeToken ??
+        createNewsletterUnsubscribeToken(),
+    });
+    counters.externalUpsertedCount += 1;
+    return;
+  }
+
+  await ctx.db.insert("newsletterExternalSubscribers", {
+    createdAt: now,
+    email: normalizedEmail,
+    name: displayName,
+    newsletterStatus: NEWSLETTER_SUBSCRIBED,
+    newsletterStatusUpdatedAt: now,
+    newsletterUnsubscribeToken: createNewsletterUnsubscribeToken(),
+  });
+  counters.externalUpsertedCount += 1;
+}
 
 async function findProfilesByEmailAddress(ctx: MutationCtx, email: string) {
   const normalizedEmail = normalizeEmailAddress(email);
@@ -517,6 +621,7 @@ export const importNewsletterSubscribers = mutation({
     externalRemovedAsDuplicateCount: v.number(),
     externalUpsertedCount: v.number(),
     profileSubscribedCount: v.number(),
+    skippedAlreadyUnsubscribedCount: v.number(),
     skippedInvalidCount: v.number(),
   }),
   handler: async (ctx, args) => {
@@ -528,9 +633,21 @@ export const importNewsletterSubscribers = mutation({
       );
     }
 
-    let profileSubscribedCount = 0;
-    let externalUpsertedCount = 0;
-    let externalRemovedAsDuplicateCount = 0;
+    const allProfiles = await ctx.db.query("userProfiles").collect();
+    const profileByNormalizedEmail = new Map<string, Doc<"userProfiles">>();
+    for (const profile of allProfiles) {
+      const key = normalizeEmailAddress(profile.email);
+      if (!profileByNormalizedEmail.has(key)) {
+        profileByNormalizedEmail.set(key, profile);
+      }
+    }
+
+    const counters: ImportCounters = {
+      externalRemovedAsDuplicateCount: 0,
+      externalUpsertedCount: 0,
+      profileSubscribedCount: 0,
+      skippedAlreadyUnsubscribedCount: 0,
+    };
     let skippedInvalidCount = 0;
     const now = Date.now();
 
@@ -546,64 +663,21 @@ export const importNewsletterSubscribers = mutation({
         ? truncateImportDisplayName(nameRaw)
         : "Newsletter subscriber";
 
-      const profiles = await findProfilesByEmailAddress(ctx, normalizedEmail);
-
-      if (profiles.length > 0) {
-        const profile = profiles[0];
-        await ctx.db.patch(profile._id, {
-          newsletterStatus: NEWSLETTER_SUBSCRIBED,
-          newsletterStatusUpdatedAt: now,
-          newsletterUnsubscribeToken:
-            profile.newsletterUnsubscribeToken ??
-            createNewsletterUnsubscribeToken(),
-        });
-        profileSubscribedCount += 1;
-
-        const externalAtEmail = await ctx.db
-          .query("newsletterExternalSubscribers")
-          .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
-          .first();
-
-        if (externalAtEmail) {
-          await ctx.db.delete(externalAtEmail._id);
-          externalRemovedAsDuplicateCount += 1;
-        }
-        continue;
-      }
-
-      const existingExternal = await ctx.db
-        .query("newsletterExternalSubscribers")
-        .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
-        .first();
-
-      if (existingExternal) {
-        await ctx.db.patch(existingExternal._id, {
-          name: displayName,
-          newsletterStatus: NEWSLETTER_SUBSCRIBED,
-          newsletterStatusUpdatedAt: now,
-          newsletterUnsubscribeToken:
-            existingExternal.newsletterUnsubscribeToken ??
-            createNewsletterUnsubscribeToken(),
-        });
-        externalUpsertedCount += 1;
-        continue;
-      }
-
-      await ctx.db.insert("newsletterExternalSubscribers", {
-        createdAt: now,
-        email: normalizedEmail,
-        name: displayName,
-        newsletterStatus: NEWSLETTER_SUBSCRIBED,
-        newsletterStatusUpdatedAt: now,
-        newsletterUnsubscribeToken: createNewsletterUnsubscribeToken(),
-      });
-      externalUpsertedCount += 1;
+      await applyNewsletterImportRow(
+        ctx,
+        counters,
+        displayName,
+        normalizedEmail,
+        now,
+        profileByNormalizedEmail
+      );
     }
 
     return {
-      externalRemovedAsDuplicateCount,
-      externalUpsertedCount,
-      profileSubscribedCount,
+      externalRemovedAsDuplicateCount: counters.externalRemovedAsDuplicateCount,
+      externalUpsertedCount: counters.externalUpsertedCount,
+      profileSubscribedCount: counters.profileSubscribedCount,
+      skippedAlreadyUnsubscribedCount: counters.skippedAlreadyUnsubscribedCount,
       skippedInvalidCount,
     };
   },

@@ -3,7 +3,7 @@
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import SiteHeader from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -31,6 +31,10 @@ export default function NewsletterPage() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const router = useRouter();
   const currentUser = useQuery(api.users.getCurrentUser);
+  const unsubscribeLink = useQuery(
+    api.newsletters.getNewsletterUnsubscribePathForCurrentUser,
+    isAuthenticated ? {} : "skip"
+  );
   const settings = useQuery(
     api.newsletters.getNewsletterSettings,
     isAuthenticated ? {} : "skip"
@@ -49,20 +53,11 @@ export default function NewsletterPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  const unsubscribePath = useMemo(() => {
-    if (!currentUser?.newsletterUnsubscribeToken) {
-      return null;
-    }
-
-    return `/newsletter/unsubscribe?token=${encodeURIComponent(
-      currentUser.newsletterUnsubscribeToken
-    )}`;
-  }, [currentUser?.newsletterUnsubscribeToken]);
-
   if (
     authLoading ||
     currentUser === undefined ||
-    (isAuthenticated && settings === undefined)
+    (isAuthenticated && settings === undefined) ||
+    (isAuthenticated && unsubscribeLink === undefined)
   ) {
     return (
       <div className="min-h-screen bg-[color:var(--color-bg)]">
@@ -210,7 +205,7 @@ export default function NewsletterPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {unsubscribePath ? (
+              {unsubscribeLink?.path ? (
                 <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-5 py-4">
                   <p className="font-medium text-slate-900 text-sm">
                     Public unsubscribe page
@@ -221,7 +216,7 @@ export default function NewsletterPage() {
                   </p>
                   <Link
                     className="mt-3 inline-flex text-red-600 text-sm transition-colors hover:text-red-700"
-                    href={unsubscribePath}
+                    href={unsubscribeLink.path}
                   >
                     Open unsubscribe page
                   </Link>

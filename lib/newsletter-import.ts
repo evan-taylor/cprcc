@@ -19,6 +19,33 @@ function isValidImportEmail(value: string) {
   return IMPORT_EMAIL_VALID_REGEX.test(value.trim());
 }
 
+function mergeEmailsFromLineIntoMap(
+  byEmail: Map<string, { name?: string }>,
+  emailsInLine: string[],
+  name: string | undefined
+): number {
+  let duplicateLineCount = 0;
+
+  for (const emailCandidate of emailsInLine) {
+    const email = emailCandidate.trim().toLowerCase();
+    if (!IMPORT_EMAIL_VALID_REGEX.test(email)) {
+      continue;
+    }
+
+    if (byEmail.has(email)) {
+      duplicateLineCount += 1;
+      const existing = byEmail.get(email);
+      byEmail.set(email, {
+        name: name ?? existing?.name,
+      });
+    } else {
+      byEmail.set(email, { name });
+    }
+  }
+
+  return duplicateLineCount;
+}
+
 /**
  * Parse pasted text from Excel (tab-separated), CSV (comma/semicolon), or plain lists.
  * Dedupes by email (case-insensitive); later rows override names for the same email.
@@ -48,21 +75,14 @@ export function parseNewsletterImportPaste(
       continue;
     }
 
-    const email = emailsInLine[0].trim().toLowerCase();
-    const nameParts = parts.filter(
-      (part) => part.trim().toLowerCase() !== email
-    );
+    const nameParts = parts.filter((part) => !isValidImportEmail(part));
     const name = nameParts.length > 0 ? nameParts.join(" ").trim() : undefined;
 
-    if (byEmail.has(email)) {
-      duplicateLineCount += 1;
-      const existing = byEmail.get(email);
-      byEmail.set(email, {
-        name: name ?? existing?.name,
-      });
-    } else {
-      byEmail.set(email, { name });
-    }
+    duplicateLineCount += mergeEmailsFromLineIntoMap(
+      byEmail,
+      emailsInLine,
+      name
+    );
   }
 
   const globalMatches = text.matchAll(EMAIL_TOKEN_REGEX);

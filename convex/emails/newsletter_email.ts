@@ -1,4 +1,8 @@
-import { CLUB_EMAIL_REPLY_TO, createPlainTextFromHtml } from "../lib/email";
+import {
+  CLUB_EMAIL_REPLY_TO,
+  createPlainTextFromHtml,
+  escapeHtmlPlainText,
+} from "../lib/email";
 
 /** Match real `style=` only — avoid false positives like `data-style=`. */
 const HTML_STYLE_ATTR_REGEX = /(^|[\s])style\s*=/i;
@@ -72,7 +76,9 @@ function getPreviewText(previewText?: string) {
     return "";
   }
 
-  return `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${previewText}</div>`;
+  return `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtmlPlainText(
+    previewText
+  )}</div>`;
 }
 
 export function generateNewsletterEmailHtml({
@@ -82,6 +88,7 @@ export function generateNewsletterEmailHtml({
   unsubscribeUrl,
 }: NewsletterEmailParams) {
   const styledBody = applyNewsletterBodyStyles(bodyHtml);
+  const subjectEscaped = escapeHtmlPlainText(subject);
   return `<!doctype html>
 <html lang="en">
   <body style="margin:0;background:#f8fafc;color:#0f172a;font-family:Inter,Arial,sans-serif;">
@@ -96,7 +103,7 @@ export function generateNewsletterEmailHtml({
                   Cal Poly Red Cross Club
                 </p>
                 <h1 style="margin:0;font-size:28px;line-height:1.2;font-weight:700;">
-                  ${subject}
+                  ${subjectEscaped}
                 </h1>
               </td>
             </tr>

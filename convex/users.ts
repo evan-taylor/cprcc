@@ -121,13 +121,27 @@ export const getCurrentUser = query({
         v.union(v.literal("subscribed"), v.literal("unsubscribed"))
       ),
       newsletterStatusUpdatedAt: v.optional(v.number()),
-      newsletterUnsubscribeToken: v.optional(v.string()),
       userId: v.id("users"),
     }),
     v.null()
   ),
   handler: async (ctx) => {
-    return await getCurrentUserProfile(ctx);
+    const profile = await getCurrentUserProfile(ctx);
+    if (!profile) {
+      return null;
+    }
+
+    return {
+      _creationTime: profile._creationTime,
+      _id: profile._id,
+      email: profile.email,
+      name: profile.name,
+      newsletterStatus: profile.newsletterStatus,
+      newsletterStatusUpdatedAt: profile.newsletterStatusUpdatedAt,
+      phoneNumber: profile.phoneNumber,
+      role: profile.role,
+      userId: profile.userId,
+    };
   },
 });
 

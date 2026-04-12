@@ -5,6 +5,16 @@ export const CLUB_EMAIL_REPLY_TO = "RedCrossClub@calpoly.edu";
 
 export const CLUB_SITE_URL = "https://calpolyredcross.org";
 
+/** Escape plain text for interpolation into HTML (e.g. subject, preheader). */
+export function escapeHtmlPlainText(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 const BLOCK_ELEMENT_REGEX =
   /<\/?(address|article|aside|blockquote|br|div|footer|h[1-6]|header|hr|li|main|ol|p|section|table|tbody|td|tfoot|th|thead|tr|ul)[^>]*>/gi;
 const HTML_TAG_REGEX = /<[^>]+>/g;
