@@ -1,0 +1,46 @@
+app/newsletter/unsubscribe/unsubscribe-client-page.tsx
+  162ac12a28b4ab9e 74-96
+components/newsletter-editor.tsx
+  162ac12a28b4ab9e 9,11,23-24,59-61,99-115,129-155,237-276,290-292
+convex/newsletters.ts
+  162ac12a28b4ab9e 98-104,106-109,111
+convex/lib/email.ts
+  162ac12a28b4ab9e 17,20,37,39
+convex/emails/newsletter_email.ts
+  162ac12a28b4ab9e 3-4,12-68,83,105
+convex/newsletter/actions.ts
+  162ac12a28b4ab9e 6,43-129,189,192-201,203-208,213-217
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "82e30fa4a9848c634e3d37de8506a43c3bb66437",
+  "prompts": {
+    "162ac12a28b4ab9e": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8612bfe6-e817-47e1-b2e3-a7bb7de79156",
+        "model": "composer-2"
+      },
+      "human_author": "Evan Taylor",
+      "messages": [],
+      "total_additions": 326,
+      "total_deletions": 108,
+      "accepted_lines": 309,
+      "overriden_lines": 0
+    },
+    "689631027311a1b4": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "da671e03-f0b0-4bc4-b4e8-6720f1199641",
+        "model": "gpt-5.4-xhigh"
+      },
+      "human_author": "Evan Taylor",
+      "messages": [],
+      "total_additions": 47,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
