@@ -144,6 +144,20 @@ async function applyNewsletterImportRow(
   if (profile) {
     if (profile.newsletterStatus === NEWSLETTER_UNSUBSCRIBED) {
       counters.skippedAlreadyUnsubscribedCount += 1;
+      // Member opted out; if a subscribed external row exists at this email,
+      // remove it — getSubscribedRecipientsForSend dedupes externals only against
+      // subscribed profiles, so this row would otherwise still receive mail.
+      const externalWhenProfileOptedOut = await ctx.db
+        .query("newsletterExternalSubscribers")
+        .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+        .first();
+      if (
+        externalWhenProfileOptedOut &&
+        externalWhenProfileOptedOut.newsletterStatus === NEWSLETTER_SUBSCRIBED
+      ) {
+        await ctx.db.delete(externalWhenProfileOptedOut._id);
+        counters.externalRemovedAsDuplicateCount += 1;
+      }
       return;
     }
 
