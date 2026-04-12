@@ -23,13 +23,23 @@ function applyNewsletterBodyStyles(html: string): string {
     },
     {
       style:
-        "margin:24px 0 12px 0;font-size:22px;line-height:1.3;color:#0f172a;",
+        "margin:28px 0 14px 0;font-size:26px;line-height:1.25;color:#0f172a;font-weight:700;",
+      tag: "h1",
+    },
+    {
+      style:
+        "margin:24px 0 12px 0;font-size:22px;line-height:1.3;color:#0f172a;font-weight:700;",
       tag: "h2",
     },
     {
       style:
-        "margin:20px 0 10px 0;font-size:18px;line-height:1.35;color:#0f172a;",
+        "margin:20px 0 10px 0;font-size:18px;line-height:1.35;color:#0f172a;font-weight:600;",
       tag: "h3",
+    },
+    {
+      style:
+        "margin:16px 0 8px 0;font-size:16px;line-height:1.4;color:#0f172a;font-weight:600;",
+      tag: "h4",
     },
     {
       style:
@@ -46,6 +56,10 @@ function applyNewsletterBodyStyles(html: string): string {
       style:
         "margin:0 0 16px 0;padding-left:16px;border-left:4px solid #e2e8f0;color:#475569;",
       tag: "blockquote",
+    },
+    {
+      style: "margin:24px 0;border:none;border-top:1px solid #e2e8f0;",
+      tag: "hr",
     },
   ];
 
@@ -66,6 +80,20 @@ function applyNewsletterBodyStyles(html: string): string {
       return `<a${attrs}>`;
     }
     return `<a style="color:#b91c1c;text-decoration:underline;"${attrs}>`;
+  });
+
+  result = result.replace(/<strong\b([^>]*)>/gi, (_match, attrs: string) => {
+    if (HTML_STYLE_ATTR_REGEX.test(attrs)) {
+      return `<strong${attrs}>`;
+    }
+    return `<strong style="font-weight:700;color:#0f172a;"${attrs}>`;
+  });
+
+  result = result.replace(/<em\b([^>]*)>/gi, (_match, attrs: string) => {
+    if (HTML_STYLE_ATTR_REGEX.test(attrs)) {
+      return `<em${attrs}>`;
+    }
+    return `<em style="font-style:italic;color:#0f172a;"${attrs}>`;
   });
 
   return result;

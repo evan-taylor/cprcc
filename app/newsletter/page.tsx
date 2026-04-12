@@ -1,7 +1,6 @@
 "use client";
 
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SiteHeader from "@/components/site-header";
@@ -16,25 +15,10 @@ import {
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 
-function formatStatusDate(timestamp?: number) {
-  if (!timestamp) {
-    return "Not set yet";
-  }
-
-  return new Date(timestamp).toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
-
 export default function NewsletterPage() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const router = useRouter();
   const currentUser = useQuery(api.users.getCurrentUser);
-  const unsubscribeLink = useQuery(
-    api.newsletters.getNewsletterUnsubscribePathForCurrentUser,
-    isAuthenticated ? {} : "skip"
-  );
   const settings = useQuery(
     api.newsletters.getNewsletterSettings,
     isAuthenticated ? {} : "skip"
@@ -56,8 +40,7 @@ export default function NewsletterPage() {
   if (
     authLoading ||
     currentUser === undefined ||
-    (isAuthenticated && settings === undefined) ||
-    (isAuthenticated && unsubscribeLink === undefined)
+    (isAuthenticated && settings === undefined)
   ) {
     return (
       <div className="min-h-screen bg-[color:var(--color-bg)]">
@@ -173,15 +156,6 @@ export default function NewsletterPage() {
                 </button>
               </div>
 
-              <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-5 py-4">
-                <p className="font-medium text-slate-900 text-sm">
-                  Last updated
-                </p>
-                <p className="mt-1 text-slate-500 text-sm">
-                  {formatStatusDate(settings.newsletterStatusUpdatedAt)}
-                </p>
-              </div>
-
               {successMessage ? (
                 <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
                   <p className="text-green-700 text-sm">{successMessage}</p>
@@ -193,46 +167,6 @@ export default function NewsletterPage() {
                   <p className="text-red-700 text-sm">{error}</p>
                 </div>
               ) : null}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[1.75rem]">
-            <CardHeader>
-              <CardTitle>Email controls</CardTitle>
-              <CardDescription>
-                Use your personal unsubscribe link any time, even outside the
-                app.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {unsubscribeLink?.path ? (
-                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-5 py-4">
-                  <p className="font-medium text-slate-900 text-sm">
-                    Public unsubscribe page
-                  </p>
-                  <p className="mt-1 text-slate-500 text-sm">
-                    This page works from future email campaigns without
-                    requiring you to sign in.
-                  </p>
-                  <Link
-                    className="mt-3 inline-flex text-red-600 text-sm transition-colors hover:text-red-700"
-                    href={unsubscribeLink.path}
-                  >
-                    Open unsubscribe page
-                  </Link>
-                </div>
-              ) : null}
-
-              <p className="text-[color:var(--color-text-muted)] text-sm">
-                Replies to any newsletter are sent to{" "}
-                <a
-                  className="font-medium text-red-600 transition-colors hover:text-red-700"
-                  href="mailto:RedCrossClub@calpoly.edu"
-                >
-                  RedCrossClub@calpoly.edu
-                </a>
-                .
-              </p>
             </CardContent>
           </Card>
         </div>

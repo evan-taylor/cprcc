@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
+import { repairVisualEditorHtmlIfMarkdown } from "@/lib/newsletter-markdown";
 
 const initialEditorContent =
   "<h2>What’s new with Cal Poly Red Cross Club</h2><p>Share your latest updates, volunteer opportunities, and reminders here.</p><ul><li>Upcoming events and meeting details</li><li>Volunteer opportunities and trainings</li><li>Important club announcements</li></ul><p>Thank you for being part of our chapter.</p>";
@@ -94,7 +95,7 @@ export default function AdminNewsletterNewPage() {
 
     try {
       const result = await sendNewsletterCampaign({
-        htmlContent,
+        htmlContent: repairVisualEditorHtmlIfMarkdown(htmlContent),
         previewText: previewText.trim() || undefined,
         subject: subject.trim(),
       });

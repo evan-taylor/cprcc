@@ -42,7 +42,6 @@ export const getNewsletterSettings = query({
         v.literal("subscribed"),
         v.literal("unsubscribed")
       ),
-      newsletterStatusUpdatedAt: v.optional(v.number()),
     }),
     v.null()
   ),
@@ -58,33 +57,6 @@ export const getNewsletterSettings = query({
       newsletterStatus: getResolvedNewsletterStatus(
         userProfile.newsletterStatus
       ),
-      newsletterStatusUpdatedAt: userProfile.newsletterStatusUpdatedAt,
-    };
-  },
-});
-
-/**
- * Returns a relative path for the token-based unsubscribe page. Call only from
- * the newsletter preferences UI — not included in getCurrentUser (bearer token).
- */
-export const getNewsletterUnsubscribePathForCurrentUser = query({
-  args: {},
-  returns: v.union(
-    v.object({
-      path: v.string(),
-    }),
-    v.null()
-  ),
-  handler: async (ctx) => {
-    const userProfile = await getCurrentUserProfile(ctx);
-    if (!userProfile?.newsletterUnsubscribeToken) {
-      return null;
-    }
-
-    return {
-      path: `/newsletter/unsubscribe?token=${encodeURIComponent(
-        userProfile.newsletterUnsubscribeToken
-      )}`,
     };
   },
 });
