@@ -42,10 +42,7 @@ function buildRsvpTransportPatch(args: {
 async function validateShiftCapacity(
   ctx: MutationCtx,
   eventId: Id<"events">,
-  shiftId: Id<"shifts">,
-  existingUserRsvps: Array<{
-    shiftId?: Id<"shifts">;
-  }>
+  shiftId: Id<"shifts">
 ) {
   const shift = await ctx.db.get(shiftId);
   if (!shift || shift.eventId !== eventId) {
@@ -56,14 +53,6 @@ async function validateShiftCapacity(
     .query("rsvps")
     .withIndex("by_shift", (q) => q.eq("shiftId", shiftId))
     .collect();
-
-  const isUserAlreadyInShift = existingUserRsvps.some(
-    (rsvp) => rsvp.shiftId === shiftId
-  );
-
-  if (isUserAlreadyInShift) {
-    throw new Error("You are already signed up for this shift");
-  }
 
   if (existingShiftRsvps.length >= shift.requiredPeople) {
     throw new Error("This shift is already full");
@@ -149,13 +138,21 @@ export const createRsvp = mutation({
       throw new Error("Please select a shift");
     }
 
-    await validateShiftCapacity(ctx, args.eventId, args.shiftId, existingRsvps);
+    const existingShiftRsvp = existingRsvps.find(
+      (existingRsvp) => existingRsvp.shiftId === args.shiftId
+    );
 
     if (existingRsvps.length > 0) {
       for (const existingRsvp of existingRsvps) {
         await ctx.db.patch(existingRsvp._id, transportPatch);
       }
     }
+
+    if (existingShiftRsvp) {
+      return;
+    }
+
+    await validateShiftCapacity(ctx, args.eventId, args.shiftId);
 
     await ctx.db.insert("rsvps", {
       eventId: args.eventId,
