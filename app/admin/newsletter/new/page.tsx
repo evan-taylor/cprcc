@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { NewsletterEditor } from "@/components/newsletter-editor";
 import SiteHeader from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -33,8 +34,6 @@ export default function AdminNewsletterNewPage() {
   const [subjectError, setSubjectError] = useState<string | undefined>();
   const [editorError, setEditorError] = useState<string | undefined>();
   const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentUser === undefined || currentUser === null || profileEnsured) {
@@ -84,9 +83,6 @@ export default function AdminNewsletterNewPage() {
   };
 
   const handleSend = async () => {
-    setError(null);
-    setSuccess(null);
-
     if (!validateForm()) {
       return;
     }
@@ -100,11 +96,18 @@ export default function AdminNewsletterNewPage() {
         subject: subject.trim(),
       });
 
-      setSuccess(
-        result.failedCount > 0
-          ? `Sent ${result.sentCount} of ${result.recipientCount} emails. ${result.failedCount} failed.`
-          : `Sent ${result.sentCount} emails successfully.`
-      );
+      if (result.failedCount > 0) {
+        toast.warning(
+          `Sent ${result.sentCount} of ${result.recipientCount} emails`,
+          {
+            description: `${result.failedCount} failed to send.`,
+          }
+        );
+      } else {
+        toast.success(
+          `Sent ${result.sentCount} email${result.sentCount === 1 ? "" : "s"}.`
+        );
+      }
       posthog.capture("newsletter_campaign_sent", {
         failed_count: result.failedCount,
         recipient_count: result.recipientCount,
@@ -117,9 +120,9 @@ export default function AdminNewsletterNewPage() {
           : new Error("Newsletter send failed")
       );
       if (sendError instanceof Error) {
-        setError(sendError.message);
+        toast.error(sendError.message);
       } else {
-        setError("Failed to send newsletter.");
+        toast.error("Failed to send newsletter.");
       }
     } finally {
       setIsSending(false);
@@ -187,22 +190,6 @@ export default function AdminNewsletterNewPage() {
             </div>
           </div>
         </header>
-
-        {error ? (
-          <div className="shrink-0 border-red-200 border-b bg-red-50 px-4 py-3 sm:px-6 lg:px-10">
-            <p className="mx-auto max-w-[min(100%,88rem)] text-red-700 text-sm">
-              {error}
-            </p>
-          </div>
-        ) : null}
-
-        {success ? (
-          <div className="shrink-0 border-green-200 border-b bg-green-50 px-4 py-3 sm:px-6 lg:px-10">
-            <p className="mx-auto max-w-[min(100%,88rem)] text-green-700 text-sm">
-              {success}
-            </p>
-          </div>
-        ) : null}
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-10">
           <div className="mx-auto flex w-full max-w-[min(100%,88rem)] flex-col gap-6 pb-8">

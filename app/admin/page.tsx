@@ -4,6 +4,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
@@ -17,7 +18,6 @@ export default function AdminPage() {
     api.users.ensureCurrentUserProfile
   );
   const [promoting, setPromoting] = useState<Id<"userProfiles"> | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [profileEnsured, setProfileEnsured] = useState(false);
   const router = useRouter();
 
@@ -114,22 +114,24 @@ export default function AdminPage() {
 
   const handlePromote = async (profileId: Id<"userProfiles">) => {
     setPromoting(profileId);
-    setError(null);
+    const promotedUser = allUsers?.find((u) => u._id === profileId);
     try {
       await promoteToBoard({ profileId });
-      const promotedUser = allUsers?.find((u) => u._id === profileId);
       posthog.capture("user_promoted_to_board", {
         promoted_user_id: profileId,
         promoted_user_name: promotedUser?.name,
       });
+      toast.success(
+        `Promoted ${promotedUser?.name ?? "member"} to board member.`
+      );
     } catch (err) {
       posthog.captureException(
         err instanceof Error ? err : new Error("Promotion failed")
       );
       if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError("Failed to promote user");
+        toast.error("Failed to promote user");
       }
     } finally {
       setPromoting(null);
@@ -155,12 +157,6 @@ export default function AdminPage() {
             Manage user roles and permissions for the Cal Poly Red Cross Club
           </p>
         </header>
-
-        {error && (
-          <div className="mb-6 animate-scale-in rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
 
         <div className="space-y-10">
           <section className="editorial-card rounded-3xl p-6 sm:p-8">

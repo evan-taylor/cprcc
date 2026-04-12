@@ -100,16 +100,14 @@ export function repairVisualEditorHtmlIfMarkdown(html: string): string {
     return html;
   }
 
-  const text = body.textContent ?? "";
-  if (!clipboardTextLooksLikeMarkdown(text)) {
-    return html;
-  }
-
   const paragraphs = [...body.querySelectorAll("p")];
   if (paragraphs.length === 0) {
     return html;
   }
 
+  // Join like Markdown paragraphs. Do not use body.textContent for detection:
+  // it concatenates adjacent <p> text with no separator, so list/heading
+  // boundaries and line breaks between blocks are lost.
   const joined = paragraphs
     .map((p) => (p.textContent ?? "").trimEnd())
     .join("\n\n")

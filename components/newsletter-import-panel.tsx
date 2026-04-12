@@ -3,6 +3,7 @@
 import { useMutation } from "convex/react";
 import posthog from "posthog-js";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,8 +31,6 @@ export function NewsletterImportPanel({
 
   const [importPasteText, setImportPasteText] = useState("");
   const [isImporting, setIsImporting] = useState(false);
-  const [importMessage, setImportMessage] = useState<string | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
 
   const importParse = useMemo(
     () => parseNewsletterImportPaste(importPasteText),
@@ -39,16 +38,13 @@ export function NewsletterImportPanel({
   );
 
   const runImport = async () => {
-    setImportError(null);
-    setImportMessage(null);
-
     if (importParse.entries.length === 0) {
-      setImportError("Paste at least one valid email address.");
+      toast.error("Paste at least one valid email address.");
       return;
     }
 
     if (importParse.entries.length > MAX_IMPORT_ROWS) {
-      setImportError(
+      toast.error(
         `Too many addresses at once. Import at most ${MAX_IMPORT_ROWS} rows.`
       );
       return;
@@ -77,7 +73,9 @@ export function NewsletterImportPanel({
           `${result.skippedAlreadyUnsubscribedCount} row(s) skipped (already unsubscribed)`
         );
       }
-      setImportMessage(`${parts.join(". ")}.`);
+      toast.success("Import complete", {
+        description: `${parts.join(". ")}.`,
+      });
       setImportPasteText("");
       posthog.capture("newsletter_subscribers_imported", {
         duplicate_lines: importParse.duplicateLineCount,
@@ -96,9 +94,9 @@ export function NewsletterImportPanel({
           : new Error("Newsletter import failed")
       );
       if (importErr instanceof Error) {
-        setImportError(importErr.message);
+        toast.error(importErr.message);
       } else {
-        setImportError("Import failed.");
+        toast.error("Import failed.");
       }
     } finally {
       setIsImporting(false);
@@ -117,23 +115,11 @@ export function NewsletterImportPanel({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {importError ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-            <p className="text-red-700 text-sm">{importError}</p>
-          </div>
-        ) : null}
-        {importMessage ? (
-          <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-            <p className="text-green-700 text-sm">{importMessage}</p>
-          </div>
-        ) : null}
         <Textarea
           helperText="Tip: In Excel, copy the email column (or name + email columns) and paste here. Commas, tabs, and semicolons are all supported."
           label="Paste from Excel or CSV"
           onChange={(event) => {
             setImportPasteText(event.target.value);
-            setImportError(null);
-            setImportMessage(null);
           }}
           placeholder="Paste one email per line, or name and email separated by a tab or comma."
           rows={8}

@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import SiteHeader from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,26 +43,22 @@ export default function NewsletterUnsubscribeClientPage() {
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleUnsubscribe = async () => {
     if (!token) {
-      setError("This unsubscribe link is incomplete.");
+      toast.error("This unsubscribe link is incomplete.");
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
-    setSuccessMessage(null);
 
     try {
       const result = await unsubscribe({ token });
-      setSuccessMessage(
+      toast.success(
         `${result.email} has been unsubscribed from future CPRCC newsletter emails.`
       );
     } catch (nextError) {
-      setError(
+      toast.error(
         nextError instanceof Error
           ? nextError.message
           : "Unable to unsubscribe with this link."
@@ -157,18 +154,6 @@ export default function NewsletterUnsubscribeClientPage() {
                     {formatStatusDate(subscription.newsletterStatusUpdatedAt)}
                   </p>
                 </div>
-
-                {successMessage ? (
-                  <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-                    <p className="text-green-700 text-sm">{successMessage}</p>
-                  </div>
-                ) : null}
-
-                {error ? (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                    <p className="text-red-700 text-sm">{error}</p>
-                  </div>
-                ) : null}
 
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button

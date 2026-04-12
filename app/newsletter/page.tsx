@@ -3,6 +3,7 @@
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import SiteHeader from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,8 +29,6 @@ export default function NewsletterPage() {
   );
 
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!(authLoading || isAuthenticated)) {
@@ -66,18 +65,16 @@ export default function NewsletterPage() {
     }
 
     setIsSaving(true);
-    setError(null);
-    setSuccessMessage(null);
 
     try {
       const result = await setNewsletterSubscription({ subscribed });
-      setSuccessMessage(
-        result.newsletterStatus === "subscribed"
-          ? "You’re subscribed and will receive future CPRCC newsletters."
-          : "You’ve been unsubscribed from future CPRCC newsletters."
-      );
+      if (result.newsletterStatus === "subscribed") {
+        toast.success("You’re subscribed to CPRCC newsletters.");
+      } else {
+        toast.success("You’ve been unsubscribed from CPRCC newsletters.");
+      }
     } catch (nextError) {
-      setError(
+      toast.error(
         nextError instanceof Error
           ? nextError.message
           : "Unable to update newsletter preferences"
@@ -155,18 +152,6 @@ export default function NewsletterPage() {
                   </p>
                 </button>
               </div>
-
-              {successMessage ? (
-                <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-                  <p className="text-green-700 text-sm">{successMessage}</p>
-                </div>
-              ) : null}
-
-              {error ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                  <p className="text-red-700 text-sm">{error}</p>
-                </div>
-              ) : null}
             </CardContent>
           </Card>
         </div>
