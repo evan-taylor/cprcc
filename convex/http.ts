@@ -36,7 +36,6 @@ http.route({
     }
 
     await ctx.runMutation(internal.newsletters.handleResendEmailEvent, {
-      id: payload.data.email_id,
       event: payload as EmailEvent,
     });
 

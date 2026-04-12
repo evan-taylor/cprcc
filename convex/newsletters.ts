@@ -1,4 +1,4 @@
-import { vOnEmailEventArgs, type EmailEvent } from "@convex-dev/resend";
+import { vEmailEvent, type EmailEvent } from "@convex-dev/resend";
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import {
@@ -157,7 +157,9 @@ function getEventRecipientEmails(event: EmailEvent) {
 }
 
 export const handleResendEmailEvent = internalMutation({
-  args: vOnEmailEventArgs,
+  args: {
+    event: vEmailEvent,
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     if (args.event.type !== "email.bounced") {
