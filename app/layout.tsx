@@ -3,6 +3,7 @@ import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { Suspense } from "react";
+import { AppToaster } from "@/components/app-toaster";
 import ConvexClientProvider from "@/components/convex-client-provider";
 import { PageLoader } from "@/components/ui/page-loader";
 
@@ -149,6 +150,7 @@ export default function RootLayout({
           <ConvexAuthNextjsServerProvider>
             <ConvexClientProvider>
               <div className="app-chrome">{children}</div>
+              <AppToaster />
             </ConvexClientProvider>
           </ConvexAuthNextjsServerProvider>
         </Suspense>

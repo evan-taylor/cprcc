@@ -19,7 +19,7 @@ export function Badge({
   ...props
 }: BadgeProps) {
   const baseStyles =
-    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em]";
+    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em]";
 
   const variants = {
     default: "border-slate-200 bg-slate-100 text-slate-600",

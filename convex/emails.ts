@@ -11,6 +11,7 @@ import {
   generateRiderEmailHtml,
   generateRiderEmailSubject,
 } from "./emails/carpool_rider_email";
+import { CLUB_EMAIL_FROM, CLUB_EMAIL_REPLY_TO } from "./lib/email";
 import { resend } from "./resend";
 
 export const sendCarpoolEmails = action({
@@ -91,9 +92,9 @@ export const sendCarpoolEmails = action({
 
       try {
         await resend.sendEmail(ctx, {
-          from: "Cal Poly Red Cross Club <notifications@calpolyredcross.org>",
+          from: CLUB_EMAIL_FROM,
           to: [driverEmail],
-          replyTo: ["redcrossclub@calpoly.edu"],
+          replyTo: [CLUB_EMAIL_REPLY_TO],
           subject: generateDriverEmailSubject(event.title),
           html: driverEmailHtml,
         });
@@ -123,9 +124,9 @@ export const sendCarpoolEmails = action({
 
         try {
           await resend.sendEmail(ctx, {
-            from: "Cal Poly Red Cross Club <notifications@calpolyredcross.org>",
+            from: CLUB_EMAIL_FROM,
             to: [rider.email],
-            replyTo: ["redcrossclub@calpoly.edu"],
+            replyTo: [CLUB_EMAIL_REPLY_TO],
             subject: generateRiderEmailSubject(event.title),
             html: riderEmailHtml,
           });

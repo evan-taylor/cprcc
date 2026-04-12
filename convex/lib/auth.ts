@@ -2,21 +2,26 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
+export interface CurrentUserProfile {
+  _creationTime: number;
+  _id: Id<"userProfiles">;
+  email: string;
+  name: string;
+  newsletterStatus?: "subscribed" | "unsubscribed";
+  newsletterStatusUpdatedAt?: number;
+  newsletterUnsubscribeToken?: string;
+  phoneNumber?: string;
+  role: "member" | "board";
+  userId: Id<"users">;
+}
+
 /**
  * Get the authenticated user's profile.
  * Returns the user profile or null if not authenticated or profile not found.
  */
 export async function getCurrentUserProfile(
   ctx: QueryCtx | MutationCtx
-): Promise<{
-  _id: Id<"userProfiles">;
-  _creationTime: number;
-  name: string;
-  email: string;
-  phoneNumber?: string;
-  role: "member" | "board";
-  userId: Id<"users">;
-} | null> {
+): Promise<CurrentUserProfile | null> {
   const authUserId = await getAuthUserId(ctx);
   if (!authUserId) {
     return null;

@@ -4,6 +4,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
@@ -17,7 +18,6 @@ export default function AdminPage() {
     api.users.ensureCurrentUserProfile
   );
   const [promoting, setPromoting] = useState<Id<"userProfiles"> | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [profileEnsured, setProfileEnsured] = useState(false);
   const router = useRouter();
 
@@ -26,6 +26,10 @@ export default function AdminPage() {
 
   const allUsers = useQuery(
     api.users.listAllUsers,
+    shouldFetchUsers ? {} : "skip"
+  );
+  const newsletterOverview = useQuery(
+    api.newsletters.getNewsletterAdminOverview,
     shouldFetchUsers ? {} : "skip"
   );
 
@@ -52,7 +56,8 @@ export default function AdminPage() {
   if (
     authLoading ||
     currentUser === undefined ||
-    (shouldFetchUsers && allUsers === undefined)
+    (shouldFetchUsers &&
+      (allUsers === undefined || newsletterOverview === undefined))
   ) {
     return (
       <PageLoader
@@ -95,7 +100,7 @@ export default function AdminPage() {
               Only board members can access this page.
             </p>
             <button
-              className="mt-5 inline-flex h-10 items-center rounded-full bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
+              className="mt-5 inline-flex h-10 items-center rounded-lg bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
               onClick={() => router.push("/")}
               type="button"
             >
@@ -109,22 +114,24 @@ export default function AdminPage() {
 
   const handlePromote = async (profileId: Id<"userProfiles">) => {
     setPromoting(profileId);
-    setError(null);
+    const promotedUser = allUsers?.find((u) => u._id === profileId);
     try {
       await promoteToBoard({ profileId });
-      const promotedUser = allUsers?.find((u) => u._id === profileId);
       posthog.capture("user_promoted_to_board", {
         promoted_user_id: profileId,
         promoted_user_name: promotedUser?.name,
       });
+      toast.success(
+        `Promoted ${promotedUser?.name ?? "member"} to board member.`
+      );
     } catch (err) {
       posthog.captureException(
         err instanceof Error ? err : new Error("Promotion failed")
       );
       if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError("Failed to promote user");
+        toast.error("Failed to promote user");
       }
     } finally {
       setPromoting(null);
@@ -151,13 +158,64 @@ export default function AdminPage() {
           </p>
         </header>
 
-        {error && (
-          <div className="mb-6 animate-scale-in rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
-
         <div className="space-y-10">
+          <section className="editorial-card rounded-3xl p-6 sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="editorial-kicker">Newsletters</p>
+                <h2 className="mt-3 font-display font-semibold text-2xl text-slate-900 sm:text-3xl">
+                  Send club-wide email campaigns
+                </h2>
+                <p className="mt-2 max-w-2xl text-[color:var(--color-text-muted)]">
+                  Compose rich-text updates, send them to subscribed members,
+                  and keep a history of recent campaigns inside the app.
+                </p>
+              </div>
+              <button
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"
+                onClick={() => router.push("/admin/newsletter")}
+                type="button"
+              >
+                Open newsletter manager
+              </button>
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+                <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
+                  Subscribed
+                </p>
+                <p
+                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {newsletterOverview?.subscribedMembersCount ?? 0}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+                <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
+                  Unsubscribed
+                </p>
+                <p
+                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {newsletterOverview?.unsubscribedMembersCount ?? 0}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+                <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
+                  Recent campaigns
+                </p>
+                <p
+                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {newsletterOverview?.recentCampaigns.length ?? 0}
+                </p>
+              </div>
+            </div>
+          </section>
+
           <UserSection
             badge="Board"
             badgeClasses="bg-red-50 text-red-700"

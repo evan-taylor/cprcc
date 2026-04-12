@@ -122,16 +122,24 @@ export default function SiteHeader({
             <nav className="hidden items-center gap-1 md:flex">
               {navItems.map((item) => (
                 <Link
-                  className={`rounded-full px-3.5 py-2 font-medium text-sm transition-all duration-150 ${desktopNavLinkClass(item.href)}`}
+                  className={`rounded-lg px-3.5 py-2 font-medium text-sm transition-all duration-150 ${desktopNavLinkClass(item.href)}`}
                   href={item.href}
                   key={item.href}
                 >
                   {item.label}
                 </Link>
               ))}
+              {isAuthenticated ? (
+                <Link
+                  className={`rounded-lg px-3.5 py-2 font-medium text-sm transition-all duration-150 ${desktopNavLinkClass("/newsletter")}`}
+                  href="/newsletter"
+                >
+                  Newsletter
+                </Link>
+              ) : null}
               {isAuthenticated && currentUser?.role === "board" && (
                 <Link
-                  className={`rounded-full px-3.5 py-2 font-medium text-sm transition-all duration-150 ${desktopNavLinkClass("/admin")}`}
+                  className={`rounded-lg px-3.5 py-2 font-medium text-sm transition-all duration-150 ${desktopNavLinkClass("/admin")}`}
                   href="/admin"
                 >
                   Admin
@@ -187,6 +195,17 @@ export default function SiteHeader({
               {item.label}
             </Link>
           ))}
+          {isAuthenticated ? (
+            <Link
+              className={`rounded-xl px-4 py-3 font-medium text-sm transition-colors duration-150 ${mobileNavLinkClass(
+                "/newsletter"
+              )}`}
+              href="/newsletter"
+              onClick={closeMobileMenu}
+            >
+              Newsletter
+            </Link>
+          ) : null}
           {isAuthenticated && currentUser?.role === "board" && (
             <Link
               className={`rounded-xl px-4 py-3 font-medium text-sm transition-colors duration-150 ${mobileNavLinkClass(
@@ -272,7 +291,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
   if (!isAuthenticated) {
     return (
       <Link
-        className={`inline-flex h-11 items-center rounded-full px-5 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
+        className={`inline-flex h-11 items-center rounded-lg px-5 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
           inverted
             ? "bg-white/15 text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 focus-visible:ring-white/60"
             : "bg-red-600 text-white shadow-md shadow-red-600/25 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-lg focus-visible:ring-red-500"
@@ -291,7 +310,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
 
   return (
     <button
-      className={`inline-flex h-11 items-center rounded-full px-5 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
+      className={`inline-flex h-11 items-center rounded-lg px-5 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
         inverted
           ? "bg-white/15 text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 focus-visible:ring-white/60"
           : "bg-red-600 text-white shadow-md shadow-red-600/25 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-lg focus-visible:ring-red-500"

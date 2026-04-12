@@ -192,7 +192,7 @@ export default async function VolunteerConnectionPage() {
             log your hours.
           </p>
           <Link
-            className="mt-5 inline-flex h-11 items-center rounded-full bg-red-600 px-7 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
+            className="mt-5 inline-flex h-11 items-center rounded-lg bg-red-600 px-7 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
             href="/events"
           >
             Browse Events

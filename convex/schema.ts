@@ -15,10 +15,54 @@ export default defineSchema({
     email: v.string(),
     phoneNumber: v.optional(v.string()),
     role: v.union(v.literal("member"), v.literal("board")),
+    newsletterStatus: v.optional(
+      v.union(v.literal("subscribed"), v.literal("unsubscribed"))
+    ),
+    newsletterStatusUpdatedAt: v.optional(v.number()),
+    newsletterUnsubscribeToken: v.optional(v.string()),
     userId: v.id("users"),
   })
     .index("by_user_id", ["userId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_newsletter_status", ["newsletterStatus"])
+    .index("by_newsletter_unsubscribe_token", ["newsletterUnsubscribeToken"]),
+  newsletterExternalSubscribers: defineTable({
+    createdAt: v.number(),
+    email: v.string(),
+    name: v.string(),
+    newsletterStatus: v.union(
+      v.literal("subscribed"),
+      v.literal("unsubscribed")
+    ),
+    newsletterStatusUpdatedAt: v.number(),
+    newsletterUnsubscribeToken: v.string(),
+  })
+    .index("by_email", ["email"])
+    .index("by_newsletter_status", ["newsletterStatus"])
+    .index("by_newsletter_unsubscribe_token", ["newsletterUnsubscribeToken"]),
+  newsletterCampaigns: defineTable({
+    audience: v.literal("subscribedMembers"),
+    createdAt: v.number(),
+    createdBy: v.id("userProfiles"),
+    failedCount: v.number(),
+    failureMessage: v.optional(v.string()),
+    htmlContent: v.string(),
+    plainTextContent: v.string(),
+    previewText: v.optional(v.string()),
+    recipientCount: v.number(),
+    sentAt: v.optional(v.number()),
+    sentCount: v.number(),
+    status: v.union(
+      v.literal("sending"),
+      v.literal("sent"),
+      v.literal("failed")
+    ),
+    subject: v.string(),
+    updatedAt: v.number(),
+  })
+    .index("by_created_by", ["createdBy"])
+    .index("by_status", ["status"])
+    .index("by_sent_at", ["sentAt"]),
   events: defineTable({
     title: v.string(),
     description: v.string(),
