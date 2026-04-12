@@ -1,7 +1,7 @@
 import type { EmailEvent } from "@convex-dev/resend";
 import { httpRouter } from "convex/server";
-import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { httpAction } from "./_generated/server";
 import { auth } from "./auth";
 import { resend } from "./resend";
 
@@ -20,12 +20,10 @@ http.route({
       return response;
     }
 
-    const payload = (await newsletterRequest.json()) as
-      | {
-          data?: { email_id?: string };
-          type?: string;
-        }
-      | null;
+    const payload = (await newsletterRequest.json()) as {
+      data?: { email_id?: string };
+      type?: string;
+    } | null;
 
     if (
       !payload ||

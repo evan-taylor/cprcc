@@ -71,7 +71,29 @@ export default function NewsletterUnsubscribeClientPage() {
     }
   };
 
-  if (!token || subscription === undefined) {
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-[color:var(--color-bg)]">
+        <SiteHeader />
+        <main className="mx-auto max-w-3xl px-4 pt-28 pb-24 sm:px-6 lg:px-8">
+          <div className="rounded-[1.75rem] border border-amber-200 bg-amber-50 px-5 py-4">
+            <p className="font-medium text-amber-900 text-sm">
+              This unsubscribe link is missing a token. Open the link from your
+              most recent newsletter email, or contact the club.
+            </p>
+            <a
+              className="mt-3 inline-flex font-medium text-amber-900 text-sm underline"
+              href="mailto:RedCrossClub@calpoly.edu"
+            >
+              RedCrossClub@calpoly.edu
+            </a>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (subscription === undefined) {
     return (
       <div className="min-h-screen bg-[color:var(--color-bg)]">
         <SiteHeader />

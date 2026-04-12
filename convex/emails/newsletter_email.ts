@@ -1,10 +1,69 @@
 import { CLUB_EMAIL_REPLY_TO, createPlainTextFromHtml } from "../lib/email";
 
+const STYLE_ATTR_REGEX = /\bstyle\s*=/i;
+
 interface NewsletterEmailParams {
   bodyHtml: string;
   previewText?: string;
   subject: string;
   unsubscribeUrl: string;
+}
+
+function applyNewsletterBodyStyles(html: string): string {
+  let result = html;
+  const blockStyles: Array<{ style: string; tag: string }> = [
+    {
+      style: "margin:0 0 16px 0;line-height:1.7;color:#0f172a;font-size:16px;",
+      tag: "p",
+    },
+    {
+      style:
+        "margin:24px 0 12px 0;font-size:22px;line-height:1.3;color:#0f172a;",
+      tag: "h2",
+    },
+    {
+      style:
+        "margin:20px 0 10px 0;font-size:18px;line-height:1.35;color:#0f172a;",
+      tag: "h3",
+    },
+    {
+      style:
+        "margin:0 0 16px 0;padding-left:24px;line-height:1.7;color:#0f172a;",
+      tag: "ul",
+    },
+    {
+      style:
+        "margin:0 0 16px 0;padding-left:24px;line-height:1.7;color:#0f172a;",
+      tag: "ol",
+    },
+    { style: "margin:0 0 8px 0;", tag: "li" },
+    {
+      style:
+        "margin:0 0 16px 0;padding-left:16px;border-left:4px solid #e2e8f0;color:#475569;",
+      tag: "blockquote",
+    },
+  ];
+
+  for (const { style, tag } of blockStyles) {
+    result = result.replace(
+      new RegExp(`<${tag}\\b([^>]*)>`, "gi"),
+      (_match, attrs: string) => {
+        if (STYLE_ATTR_REGEX.test(attrs)) {
+          return `<${tag}${attrs}>`;
+        }
+        return `<${tag} style="${style}"${attrs}>`;
+      }
+    );
+  }
+
+  result = result.replace(/<a\b([^>]*)>/gi, (_match, attrs: string) => {
+    if (STYLE_ATTR_REGEX.test(attrs)) {
+      return `<a${attrs}>`;
+    }
+    return `<a style="color:#b91c1c;text-decoration:underline;"${attrs}>`;
+  });
+
+  return result;
 }
 
 function getPreviewText(previewText?: string) {
@@ -21,6 +80,7 @@ export function generateNewsletterEmailHtml({
   subject,
   unsubscribeUrl,
 }: NewsletterEmailParams) {
+  const styledBody = applyNewsletterBodyStyles(bodyHtml);
   return `<!doctype html>
 <html lang="en">
   <body style="margin:0;background:#f8fafc;color:#0f172a;font-family:Inter,Arial,sans-serif;">
@@ -42,7 +102,7 @@ export function generateNewsletterEmailHtml({
             <tr>
               <td style="padding:32px;">
                 <div style="font-size:16px;line-height:1.7;color:#0f172a;">
-                  ${bodyHtml}
+                  ${styledBody}
                 </div>
               </td>
             </tr>

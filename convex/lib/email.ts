@@ -14,8 +14,10 @@ const UNSAFE_BLOCK_REGEX =
   /<(iframe|object|embed|script|style)[\s\S]*?<\/\1>/gi;
 const INLINE_EVENT_HANDLER_DOUBLE_QUOTE_REGEX = /\son[a-z]+="[^"]*"/gi;
 const INLINE_EVENT_HANDLER_SINGLE_QUOTE_REGEX = /\son[a-z]+='[^']*'/gi;
+const INLINE_EVENT_HANDLER_UNQUOTED_REGEX = /\s+on[a-z]+\s*=\s*[^\s>]+/gi;
 const JAVASCRIPT_PROTOCOL_REGEX =
   /(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi;
+const JAVASCRIPT_PROTOCOL_UNQUOTED_REGEX = /(href|src)\s*=\s*javascript:/gi;
 
 function decodeHtmlEntities(value: string) {
   return value
@@ -32,7 +34,9 @@ export function sanitizeEmailHtml(html: string) {
     .replace(UNSAFE_BLOCK_REGEX, "")
     .replace(INLINE_EVENT_HANDLER_DOUBLE_QUOTE_REGEX, "")
     .replace(INLINE_EVENT_HANDLER_SINGLE_QUOTE_REGEX, "")
+    .replace(INLINE_EVENT_HANDLER_UNQUOTED_REGEX, "")
     .replace(JAVASCRIPT_PROTOCOL_REGEX, '$1="#"')
+    .replace(JAVASCRIPT_PROTOCOL_UNQUOTED_REGEX, '$1="#"')
     .trim();
 }
 

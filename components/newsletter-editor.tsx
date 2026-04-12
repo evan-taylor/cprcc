@@ -6,8 +6,9 @@ import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface NewsletterEditorProps {
   content: string;
@@ -18,6 +19,8 @@ interface NewsletterEditorProps {
 }
 
 const emptyEditorContent = "<p></p>";
+
+const HTTP_URL_PREFIX_REGEX = /^https?:\/\//i;
 
 function ToolbarButton({
   active,
@@ -53,6 +56,9 @@ export function NewsletterEditor({
   onChange,
   placeholder = "Share updates, volunteer opportunities, and highlights with the club.",
 }: NewsletterEditorProps) {
+  const [linkHref, setLinkHref] = useState("");
+  const [linkError, setLinkError] = useState<string | undefined>();
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -90,6 +96,28 @@ export function NewsletterEditor({
       return;
     }
 
+    const syncLinkHref = () => {
+      if (editor.isActive("link")) {
+        const href = editor.getAttributes("link").href;
+        if (typeof href === "string" && href.length > 0) {
+          setLinkHref(href);
+        }
+      }
+    };
+
+    editor.on("selectionUpdate", syncLinkHref);
+    syncLinkHref();
+
+    return () => {
+      editor.off("selectionUpdate", syncLinkHref);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
     const currentHtml = editor.getHTML();
     const normalizedContent = content || emptyEditorContent;
     if (currentHtml !== normalizedContent) {
@@ -97,6 +125,33 @@ export function NewsletterEditor({
     }
     editor.setEditable(!disabled);
   }, [content, disabled, editor]);
+
+  const applyLinkHref = () => {
+    if (!editor) {
+      return;
+    }
+
+    const raw = linkHref.trim();
+    if (raw === "") {
+      setLinkError("Enter a URL.");
+      return;
+    }
+
+    if (editor.state.selection.empty && !editor.isActive("link")) {
+      setLinkError("Select text first, then apply a link.");
+      return;
+    }
+
+    setLinkError(undefined);
+    const href = HTTP_URL_PREFIX_REGEX.test(raw) ? raw : `https://${raw}`;
+
+    if (editor.isActive("link")) {
+      editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+      return;
+    }
+
+    editor.chain().focus().setLink({ href }).run();
+  };
 
   if (!editor) {
     return (
@@ -179,13 +234,46 @@ export function NewsletterEditor({
           >
             Center
           </ToolbarButton>
-          <ToolbarButton
-            active={editor.isActive("link")}
-            disabled={disabled}
-            onClick={() => editor.chain().focus().unsetLink().run()}
-          >
-            Remove link
-          </ToolbarButton>
+          <div className="flex w-full min-w-[min(100%,20rem)] flex-1 flex-col gap-2 sm:w-auto sm:min-w-0 sm:flex-none sm:flex-row sm:items-center">
+            <Input
+              aria-label="Link URL"
+              className="min-w-0 flex-1 py-2 text-sm"
+              disabled={disabled}
+              onChange={(event) => {
+                setLinkHref(event.target.value);
+                setLinkError(undefined);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyLinkHref();
+                }
+              }}
+              placeholder="https://example.org"
+              value={linkHref}
+            />
+            <ToolbarButton
+              disabled={disabled}
+              onClick={() => {
+                applyLinkHref();
+              }}
+            >
+              Apply link
+            </ToolbarButton>
+            <ToolbarButton
+              active={editor.isActive("link")}
+              disabled={disabled || !editor.isActive("link")}
+              onClick={() => {
+                setLinkError(undefined);
+                editor.chain().focus().unsetLink().run();
+              }}
+            >
+              Remove link
+            </ToolbarButton>
+          </div>
+          {linkError ? (
+            <p className="w-full text-red-600 text-sm">{linkError}</p>
+          ) : null}
           <Button
             className="ml-auto"
             disabled={disabled}
@@ -199,7 +287,9 @@ export function NewsletterEditor({
             Clear formatting
           </Button>
         </div>
-        <EditorContent editor={editor} />
+        <div className="[&_.ProseMirror_blockquote]:mb-4 [&_.ProseMirror_h2]:mt-6 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h3]:mt-5 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_li]:mb-1 [&_.ProseMirror_ol]:mb-4 [&_.ProseMirror_p]:mb-4 [&_.ProseMirror_ul]:mb-4">
+          <EditorContent editor={editor} />
+        </div>
       </div>
       {error ? <p className="mt-2 text-red-600 text-sm">{error}</p> : null}
     </div>

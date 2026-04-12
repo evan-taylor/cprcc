@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { action } from "../_generated/server";
+import { type ActionCtx, action } from "../_generated/server";
 import {
   generateNewsletterEmailHtml,
   generateNewsletterEmailText,
@@ -38,6 +38,93 @@ function getFailureMessage(failedEmails: string[], fallbackMessage?: string) {
   }
 
   return `Failed to send to: ${examples}, and ${failedEmails.length - MAX_FAILURE_EXAMPLES} more`;
+}
+
+async function sendOneNewsletterEmail(
+  ctx: ActionCtx,
+  recipient: Recipient,
+  htmlContent: string,
+  previewText: string | undefined,
+  subject: string
+): Promise<{ email: string; success: boolean }> {
+  const unsubscribeUrl = getNewsletterUnsubscribeUrl(
+    recipient.newsletterUnsubscribeToken
+  );
+
+  try {
+    await resend.sendEmail(ctx, {
+      from: CLUB_EMAIL_FROM,
+      to: [recipient.email],
+      replyTo: [CLUB_EMAIL_REPLY_TO],
+      subject,
+      html: generateNewsletterEmailHtml({
+        bodyHtml: htmlContent,
+        previewText,
+        subject,
+        unsubscribeUrl,
+      }),
+      text: generateNewsletterEmailText({
+        bodyHtml: htmlContent,
+        previewText,
+        subject,
+        unsubscribeUrl,
+      }),
+    });
+
+    return { email: recipient.email, success: true };
+  } catch (_error) {
+    return { email: recipient.email, success: false };
+  }
+}
+
+async function sendNewsletterBatches(
+  ctx: ActionCtx,
+  recipients: Recipient[],
+  htmlContent: string,
+  previewText: string | undefined,
+  subject: string
+): Promise<{
+  failedCount: number;
+  failedEmails: string[];
+  sentCount: number;
+}> {
+  let sentCount = 0;
+  let failedCount = 0;
+  const failedEmails: string[] = [];
+
+  for (
+    let recipientIndex = 0;
+    recipientIndex < recipients.length;
+    recipientIndex += SEND_BATCH_SIZE
+  ) {
+    const batch = recipients.slice(
+      recipientIndex,
+      recipientIndex + SEND_BATCH_SIZE
+    );
+
+    const batchResults = await Promise.all(
+      batch.map((recipient) =>
+        sendOneNewsletterEmail(
+          ctx,
+          recipient,
+          htmlContent,
+          previewText,
+          subject
+        )
+      )
+    );
+
+    for (const batchResult of batchResults) {
+      if (batchResult.success) {
+        sentCount += 1;
+      } else {
+        failedCount += 1;
+        failedEmails.push(batchResult.email);
+      }
+    }
+  }
+
+  return { failedCount, failedEmails, sentCount };
 }
 
 export const sendNewsletterCampaign = action({
@@ -99,80 +186,35 @@ export const sendNewsletterCampaign = action({
 
     let sentCount = 0;
     let failedCount = 0;
-    const failedEmails: string[] = [];
+    let failedEmails: string[] = [];
 
     try {
-      for (
-        let recipientIndex = 0;
-        recipientIndex < recipients.length;
-        recipientIndex += SEND_BATCH_SIZE
-      ) {
-        const batch = recipients.slice(
-          recipientIndex,
-          recipientIndex + SEND_BATCH_SIZE
-        );
-
-        const batchResults = await Promise.all(
-          batch.map(async (recipient) => {
-            const unsubscribeUrl = getNewsletterUnsubscribeUrl(
-              recipient.newsletterUnsubscribeToken
-            );
-
-            try {
-              await resend.sendEmail(ctx, {
-                from: CLUB_EMAIL_FROM,
-                to: [recipient.email],
-                replyTo: [CLUB_EMAIL_REPLY_TO],
-                subject,
-                html: generateNewsletterEmailHtml({
-                  bodyHtml: htmlContent,
-                  previewText,
-                  subject,
-                  unsubscribeUrl,
-                }),
-                text: generateNewsletterEmailText({
-                  bodyHtml: htmlContent,
-                  previewText,
-                  subject,
-                  unsubscribeUrl,
-                }),
-              });
-
-              return {
-                email: recipient.email,
-                success: true,
-              } as const;
-            } catch (_error) {
-              return {
-                email: recipient.email,
-                success: false,
-              } as const;
-            }
-          })
-        );
-
-        for (const batchResult of batchResults) {
-          if (batchResult.success) {
-            sentCount += 1;
-          } else {
-            failedCount += 1;
-            failedEmails.push(batchResult.email);
-          }
-        }
-      }
+      const batchResult = await sendNewsletterBatches(
+        ctx,
+        recipients,
+        htmlContent,
+        previewText,
+        subject
+      );
+      sentCount = batchResult.sentCount;
+      failedCount = batchResult.failedCount;
+      failedEmails = batchResult.failedEmails;
     } catch (error) {
+      const failurePrefix =
+        error instanceof Error ? error.message : "Failed to send newsletter";
+      const bounceDetails = getFailureMessage(failedEmails);
+      const failureMessage = bounceDetails
+        ? `${failurePrefix}. ${bounceDetails}`
+        : failurePrefix;
       await ctx.runMutation(
         internal.newsletters.finalizeNewsletterCampaignRecord,
         {
           campaignId,
-          failedCount: recipients.length,
-          failureMessage:
-            error instanceof Error
-              ? error.message
-              : "Failed to send newsletter",
-          sentAt: undefined,
-          sentCount: 0,
-          status: "failed",
+          failedCount,
+          failureMessage,
+          sentAt: sentCount > 0 ? Date.now() : undefined,
+          sentCount,
+          status: sentCount > 0 ? "sent" : "failed",
         }
       );
       throw error;

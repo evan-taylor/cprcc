@@ -1,10 +1,10 @@
-import { vEmailEvent, type EmailEvent } from "@convex-dev/resend";
+import { type EmailEvent, vEmailEvent } from "@convex-dev/resend";
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import {
-  type MutationCtx,
   internalMutation,
   internalQuery,
+  type MutationCtx,
   mutation,
   query,
 } from "./_generated/server";
@@ -87,10 +87,7 @@ export const setCurrentUserNewsletterSubscription = mutation({
 
 const normalizeEmailAddress = (value: string) => value.trim().toLowerCase();
 
-async function findProfilesByEmailAddress(
-  ctx: MutationCtx,
-  email: string
-) {
+async function findProfilesByEmailAddress(ctx: MutationCtx, email: string) {
   const normalizedEmail = normalizeEmailAddress(email);
 
   const exactMatches = await ctx.db
@@ -98,20 +95,20 @@ async function findProfilesByEmailAddress(
     .withIndex("by_email", (q) => q.eq("email", email))
     .collect();
 
-  if (normalizedEmail === email) {
-    return exactMatches;
+  const normalizedIndexMatches =
+    normalizedEmail === email
+      ? []
+      : await ctx.db
+          .query("userProfiles")
+          .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+          .collect();
+
+  const uniqueProfiles = new Map<string, Doc<"userProfiles">>();
+  for (const profile of [...exactMatches, ...normalizedIndexMatches]) {
+    uniqueProfiles.set(profile._id, profile);
   }
 
-  const normalizedMatches = await ctx.db
-    .query("userProfiles")
-    .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
-    .collect();
-
-  if (exactMatches.length > 0 || normalizedMatches.length > 0) {
-    const uniqueProfiles = new Map<string, Doc<"userProfiles">>();
-    for (const profile of [...exactMatches, ...normalizedMatches]) {
-      uniqueProfiles.set(profile._id, profile);
-    }
+  if (uniqueProfiles.size > 0) {
     return [...uniqueProfiles.values()];
   }
 
