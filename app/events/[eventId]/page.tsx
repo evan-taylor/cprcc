@@ -19,6 +19,91 @@ const formatCampusLocation = (campusLocation: CampusLocation) => {
   return "Off campus";
 };
 
+const formatShiftTime = (startTime: number, endTime?: number) => {
+  const start = new Date(startTime).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  if (endTime === undefined) {
+    return start;
+  }
+
+  const end = new Date(endTime).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  return `${start} - ${end}`;
+};
+
+const getShiftCoverageStatus = (
+  signupCount: number,
+  requiredPeople: number
+): string => {
+  if (signupCount === 0) {
+    return "Open";
+  }
+  if (signupCount >= requiredPeople) {
+    return "Filled";
+  }
+  return "Partially filled";
+};
+
+interface AdminRsvpCardProps {
+  rsvp: {
+    _id: Id<"rsvps">;
+    canDrive: boolean;
+    campusLocation?: CampusLocation;
+    driverInfo?: { carColor: string; carType: string };
+    needsRide: boolean;
+    selfTransport?: boolean;
+    shiftId?: Id<"shifts">;
+    userEmail?: string;
+    userName: string;
+    userPhoneNumber?: string;
+  };
+  shiftLabel?: string;
+}
+
+function AdminRsvpCard({ rsvp, shiftLabel }: AdminRsvpCardProps) {
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div>
+        <p className="font-semibold text-slate-900 text-sm">{rsvp.userName}</p>
+        <p className="text-slate-900 text-xs">{rsvp.userEmail}</p>
+        {rsvp.userPhoneNumber && (
+          <p className="text-slate-900 text-xs">
+            <a
+              className="hover:text-rose-600"
+              href={`tel:${rsvp.userPhoneNumber}`}
+            >
+              {rsvp.userPhoneNumber}
+            </a>
+          </p>
+        )}
+        {rsvp.canDrive && (
+          <p className="mt-1 text-blue-700 text-xs">
+            Driver: {rsvp.driverInfo?.carColor} {rsvp.driverInfo?.carType}
+          </p>
+        )}
+        {rsvp.needsRide && (
+          <p className="mt-1 text-orange-700 text-xs">Needs ride</p>
+        )}
+        {rsvp.selfTransport && (
+          <p className="mt-1 text-green-700 text-xs">Self-transport</p>
+        )}
+        {rsvp.campusLocation && (
+          <p className="mt-1 text-indigo-700 text-xs">
+            Pickup area: {formatCampusLocation(rsvp.campusLocation)}
+          </p>
+        )}
+      </div>
+      {shiftLabel && <p className="text-slate-900 text-xs">{shiftLabel}</p>}
+    </div>
+  );
+}
+
 interface RsvpStatusProps {
   event: {
     eventType: string;
@@ -74,11 +159,7 @@ function RsvpStatusSection({
               </p>
               {shift && (
                 <p className="mt-1 text-green-700 text-sm">
-                  Shift:{" "}
-                  {new Date(shift.startTime).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
+                  Shift: {formatShiftTime(shift.startTime)}
                 </p>
               )}
               {rsvp.canDrive && (
@@ -1009,81 +1090,121 @@ export default function EventDetailPage() {
           {currentUser?.role === "board" && (
             <div className="editorial-card rounded-3xl p-8">
               <h2 className="mb-4 font-semibold text-slate-900 text-xl">
-                Attendees ({uniqueRsvpUserIds.size})
+                Attendees ({uniqueRsvpUserIds.size} volunteers,{" "}
+                {event.rsvps.length} signups)
               </h2>
-              {event.rsvps.length === 0 ? (
-                <p className="text-center text-slate-900 text-sm">
-                  No RSVPs yet
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {event.rsvps.map((rsvp: EventRsvp) => (
-                    <div
-                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
-                      key={rsvp._id}
-                    >
-                      <div>
-                        <p className="font-semibold text-slate-900 text-sm">
-                          {rsvp.userName}
-                        </p>
-                        <p className="text-slate-900 text-xs">
-                          {rsvp.userEmail}
-                        </p>
-                        {rsvp.userPhoneNumber && (
-                          <p className="text-slate-900 text-xs">
-                            <a
-                              className="hover:text-rose-600"
-                              href={`tel:${rsvp.userPhoneNumber}`}
-                            >
-                              {rsvp.userPhoneNumber}
-                            </a>
-                          </p>
-                        )}
-                        {rsvp.canDrive && (
-                          <p className="mt-1 text-blue-700 text-xs">
-                            Driver: {rsvp.driverInfo?.carColor}{" "}
-                            {rsvp.driverInfo?.carType}
-                          </p>
-                        )}
-                        {rsvp.needsRide && (
-                          <p className="mt-1 text-orange-700 text-xs">
-                            Needs ride
-                          </p>
-                        )}
-                        {rsvp.selfTransport && (
-                          <p className="mt-1 text-green-700 text-xs">
-                            Self-transport
-                          </p>
-                        )}
-                        {rsvp.campusLocation && (
-                          <p className="mt-1 text-indigo-700 text-xs">
-                            Pickup area:{" "}
-                            {formatCampusLocation(rsvp.campusLocation)}
-                          </p>
-                        )}
-                      </div>
-                      {rsvp.shiftId &&
-                        (() => {
-                          const shift = event.shifts.find(
-                            (s: EventShift) => s._id === rsvp.shiftId
-                          );
-                          return shift ? (
-                            <p className="text-slate-900 text-xs">
-                              Shift:{" "}
-                              {new Date(shift.startTime).toLocaleTimeString(
-                                "en-US",
-                                {
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                }
-                              )}
+              {(() => {
+                if (event.rsvps.length === 0) {
+                  return (
+                    <p className="text-center text-slate-900 text-sm">
+                      No RSVPs yet
+                    </p>
+                  );
+                }
+
+                if (event.eventType === "boothing") {
+                  const unassignedRsvps = event.rsvps.filter(
+                    (rsvp: EventRsvp) => !rsvp.shiftId
+                  );
+
+                  return (
+                    <div className="space-y-6">
+                      {event.shifts.map((shift: EventShift) => {
+                        const shiftRsvps = event.rsvps.filter(
+                          (rsvp: EventRsvp) => rsvp.shiftId === shift._id
+                        );
+                        const shiftStatus = getShiftCoverageStatus(
+                          shiftRsvps.length,
+                          shift.requiredPeople
+                        );
+
+                        return (
+                          <section
+                            className="rounded-2xl border border-slate-200 bg-white p-5"
+                            key={shift._id}
+                          >
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                              <div>
+                                <h3 className="font-semibold text-lg text-slate-900">
+                                  {formatShiftTime(
+                                    shift.startTime,
+                                    shift.endTime
+                                  )}
+                                </h3>
+                                <p className="mt-1 text-slate-900 text-sm">
+                                  {shiftRsvps.length} / {shift.requiredPeople}{" "}
+                                  volunteers
+                                </p>
+                              </div>
+                              <span className="rounded-full bg-rose-100 px-3 py-1 font-semibold text-rose-700 text-xs">
+                                {shiftStatus}
+                              </span>
+                            </div>
+
+                            {shiftRsvps.length === 0 ? (
+                              <p className="text-slate-900 text-sm">
+                                No one is signed up for this shift yet.
+                              </p>
+                            ) : (
+                              <div className="space-y-2">
+                                {shiftRsvps.map((rsvp: EventRsvp) => (
+                                  <AdminRsvpCard key={rsvp._id} rsvp={rsvp} />
+                                ))}
+                              </div>
+                            )}
+                          </section>
+                        );
+                      })}
+
+                      {unassignedRsvps.length > 0 && (
+                        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                          <div className="mb-4">
+                            <h3 className="font-semibold text-lg text-slate-900">
+                              Unassigned shift signups
+                            </h3>
+                            <p className="mt-1 text-slate-900 text-sm">
+                              These RSVPs are not currently attached to a shift.
                             </p>
-                          ) : null;
-                        })()}
+                          </div>
+                          <div className="space-y-2">
+                            {unassignedRsvps.map((rsvp: EventRsvp) => (
+                              <AdminRsvpCard key={rsvp._id} rsvp={rsvp} />
+                            ))}
+                          </div>
+                        </section>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                }
+
+                return (
+                  <div className="space-y-2">
+                    {event.rsvps.map((rsvp: EventRsvp) => {
+                      let shiftLabel: string | undefined;
+
+                      if (rsvp.shiftId) {
+                        const shift = event.shifts.find(
+                          (s: EventShift) => s._id === rsvp.shiftId
+                        );
+                        if (shift) {
+                          shiftLabel = `Shift: ${formatShiftTime(
+                            shift.startTime,
+                            shift.endTime
+                          )}`;
+                        }
+                      }
+
+                      return (
+                        <AdminRsvpCard
+                          key={rsvp._id}
+                          rsvp={rsvp}
+                          shiftLabel={shiftLabel}
+                        />
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

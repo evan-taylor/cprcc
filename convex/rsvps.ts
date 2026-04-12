@@ -23,11 +23,29 @@ function validateTransportOptions(args: {
   }
 }
 
+function buildRsvpTransportPatch(args: {
+  canDrive: boolean;
+  campusLocation?: "onCampus" | "offCampus";
+  driverInfo?: { carType: string; carColor: string; capacity: number };
+  needsRide: boolean;
+  selfTransport: boolean;
+}) {
+  return {
+    needsRide: args.needsRide,
+    canDrive: args.canDrive,
+    selfTransport: args.selfTransport,
+    campusLocation: args.campusLocation,
+    driverInfo: args.driverInfo,
+  };
+}
+
 async function validateShiftCapacity(
   ctx: MutationCtx,
   eventId: Id<"events">,
   shiftId: Id<"shifts">,
-  userProfileId: Id<"userProfiles">
+  existingUserRsvps: Array<{
+    shiftId?: Id<"shifts">;
+  }>
 ) {
   const shift = await ctx.db.get(shiftId);
   if (!shift || shift.eventId !== eventId) {
@@ -39,19 +57,15 @@ async function validateShiftCapacity(
     .withIndex("by_shift", (q) => q.eq("shiftId", shiftId))
     .collect();
 
-  const existingRsvp = await ctx.db
-    .query("rsvps")
-    .withIndex("by_event_and_user", (q) =>
-      q.eq("eventId", eventId).eq("userProfileId", userProfileId)
-    )
-    .first();
+  const isUserAlreadyInShift = existingUserRsvps.some(
+    (rsvp) => rsvp.shiftId === shiftId
+  );
 
-  const isUserAlreadyInShift = existingRsvp?.shiftId === shiftId;
+  if (isUserAlreadyInShift) {
+    throw new Error("You are already signed up for this shift");
+  }
 
-  if (
-    !isUserAlreadyInShift &&
-    existingShiftRsvps.length >= shift.requiredPeople
-  ) {
+  if (existingShiftRsvps.length >= shift.requiredPeople) {
     throw new Error("This shift is already full");
   }
 }
@@ -94,44 +108,60 @@ export const createRsvp = mutation({
     const rsvpCampusLocation = requiresCampusLocation
       ? args.campusLocation
       : undefined;
+    const transportPatch = buildRsvpTransportPatch({
+      needsRide: args.needsRide,
+      canDrive: args.canDrive,
+      selfTransport: args.selfTransport,
+      campusLocation: rsvpCampusLocation,
+      driverInfo: args.driverInfo,
+    });
 
-    if (args.shiftId) {
-      await validateShiftCapacity(
-        ctx,
-        args.eventId,
-        args.shiftId,
-        userProfile._id
-      );
-    }
-
-    const existingRsvp = await ctx.db
+    const existingRsvps = await ctx.db
       .query("rsvps")
       .withIndex("by_event_and_user", (q) =>
         q.eq("eventId", args.eventId).eq("userProfileId", userProfile._id)
       )
-      .first();
+      .collect();
 
-    if (existingRsvp) {
-      await ctx.db.patch(existingRsvp._id, {
-        shiftId: args.shiftId,
-        needsRide: args.needsRide,
-        canDrive: args.canDrive,
-        selfTransport: args.selfTransport,
-        campusLocation: rsvpCampusLocation,
-        driverInfo: args.driverInfo,
+    if (event.eventType === "regular") {
+      if (args.shiftId) {
+        throw new Error("Regular events do not support shift RSVPs");
+      }
+
+      if (existingRsvps.length > 0) {
+        for (const existingRsvp of existingRsvps) {
+          await ctx.db.patch(existingRsvp._id, transportPatch);
+        }
+        return;
+      }
+
+      await ctx.db.insert("rsvps", {
+        eventId: args.eventId,
+        userProfileId: userProfile._id,
+        shiftId: undefined,
+        ...transportPatch,
+        createdAt: Date.now(),
       });
       return;
+    }
+
+    if (!args.shiftId) {
+      throw new Error("Please select a shift");
+    }
+
+    await validateShiftCapacity(ctx, args.eventId, args.shiftId, existingRsvps);
+
+    if (existingRsvps.length > 0) {
+      for (const existingRsvp of existingRsvps) {
+        await ctx.db.patch(existingRsvp._id, transportPatch);
+      }
     }
 
     await ctx.db.insert("rsvps", {
       eventId: args.eventId,
       userProfileId: userProfile._id,
       shiftId: args.shiftId,
-      needsRide: args.needsRide,
-      canDrive: args.canDrive,
-      selfTransport: args.selfTransport,
-      campusLocation: rsvpCampusLocation,
-      driverInfo: args.driverInfo,
+      ...transportPatch,
       createdAt: Date.now(),
     });
   },
