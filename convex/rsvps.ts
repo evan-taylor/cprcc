@@ -23,11 +23,26 @@ function validateTransportOptions(args: {
   }
 }
 
+function buildRsvpTransportPatch(args: {
+  canDrive: boolean;
+  campusLocation?: "onCampus" | "offCampus";
+  driverInfo?: { carType: string; carColor: string; capacity: number };
+  needsRide: boolean;
+  selfTransport: boolean;
+}) {
+  return {
+    needsRide: args.needsRide,
+    canDrive: args.canDrive,
+    selfTransport: args.selfTransport,
+    campusLocation: args.campusLocation,
+    driverInfo: args.driverInfo,
+  };
+}
+
 async function validateShiftCapacity(
   ctx: MutationCtx,
   eventId: Id<"events">,
-  shiftId: Id<"shifts">,
-  userProfileId: Id<"userProfiles">
+  shiftId: Id<"shifts">
 ) {
   const shift = await ctx.db.get(shiftId);
   if (!shift || shift.eventId !== eventId) {
@@ -39,19 +54,7 @@ async function validateShiftCapacity(
     .withIndex("by_shift", (q) => q.eq("shiftId", shiftId))
     .collect();
 
-  const existingRsvp = await ctx.db
-    .query("rsvps")
-    .withIndex("by_event_and_user", (q) =>
-      q.eq("eventId", eventId).eq("userProfileId", userProfileId)
-    )
-    .first();
-
-  const isUserAlreadyInShift = existingRsvp?.shiftId === shiftId;
-
-  if (
-    !isUserAlreadyInShift &&
-    existingShiftRsvps.length >= shift.requiredPeople
-  ) {
+  if (existingShiftRsvps.length >= shift.requiredPeople) {
     throw new Error("This shift is already full");
   }
 }
@@ -94,44 +97,68 @@ export const createRsvp = mutation({
     const rsvpCampusLocation = requiresCampusLocation
       ? args.campusLocation
       : undefined;
-
-    if (args.shiftId) {
-      await validateShiftCapacity(
-        ctx,
-        args.eventId,
-        args.shiftId,
-        userProfile._id
-      );
-    }
-
-    const existingRsvp = await ctx.db
-      .query("rsvps")
-      .withIndex("by_event_and_user", (q) =>
-        q.eq("eventId", args.eventId).eq("userProfileId", userProfile._id)
-      )
-      .first();
-
-    if (existingRsvp) {
-      await ctx.db.patch(existingRsvp._id, {
-        shiftId: args.shiftId,
-        needsRide: args.needsRide,
-        canDrive: args.canDrive,
-        selfTransport: args.selfTransport,
-        campusLocation: rsvpCampusLocation,
-        driverInfo: args.driverInfo,
-      });
-      return;
-    }
-
-    await ctx.db.insert("rsvps", {
-      eventId: args.eventId,
-      userProfileId: userProfile._id,
-      shiftId: args.shiftId,
+    const transportPatch = buildRsvpTransportPatch({
       needsRide: args.needsRide,
       canDrive: args.canDrive,
       selfTransport: args.selfTransport,
       campusLocation: rsvpCampusLocation,
       driverInfo: args.driverInfo,
+    });
+
+    const existingRsvps = await ctx.db
+      .query("rsvps")
+      .withIndex("by_event_and_user", (q) =>
+        q.eq("eventId", args.eventId).eq("userProfileId", userProfile._id)
+      )
+      .collect();
+
+    if (event.eventType === "regular") {
+      if (args.shiftId) {
+        throw new Error("Regular events do not support shift RSVPs");
+      }
+
+      if (existingRsvps.length > 0) {
+        for (const existingRsvp of existingRsvps) {
+          await ctx.db.patch(existingRsvp._id, transportPatch);
+        }
+        return;
+      }
+
+      await ctx.db.insert("rsvps", {
+        eventId: args.eventId,
+        userProfileId: userProfile._id,
+        shiftId: undefined,
+        ...transportPatch,
+        createdAt: Date.now(),
+      });
+      return;
+    }
+
+    if (!args.shiftId) {
+      throw new Error("Please select a shift");
+    }
+
+    const existingShiftRsvp = existingRsvps.find(
+      (existingRsvp) => existingRsvp.shiftId === args.shiftId
+    );
+
+    if (existingRsvps.length > 0) {
+      for (const existingRsvp of existingRsvps) {
+        await ctx.db.patch(existingRsvp._id, transportPatch);
+      }
+    }
+
+    if (existingShiftRsvp) {
+      return;
+    }
+
+    await validateShiftCapacity(ctx, args.eventId, args.shiftId);
+
+    await ctx.db.insert("rsvps", {
+      eventId: args.eventId,
+      userProfileId: userProfile._id,
+      shiftId: args.shiftId,
+      ...transportPatch,
       createdAt: Date.now(),
     });
   },
