@@ -1,10 +1,8 @@
 "use client";
 
-import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import posthog from "posthog-js";
-import { useEffect, useMemo, useState } from "react";
-import { NewsletterEditor } from "@/components/newsletter-editor";
+import { useEffect, useState } from "react";
 import { NewsletterImportPanel } from "@/components/newsletter-import-panel";
 import SiteHeader from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +14,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input, Textarea } from "@/components/ui/input";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
-
-const initialEditorContent =
-  "<h2>What’s new with Cal Poly Red Cross Club</h2><p>Share your latest updates, volunteer opportunities, and reminders here.</p><ul><li>Upcoming events and meeting details</li><li>Volunteer opportunities and trainings</li><li>Important club announcements</li></ul><p>Thank you for being part of our chapter.</p>";
 
 const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
@@ -57,18 +51,7 @@ export default function AdminNewsletterPage() {
     api.newsletters.getNewsletterAdminOverview,
     isAuthenticated && currentUser?.role === "board" ? {} : "skip"
   );
-  const sendNewsletterCampaign = useAction(
-    api.newsletter.actions.sendNewsletterCampaign
-  );
   const [profileEnsured, setProfileEnsured] = useState(false);
-  const [subject, setSubject] = useState("");
-  const [previewText, setPreviewText] = useState("");
-  const [htmlContent, setHtmlContent] = useState(initialEditorContent);
-  const [subjectError, setSubjectError] = useState<string | undefined>();
-  const [editorError, setEditorError] = useState<string | undefined>();
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentUser === undefined || currentUser === null || profileEnsured) {
@@ -93,80 +76,6 @@ export default function AdminNewsletterPage() {
       router.push("/signin");
     }
   }, [authLoading, currentUser, isAuthenticated, router]);
-
-  const previewSummary = useMemo(() => {
-    if (!previewText.trim()) {
-      return "No preview text set.";
-    }
-
-    return previewText.trim();
-  }, [previewText]);
-
-  const validateForm = () => {
-    const trimmedSubject = subject.trim();
-    const trimmedContent = htmlContent.replace(/<[^>]+>/g, "").trim();
-
-    let valid = true;
-
-    if (trimmedSubject.length === 0) {
-      setSubjectError("Add a subject line before sending.");
-      valid = false;
-    } else {
-      setSubjectError(undefined);
-    }
-
-    if (trimmedContent.length === 0) {
-      setEditorError("Write some newsletter content before sending.");
-      valid = false;
-    } else {
-      setEditorError(undefined);
-    }
-
-    return valid;
-  };
-
-  const handleSend = async () => {
-    setError(null);
-    setSuccess(null);
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSending(true);
-
-    try {
-      const result = await sendNewsletterCampaign({
-        htmlContent,
-        previewText: previewText.trim() || undefined,
-        subject: subject.trim(),
-      });
-
-      setSuccess(
-        result.failedCount > 0
-          ? `Sent ${result.sentCount} of ${result.recipientCount} emails. ${result.failedCount} failed.`
-          : `Sent ${result.sentCount} emails successfully.`
-      );
-      posthog.capture("newsletter_campaign_sent", {
-        failed_count: result.failedCount,
-        recipient_count: result.recipientCount,
-        sent_count: result.sentCount,
-      });
-    } catch (sendError) {
-      posthog.captureException(
-        sendError instanceof Error
-          ? sendError
-          : new Error("Newsletter send failed")
-      );
-      if (sendError instanceof Error) {
-        setError(sendError.message);
-      } else {
-        setError("Failed to send newsletter.");
-      }
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   if (
     authLoading ||
@@ -230,16 +139,26 @@ export default function AdminNewsletterPage() {
     <div className="min-h-screen bg-[color:var(--color-bg)]">
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 pt-28 pb-24 sm:px-6 lg:px-8">
-        <header className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="editorial-kicker animate-fade-up">Admin</p>
-            <h1 className="stagger-1 editorial-title mt-3 animate-fade-up text-3xl sm:text-4xl">
-              Newsletter Management
-            </h1>
-            <p className="stagger-2 mt-2 max-w-2xl animate-fade-up text-[color:var(--color-text-muted)]">
-              Compose rich club updates, send them to subscribed members, and
-              review recent campaign history.
-            </p>
+        <header className="mb-10 space-y-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="editorial-kicker animate-fade-up">Admin</p>
+              <h1 className="stagger-1 editorial-title mt-3 animate-fade-up text-3xl sm:text-4xl">
+                Newsletter
+              </h1>
+              <p className="stagger-2 mt-2 max-w-2xl animate-fade-up text-[color:var(--color-text-muted)]">
+                Import contacts, review your audience, and open the composer to
+                send campaigns.
+              </p>
+            </div>
+            <Button
+              className="shrink-0 self-start sm:mt-8"
+              onClick={() => router.push("/admin/newsletter/new")}
+              size="md"
+              type="button"
+            >
+              Compose & send newsletter
+            </Button>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
@@ -261,76 +180,9 @@ export default function AdminNewsletterPage() {
           </div>
         </header>
 
-        {error ? (
-          <div className="mb-6 animate-scale-in rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        ) : null}
-
-        {success ? (
-          <div className="mb-6 animate-scale-in rounded-xl border border-green-200 bg-green-50 p-4">
-            <p className="text-green-700 text-sm">{success}</p>
-          </div>
-        ) : null}
-
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
           <section className="space-y-6">
-            <NewsletterImportPanel isComposerBusy={isSending} />
-
-            <Card className="rounded-[1.75rem]">
-              <CardHeader>
-                <CardTitle>Compose a newsletter</CardTitle>
-                <CardDescription>
-                  Use headings, lists, links, alignment, and formatting to build
-                  polished club announcements.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <Input
-                  error={subjectError}
-                  label="Subject"
-                  onChange={(event) => setSubject(event.target.value)}
-                  placeholder="Volunteer updates for this week"
-                  value={subject}
-                />
-                <Textarea
-                  helperText="Shown as preview text in inboxes that support it."
-                  label="Preview text"
-                  onChange={(event) => setPreviewText(event.target.value)}
-                  placeholder="A quick summary of this week’s highlights."
-                  value={previewText}
-                />
-                <div>
-                  <p className="mb-2 block font-medium text-slate-900 text-sm">
-                    Body
-                  </p>
-                  <NewsletterEditor
-                    content={htmlContent}
-                    disabled={isSending}
-                    error={editorError}
-                    onChange={setHtmlContent}
-                  />
-                </div>
-              </CardContent>
-              <div className="border-[color:var(--color-border)]/70 border-t bg-[color:var(--color-bg-subtle)]/60 px-6 py-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-[color:var(--color-text-muted)] text-sm">
-                    Replies go to RedCrossClub@calpoly.edu and every email
-                    includes an unsubscribe link.
-                  </p>
-                  <div className="flex gap-3">
-                    <Button
-                      disabled={isSending}
-                      onClick={handleSend}
-                      size="md"
-                      type="button"
-                    >
-                      {isSending ? "Sending…" : "Send newsletter"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <NewsletterImportPanel isComposerBusy={false} />
           </section>
 
           <aside className="space-y-6">
@@ -397,30 +249,11 @@ export default function AdminNewsletterPage() {
                       ))
                     ) : (
                       <p className="text-[color:var(--color-text-muted)] text-sm">
-                        No imported contacts yet. Use Import subscribers on the
-                        left.
+                        No imported contacts yet. Paste a list in Import
+                        subscribers to add external addresses.
                       </p>
                     )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[1.75rem]">
-              <CardHeader>
-                <CardTitle>Preview summary</CardTitle>
-                <CardDescription>
-                  A quick reference for the subject line and inbox preview text.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <p className="font-medium text-slate-900 text-sm">
-                    {subject.trim() || "No subject yet"}
-                  </p>
-                  <p className="mt-1 text-slate-500 text-sm">
-                    {previewSummary}
-                  </p>
                 </div>
               </CardContent>
             </Card>

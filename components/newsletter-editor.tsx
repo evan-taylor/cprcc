@@ -15,6 +15,8 @@ interface NewsletterEditorProps {
   content: string;
   disabled?: boolean;
   error?: string;
+  /** Taller editing area for the dedicated compose screen */
+  largeWorkspace?: boolean;
   onChange: (html: string) => void;
   placeholder?: string;
 }
@@ -50,10 +52,15 @@ function ToolbarButton({
   );
 }
 
+const EDITOR_MIN_HEIGHT_DEFAULT = "min-h-[20rem]";
+const EDITOR_MIN_HEIGHT_LARGE =
+  "min-h-[min(70vh,52rem)] sm:min-h-[min(75vh,56rem)]";
+
 export function NewsletterEditor({
   content,
   disabled = false,
   error,
+  largeWorkspace = false,
   onChange,
   placeholder = "Share updates, volunteer opportunities, and highlights with the club.",
 }: NewsletterEditorProps) {
@@ -89,8 +96,7 @@ export function NewsletterEditor({
     editable: !disabled,
     editorProps: {
       attributes: {
-        class:
-          "min-h-[20rem] rounded-b-[1.5rem] px-5 py-5 text-[15px] leading-7 text-slate-900 focus:outline-none [&_a.newsletter-editor-link]:text-red-700 [&_a.newsletter-editor-link]:underline [&_a.newsletter-editor-link]:decoration-red-600/70",
+        class: `${largeWorkspace ? EDITOR_MIN_HEIGHT_LARGE : EDITOR_MIN_HEIGHT_DEFAULT} rounded-b-[1.5rem] px-5 py-5 text-[15px] leading-7 text-slate-900 focus:outline-none [&_a.newsletter-editor-link]:text-red-700 [&_a.newsletter-editor-link]:underline [&_a.newsletter-editor-link]:decoration-red-600/70`,
       },
     },
     onUpdate: ({ editor: nextEditor }) => {
@@ -357,7 +363,7 @@ export function NewsletterEditor({
               Markdown
             </label>
             <textarea
-              className="min-h-[20rem] w-full resize-y rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 font-mono text-[14px] text-slate-900 leading-6 placeholder:text-slate-400 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+              className={`${largeWorkspace ? EDITOR_MIN_HEIGHT_LARGE : EDITOR_MIN_HEIGHT_DEFAULT} w-full resize-y rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 font-mono text-[14px] text-slate-900 leading-6 placeholder:text-slate-400 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20`}
               disabled={disabled}
               id="newsletter-markdown-body"
               onChange={(event) => {
