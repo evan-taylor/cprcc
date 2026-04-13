@@ -217,10 +217,15 @@ export default function AdminNewsletterNewPage() {
 
         <footer className="shrink-0 border-[color:var(--color-border)]/80 border-t bg-[color:var(--color-bg-subtle)]/90 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-10">
           <div className="mx-auto flex w-full max-w-[min(100%,88rem)] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-[color:var(--color-text-muted)] text-sm">
-              Replies go to RedCrossClub@calpoly.edu and every email includes an
-              unsubscribe link.
-            </p>
+            <div className="text-[color:var(--color-text-muted)] text-sm">
+              <p>
+                Replies go to RedCrossClub@calpoly.edu and every email includes
+                an unsubscribe link.
+              </p>
+              <p className="mt-2">
+                Hard bounces unsubscribe that address automatically.
+              </p>
+            </div>
             <div className="flex flex-wrap gap-3">
               <Button
                 disabled={isSending}
