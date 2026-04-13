@@ -315,13 +315,23 @@ const vResendEmailBouncedEvent = v.object({
       subType: v.string(),
       type: v.string(),
     }),
+    bcc: v.optional(v.union(v.string(), v.array(v.string()))),
+    broadcast_id: v.optional(v.string()),
+    cc: v.optional(v.union(v.string(), v.array(v.string()))),
     created_at: v.string(),
     email_id: v.string(),
     from: v.union(v.string(), v.array(v.string())),
     headers: v.optional(
       v.array(v.object({ name: v.string(), value: v.string() }))
     ),
+    reply_to: v.optional(v.union(v.string(), v.array(v.string()))),
     subject: v.string(),
+    tags: v.optional(
+      v.union(
+        v.record(v.string(), v.string()),
+        v.array(v.object({ name: v.string(), value: v.string() }))
+      )
+    ),
     to: v.union(v.string(), v.array(v.string())),
   }),
   type: v.literal("email.bounced"),
@@ -337,11 +347,16 @@ export interface ResendEmailBouncedWebhookPayload {
       subType: string;
       type: string;
     };
+    bcc?: string | string[];
+    broadcast_id?: string;
+    cc?: string | string[];
     created_at: string;
     email_id: string;
     from: string | string[];
     headers?: { name: string; value: string }[];
+    reply_to?: string | string[];
     subject: string;
+    tags?: Record<string, string> | { name: string; value: string }[];
     to: string | string[];
   };
   type: "email.bounced";
@@ -358,10 +373,6 @@ export const handleResendEmailEvent = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (args.event.type !== "email.bounced") {
-      return null;
-    }
-
     const recipients = getEventRecipientEmails(args.event);
     for (const recipient of recipients) {
       await unsubscribeProfilesForBounce(ctx, recipient);
