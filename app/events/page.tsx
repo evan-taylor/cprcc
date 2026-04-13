@@ -2,7 +2,8 @@
 
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,16 +11,6 @@ import { api } from "@/convex/_generated/api";
 
 export default function EventsPage() {
   const [requestTime] = useState(() => Date.now());
-  useEffect(() => {
-    document.title = "Events & RSVP | Cal Poly Red Cross Club";
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute(
-        "content",
-        "Browse upcoming Cal Poly Red Cross Club volunteer opportunities and events. RSVP to blood drives, disaster relief training, and community service events at Cal Poly SLO."
-      );
-    }
-  }, []);
   const events = useQuery(api.events.listUpcomingEvents, { now: requestTime });
   const currentUser = useQuery(api.users.getCurrentUser);
   return (
@@ -63,7 +54,9 @@ export default function EventsPage() {
 
         {events === undefined && <LoadingSkeleton />}
 
-        {events !== undefined && events.length === 0 && <EmptyState />}
+        {events !== undefined && events.length === 0 && (
+          <EmptyState showBoardCreate={currentUser?.role === "board"} />
+        )}
 
         {events !== undefined && events.length > 0 && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -73,6 +66,7 @@ export default function EventsPage() {
           </div>
         )}
       </main>
+      <SiteFooter />
     </div>
   );
 }
@@ -104,7 +98,7 @@ function LoadingSkeleton() {
   );
 }
 
-function EmptyState() {
+function EmptyState({ showBoardCreate }: { showBoardCreate?: boolean }) {
   return (
     <div className="mx-auto max-w-md py-16 text-center">
       <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50/80">
@@ -145,7 +139,7 @@ function EmptyState() {
         </a>
         <a
           className="editorial-pill inline-flex items-center gap-2 px-5 py-2.5 font-medium text-[color:var(--color-text)] text-sm transition-all duration-200 hover:bg-white hover:text-[color:var(--color-text-emphasis)] active:scale-[0.97]"
-          href="https://groupme.com/join_group/103395902/FeigA9Y5"
+          href="https://groupme.com/join_group/110362987/vWy9gKFG"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -156,6 +150,15 @@ function EmptyState() {
           GroupMe
         </a>
       </div>
+      {showBoardCreate ? (
+        <div className="mt-8">
+          <Link href="/events/create">
+            <Button className="interactive-lift" size="lg">
+              Create Event
+            </Button>
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -214,7 +217,7 @@ function EventCard({ event }: { event: EventData }) {
         <div className="space-y-2.5 border-[color:var(--color-border)]/70 border-t pt-4 text-[color:var(--color-text-muted)] text-sm">
           <div className="flex items-center gap-2.5">
             <svg
-              className="h-4 w-4 flex-shrink-0 text-slate-400"
+              className="h-4 w-4 flex-shrink-0 text-[color:var(--color-text-subtle)]"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}
@@ -241,7 +244,7 @@ function EventCard({ event }: { event: EventData }) {
           </div>
           <div className="flex items-center gap-2.5">
             <svg
-              className="h-4 w-4 flex-shrink-0 text-slate-400"
+              className="h-4 w-4 flex-shrink-0 text-[color:var(--color-text-subtle)]"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}

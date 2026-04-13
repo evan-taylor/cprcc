@@ -130,12 +130,7 @@ export default function AdminNewsletterNewPage() {
   };
 
   if (authLoading || currentUser === undefined) {
-    return (
-      <PageLoader
-        detail="Preparing the newsletter composer."
-        message="Loading composer..."
-      />
-    );
+    return <PageLoader message="Loading…" />;
   }
 
   if (!isAuthenticated || currentUser === null) {
@@ -178,15 +173,11 @@ export default function AdminNewsletterNewPage() {
                 className="text-[color:var(--color-text-muted)] text-sm transition-colors hover:text-red-600"
                 href="/admin/newsletter"
               >
-                ← Newsletter dashboard
+                ← Newsletter
               </Link>
               <h1 className="mt-2 font-display font-semibold text-2xl text-[color:var(--color-text-emphasis)] sm:text-3xl">
                 New newsletter
               </h1>
-              <p className="mt-1 max-w-2xl text-[color:var(--color-text-muted)] text-sm">
-                Draft in a full-width editor. Import subscribers and view
-                audience stats stay on the dashboard.
-              </p>
             </div>
           </div>
         </header>

@@ -24,7 +24,8 @@ export function Badge({
   const variants = {
     default: "border-slate-200 bg-slate-100 text-slate-600",
     primary: "border-red-200 bg-red-50 text-red-700",
-    secondary: "border-violet-200 bg-violet-50 text-violet-700",
+    secondary:
+      "border-[color:var(--color-accent-light)] bg-[color:var(--color-accent-soft)] text-[color:var(--color-accent)]",
     success: "border-green-200 bg-green-50 text-green-700",
     warning: "border-orange-200 bg-orange-50 text-orange-700",
     danger: "border-rose-200 bg-rose-50 text-rose-700",

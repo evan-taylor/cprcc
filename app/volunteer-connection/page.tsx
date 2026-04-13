@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 
 export const metadata: Metadata = {
@@ -161,7 +162,7 @@ export default async function VolunteerConnectionPage() {
                 key={step.title}
               >
                 {index < steps.length - 1 && (
-                  <div className="absolute top-11 left-5 h-[calc(100%-2.75rem)] w-px bg-gradient-to-b from-red-200 to-slate-100" />
+                  <div className="absolute top-11 left-5 h-[calc(100%-2.75rem)] w-px bg-gradient-to-b from-red-200 to-[color:var(--color-bg-subtle)]" />
                 )}
                 <div
                   className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 font-bold text-sm text-white shadow-md shadow-red-600/20"
@@ -199,6 +200,7 @@ export default async function VolunteerConnectionPage() {
           </Link>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

@@ -2,9 +2,16 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { api } from "@/convex/_generated/api";
 
 const navItems = [
@@ -37,6 +44,8 @@ export default function SiteHeader({
   const { isAuthenticated } = useConvexAuth();
   const currentUser = useQuery(api.users.getCurrentUser);
   const pathname = usePathname();
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavPanelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,6 +84,67 @@ export default function SiteHeader({
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return;
+    }
+    const panel = mobileNavPanelRef.current;
+    if (!panel) {
+      return;
+    }
+    const firstLink = panel.querySelector<HTMLElement>("a[href]");
+    requestAnimationFrame(() => {
+      firstLink?.focus();
+    });
+  }, [mobileMenuOpen]);
+
+  const prevMobileMenuOpenRef = useRef(false);
+  useEffect(() => {
+    if (prevMobileMenuOpenRef.current && !mobileMenuOpen) {
+      requestAnimationFrame(() => {
+        mobileMenuButtonRef.current?.focus();
+      });
+    }
+    prevMobileMenuOpenRef.current = mobileMenuOpen;
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return;
+    }
+    const panel = mobileNavPanelRef.current;
+    if (!panel) {
+      return;
+    }
+    const getFocusables = () =>
+      [...panel.querySelectorAll<HTMLElement>("a[href]")].filter(
+        (el) => el.offsetParent !== null
+      );
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") {
+        return;
+      }
+      const list = getFocusables();
+      if (list.length === 0) {
+        return;
+      }
+      const first = list[0];
+      const last = list.at(-1);
+      if (!last) {
+        return;
+      }
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    panel.addEventListener("keydown", handleKeyDown);
+    return () => panel.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
   const isInverted = variant === "inverted";
   const transparent = isInverted && !scrolled;
   const desktopNavLinkClass = (href: string) => {
@@ -109,14 +179,26 @@ export default function SiteHeader({
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
           <Link
-            className={`font-display text-lg tracking-tight transition-colors duration-200 ${
+            aria-label="Cal Poly Red Cross Club — Home"
+            className={`group flex items-center gap-2.5 font-display text-lg tracking-tight transition-colors duration-200 ${
               transparent
                 ? "text-white"
                 : "text-[color:var(--color-primary)] hover:text-[color:var(--color-primary-hover)]"
             }`}
             href="/"
           >
-            Cal Poly Red Cross Club
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/95 shadow-sm ring-1 ring-black/5 transition-transform duration-200 group-hover:scale-[1.03]">
+              <Image
+                alt=""
+                className="h-6 w-6"
+                height={24}
+                src="/redcross.svg"
+                width={24}
+              />
+            </span>
+            <span className="max-w-[11rem] leading-tight sm:max-w-none">
+              Cal Poly Red Cross Club
+            </span>
           </Link>
           <div className="flex flex-1 items-center justify-end gap-5">
             <nav className="hidden items-center gap-1 md:flex">
@@ -150,6 +232,7 @@ export default function SiteHeader({
             <MobileMenuButton
               iconColor={transparent ? "white" : "#334155"}
               isOpen={mobileMenuOpen}
+              menuButtonRef={mobileMenuButtonRef}
               onToggle={() => setMobileMenuOpen((prev) => !prev)}
             />
 
@@ -165,7 +248,7 @@ export default function SiteHeader({
           mobileMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={closeMobileMenu}
-        tabIndex={mobileMenuOpen ? 0 : -1}
+        tabIndex={-1}
         type="button"
       />
 
@@ -177,6 +260,8 @@ export default function SiteHeader({
             ? "translate-y-0 opacity-100"
             : "pointer-events-none -translate-y-2 opacity-0"
         }`}
+        id="mobile-navigation-panel"
+        ref={mobileNavPanelRef}
         style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
       >
         <div className="flex flex-col px-3 py-3">
@@ -227,17 +312,21 @@ function MobileMenuButton({
   isOpen,
   onToggle,
   iconColor,
+  menuButtonRef,
 }: {
   isOpen: boolean;
   onToggle: () => void;
   iconColor: string;
+  menuButtonRef: RefObject<HTMLButtonElement | null>;
 }) {
   return (
     <button
+      aria-controls="mobile-navigation-panel"
       aria-expanded={isOpen}
       aria-label="Toggle navigation menu"
-      className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-slate-100/80 active:scale-95 md:hidden"
+      className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-[color:var(--color-bg-subtle)] active:scale-95 md:hidden"
       onClick={onToggle}
+      ref={menuButtonRef}
       type="button"
     >
       <svg

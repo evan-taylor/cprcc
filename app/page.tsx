@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 
 export const metadata: Metadata = {
@@ -60,13 +61,14 @@ export default async function HomePage() {
         />
         <CTASection />
       </main>
+      <SiteFooter />
     </div>
   );
 }
 
 function HeroSection() {
   return (
-    <section className="relative isolate flex min-h-[100svh] items-center justify-center overflow-hidden text-center text-white">
+    <section className="relative isolate flex min-h-[100svh] items-center justify-center overflow-hidden text-center text-white [clip-path:polygon(0_0,100%_0,100%_calc(100%-2.5rem),0_100%)] sm:[clip-path:polygon(0_0,100%_0,100%_calc(100%-3.5rem),0_100%)]">
       <Image
         alt="Cal Poly Red Cross Club tabling at an event"
         className="object-cover"
@@ -75,31 +77,42 @@ function HeroSection() {
         sizes="100vw"
         src={heroImage}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/70" />
-      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,rgb(255_255_255_/_0.14),transparent_60%)]" />
-      <div className="pointer-events-none absolute -top-32 left-1/2 z-0 h-80 w-80 -translate-x-1/2 rounded-full bg-red-500/20 blur-[90px]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628]/88 via-black/60 to-[#1a0a0a]/85" />
+      <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,rgb(255_255_255_/_0.12),transparent_55%)]" />
+      <div className="pointer-events-none absolute -top-28 left-1/2 z-0 h-[22rem] w-[22rem] -translate-x-1/2 rounded-full bg-[color:var(--color-primary)]/25 blur-[100px]" />
+      <div className="pointer-events-none absolute -bottom-24 -left-24 z-0 h-72 w-72 rounded-full bg-[color:var(--color-accent)]/20 blur-[90px]" />
       <div className="relative z-10 mx-auto max-w-3xl px-6">
         <div className="animate-fade-up">
-          <p className="mb-4 font-medium text-sm text-white/70 uppercase tracking-[0.25em]">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 font-medium text-white/85 text-xs uppercase tracking-[0.2em] backdrop-blur-md">
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-primary)] shadow-[0_0_14px_rgb(226_18_36_/_0.55)]"
+            />
             Cal Poly San Luis Obispo
           </p>
         </div>
-        <h1 className="stagger-1 animate-fade-up font-bold text-5xl tracking-tight sm:text-6xl lg:text-7xl">
-          Red Cross Club
+        <h1 className="stagger-1 animate-fade-up font-bold text-5xl tracking-[-0.04em] sm:text-6xl lg:text-[4.25rem] lg:leading-[1.05]">
+          <span className="block font-display text-white/95">Red Cross</span>
+          <span className="mt-1 block bg-gradient-to-r from-white via-white to-white/75 bg-clip-text font-display text-transparent">
+            Club
+          </span>
         </h1>
-        <div className="stagger-2 mx-auto mt-4 h-0.5 w-20 animate-fade-up rounded-full bg-white/40" />
-        <p className="stagger-3 mx-auto mt-6 max-w-xl animate-fade-up text-lg text-white/80 leading-relaxed sm:text-xl">
+        <div className="stagger-2 mx-auto mt-5 flex animate-fade-up justify-center gap-2">
+          <span className="h-1 w-10 rounded-full bg-[color:var(--color-primary)]" />
+          <span className="h-1 w-3 rounded-full bg-white/35" />
+        </div>
+        <p className="stagger-3 mx-auto mt-6 max-w-xl animate-fade-up text-lg text-white/78 leading-relaxed sm:text-xl">
           Preventing and relieving suffering through volunteer action
         </p>
-        <div className="stagger-4 mt-8 flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <div className="stagger-4 mt-9 flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-lg bg-red-600 px-8 font-semibold text-base text-white shadow-lg shadow-red-600/30 hover:bg-red-700 hover:shadow-red-600/40 hover:shadow-xl active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-xl bg-[color:var(--color-primary)] px-8 font-semibold text-base text-white shadow-lg shadow-red-900/35 hover:bg-[color:var(--color-primary-hover)] hover:shadow-red-900/40 hover:shadow-xl active:scale-[0.97]"
             href="/events"
           >
             View Upcoming Events
           </Link>
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-lg bg-white/15 px-8 font-semibold text-base text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-xl border border-white/25 bg-white/12 px-8 font-semibold text-base text-white ring-1 ring-white/15 ring-inset backdrop-blur-md hover:bg-white/20 active:scale-[0.97]"
             href="/volunteer-connection"
           >
             Get Involved
@@ -134,7 +147,7 @@ function QuickStats() {
   ];
 
   return (
-    <section className="border-[color:var(--color-border)]/60 border-b bg-[color:var(--color-bg-subtle)]/40 py-10">
+    <section className="relative border-[color:var(--color-border)]/50 border-b bg-[color:var(--color-bg-subtle)]/50 py-12">
       <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 px-6 sm:grid-cols-3">
         {stats.map((stat, index) => (
           <article
@@ -144,7 +157,7 @@ function QuickStats() {
             key={stat.label}
           >
             <span
-              className="font-display font-semibold text-3xl text-red-600 sm:text-4xl"
+              className="font-bold font-display text-3xl text-red-600 sm:text-4xl"
               style={{ fontVariantNumeric: "tabular-nums" }}
             >
               {stat.value}
@@ -172,7 +185,7 @@ function ContentSection({
     <section className="py-[var(--spacing-section)]" id={id}>
       <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 text-center">
         <div className="flex flex-col items-center gap-4">
-          <h2 className="font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] sm:text-4xl">
+          <h2 className="font-bold font-display text-3xl text-[color:var(--color-text-emphasis)] sm:text-4xl">
             {title}
           </h2>
           <div className="h-0.5 w-12 rounded-full bg-red-600/30" />
@@ -191,9 +204,9 @@ function ContentSection({
 
 function CTASection() {
   return (
-    <section className="border-[color:var(--color-border)]/60 border-t bg-[color:var(--color-bg-subtle)]/70 py-[var(--spacing-section)]">
+    <section className="relative border-[color:var(--color-border)]/50 border-t bg-gradient-to-b from-[color:var(--color-bg-subtle)]/80 to-[color:var(--color-bg)] py-[var(--spacing-section)]">
       <div className="mx-auto max-w-3xl px-6 text-center">
-        <h2 className="font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] sm:text-4xl">
+        <h2 className="font-bold font-display text-3xl text-[color:var(--color-text-emphasis)] sm:text-4xl">
           Ready to make a difference?
         </h2>
         <p className="editorial-lead mx-auto mt-4 max-w-xl">
@@ -208,7 +221,7 @@ function CTASection() {
             Start Volunteering
           </Link>
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-lg border border-slate-200 bg-white px-8 font-semibold text-base text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-8 font-semibold text-[color:var(--color-text-emphasis)] text-base shadow-sm hover:border-[color:var(--color-accent-light)] hover:bg-[color:var(--color-accent-soft)] hover:text-[color:var(--color-accent)] active:scale-[0.97]"
             href="/contact"
           >
             Contact Us

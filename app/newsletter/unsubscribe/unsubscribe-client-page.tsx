@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -136,20 +137,20 @@ export default function NewsletterUnsubscribeClientPage() {
           <CardContent className="space-y-6">
             {subscription ? (
               <>
-                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-5 py-4">
-                  <p className="font-medium text-slate-900 text-sm">
+                <div className="rounded-[1.25rem] border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] px-5 py-4">
+                  <p className="font-medium text-[color:var(--color-text-emphasis)] text-sm">
                     {subscription.name}
                   </p>
-                  <p className="mt-1 text-slate-500 text-sm">
+                  <p className="mt-1 text-[color:var(--color-text-muted)] text-sm">
                     {subscription.email}
                   </p>
-                  <p className="mt-3 text-slate-500 text-sm">
+                  <p className="mt-3 text-[color:var(--color-text-muted)] text-sm">
                     Current status:{" "}
-                    <span className="font-medium text-slate-900">
+                    <span className="font-medium text-[color:var(--color-text-emphasis)]">
                       {subscription.newsletterStatus}
                     </span>
                   </p>
-                  <p className="mt-1 text-slate-500 text-sm">
+                  <p className="mt-1 text-[color:var(--color-text-muted)] text-sm">
                     Last updated:{" "}
                     {formatStatusDate(subscription.newsletterStatusUpdatedAt)}
                   </p>
@@ -205,6 +206,7 @@ export default function NewsletterUnsubscribeClientPage() {
           </CardContent>
         </Card>
       </main>
+      <SiteFooter />
     </div>
   );
 }

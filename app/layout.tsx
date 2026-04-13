@@ -1,23 +1,10 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { Suspense } from "react";
 import { AppToaster } from "@/components/app-toaster";
 import ConvexClientProvider from "@/components/convex-client-provider";
 import { PageLoader } from "@/components/ui/page-loader";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: {
@@ -84,9 +71,6 @@ export const metadata: Metadata = {
     icon: "/redcross.svg",
     apple: "/redcross.svg",
   },
-  verification: {
-    google: "google-site-verification-code",
-  },
 };
 
 export default function RootLayout({
@@ -131,7 +115,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
+      <body className="antialiased">
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires dangerouslySetInnerHTML per Next.js convention
           dangerouslySetInnerHTML={{

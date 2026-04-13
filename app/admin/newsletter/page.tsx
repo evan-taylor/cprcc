@@ -1,6 +1,7 @@
 "use client";
 
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { NewsletterImportPanel } from "@/components/newsletter-import-panel";
@@ -82,12 +83,7 @@ export default function AdminNewsletterPage() {
     currentUser === undefined ||
     (isAuthenticated && currentUser?.role === "board" && overview === undefined)
   ) {
-    return (
-      <PageLoader
-        detail="Loading newsletter audience and recent campaign history."
-        message="Loading newsletter tools..."
-      />
-    );
+    return <PageLoader message="Loading…" />;
   }
 
   if (!isAuthenticated || currentUser === null) {
@@ -146,10 +142,6 @@ export default function AdminNewsletterPage() {
               <h1 className="stagger-1 editorial-title mt-3 animate-fade-up text-3xl sm:text-4xl">
                 Newsletter
               </h1>
-              <p className="stagger-2 mt-2 max-w-2xl animate-fade-up text-[color:var(--color-text-muted)]">
-                Import contacts, review your audience, and open the composer to
-                send campaigns.
-              </p>
             </div>
             <Button
               className="shrink-0 self-start sm:mt-8"
@@ -188,82 +180,26 @@ export default function AdminNewsletterPage() {
           <aside className="space-y-6">
             <Card className="rounded-[1.75rem]">
               <CardHeader>
-                <CardTitle>Audience preview</CardTitle>
+                <CardTitle>Audience</CardTitle>
                 <CardDescription>
-                  Subscribed member accounts and imported contacts that will
-                  receive the next campaign (
-                  {overview?.totalNewsletterRecipients ?? 0} total).
+                  {overview?.totalNewsletterRecipients ?? 0} recipients ·{" "}
+                  {overview?.subscribedMembersCount ?? 0} members ·{" "}
+                  {overview?.importedSubscribersCount ?? 0} imported
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-5">
-                <div>
-                  <p className="mb-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
-                    Member accounts
-                  </p>
-                  <div className="space-y-3">
-                    {overview?.subscribedMembersPreview.length ? (
-                      overview.subscribedMembersPreview.map((member) => (
-                        <div
-                          className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
-                          key={member._id}
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate font-medium text-slate-900 text-sm">
-                              {member.name}
-                            </p>
-                            <p className="truncate text-slate-500 text-xs">
-                              {member.email}
-                            </p>
-                          </div>
-                          <Badge variant="success">Subscribed</Badge>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-[color:var(--color-text-muted)] text-sm">
-                        No subscribed members yet.
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-2 font-medium text-slate-700 text-xs uppercase tracking-wide">
-                    Imported contacts
-                  </p>
-                  <div className="space-y-3">
-                    {overview?.importedSubscribersPreview.length ? (
-                      overview.importedSubscribersPreview.map((row) => (
-                        <div
-                          className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
-                          key={row._id}
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate font-medium text-slate-900 text-sm">
-                              {row.name}
-                            </p>
-                            <p className="truncate text-slate-500 text-xs">
-                              {row.email}
-                            </p>
-                          </div>
-                          <Badge variant="success">Imported</Badge>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-[color:var(--color-text-muted)] text-sm">
-                        No imported contacts yet. Paste a list in Import
-                        subscribers to add external addresses.
-                      </p>
-                    )}
-                  </div>
-                </div>
+              <CardContent>
+                <Link
+                  className="relative inline-flex items-center justify-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] px-6 py-2.5 font-semibold text-[color:var(--color-text)] text-sm transition-all duration-[250ms] ease-out hover:-translate-y-0.5 hover:border-[color:var(--color-border-hover)] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 active:translate-y-0 active:scale-[0.98]"
+                  href="/admin/newsletter/audience"
+                >
+                  Manage audience
+                </Link>
               </CardContent>
             </Card>
 
             <Card className="rounded-[1.75rem]">
               <CardHeader>
                 <CardTitle>Recent campaigns</CardTitle>
-                <CardDescription>
-                  Review recent sends and confirm audience reach.
-                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {overview?.recentCampaigns.length ? (

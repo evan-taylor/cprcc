@@ -6,7 +6,7 @@ interface PageLoaderProps {
 
 export function PageLoader({
   message = "Preparing your experience...",
-  detail = "Bringing in events, photos, and volunteer details.",
+  detail,
   fullScreen = true,
 }: PageLoaderProps) {
   return (
@@ -16,7 +16,7 @@ export function PageLoader({
       }`}
     >
       <div className="editorial-card w-full max-w-md animate-fade-in rounded-3xl px-8 py-10 text-center">
-        <div className="mx-auto flex h-14 w-14 animate-soft-pulse items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-600/25">
+        <div className="mx-auto flex h-14 w-14 animate-soft-pulse items-center justify-center rounded-2xl bg-[color:var(--color-primary)] text-white shadow-lg shadow-red-900/25 ring-2 ring-[color:var(--color-primary-light)]">
           <svg
             aria-hidden="true"
             className="h-8 w-8"
@@ -30,12 +30,14 @@ export function PageLoader({
         <p className="mt-5 font-semibold text-[color:var(--color-text-emphasis)] text-lg">
           {message}
         </p>
-        <p
-          aria-live="polite"
-          className="mt-1.5 text-[color:var(--color-text-muted)] text-sm"
-        >
-          {detail}
-        </p>
+        {detail ? (
+          <p
+            aria-live="polite"
+            className="mt-1.5 text-[color:var(--color-text-muted)] text-sm"
+          >
+            {detail}
+          </p>
+        ) : null}
 
         <div className="mt-6 space-y-2.5">
           <div className="shimmer-surface h-2.5 rounded-full" />
