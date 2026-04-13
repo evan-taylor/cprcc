@@ -1,6 +1,6 @@
-import Link from "next/link";
+"use client";
 
-const CURRENT_YEAR = new Date().getFullYear();
+import Link from "next/link";
 
 const footerLinks = [
   { href: "/events", label: "Events" },
@@ -44,6 +44,8 @@ const socialLinks = [
 ];
 
 export default function SiteFooter() {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="border-[color:var(--color-border)]/80 border-t bg-[color:var(--color-bg-subtle)]/80 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -106,7 +108,7 @@ export default function SiteFooter() {
 
         <div className="mt-10 flex flex-col gap-3 border-[color:var(--color-border)]/60 border-t pt-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[color:var(--color-text-subtle)] text-xs">
-            © {CURRENT_YEAR} Cal Poly Red Cross Club. Not an official Red Cross
+            © {currentYear} Cal Poly Red Cross Club. Not an official Red Cross
             website; we are a university student organization affiliated with
             the American Red Cross.
           </p>

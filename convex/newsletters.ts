@@ -26,6 +26,8 @@ const IMPORT_EMAIL_SYNTAX_REGEX =
   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const MAX_IMPORT_ENTRIES = 2000;
 const MAX_AUDIENCE_SEARCH_RESULTS_PER_KIND = 40;
+/** Cap rows read per table for admin audience search (avoids unbounded collect). */
+const MAX_AUDIENCE_SEARCH_SCAN_ROWS = 2000;
 
 function truncateImportDisplayName(name: string) {
   if (name.length <= 120) {
@@ -97,6 +99,23 @@ export const setCurrentUserNewsletterSubscription = mutation({
 });
 
 const normalizeEmailAddress = (value: string) => value.trim().toLowerCase();
+
+/**
+ * When a member unsubscribes, remove a subscribed external row at the same email
+ * if any — send deduping only excludes externals that match *subscribed* profiles.
+ */
+async function deleteSubscribedExternalDuplicateAtEmail(
+  ctx: MutationCtx,
+  normalizedEmail: string
+) {
+  const external = await ctx.db
+    .query("newsletterExternalSubscribers")
+    .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+    .first();
+  if (external?.newsletterStatus === NEWSLETTER_SUBSCRIBED) {
+    await ctx.db.delete(external._id);
+  }
+}
 
 interface ImportCounters {
   externalRemovedAsDuplicateCount: number;
@@ -397,6 +416,11 @@ export const adminUnsubscribeMemberFromNewsletter = mutation({
         createNewsletterUnsubscribeToken(),
     });
 
+    await deleteSubscribedExternalDuplicateAtEmail(
+      ctx,
+      normalizeEmailAddress(profile.email)
+    );
+
     return {
       email: profile.email,
       newsletterStatus: NEWSLETTER_UNSUBSCRIBED,
@@ -469,6 +493,7 @@ export const adminRemoveSubscriberByEmail = mutation({
     }
 
     if (memberEmail) {
+      await deleteSubscribedExternalDuplicateAtEmail(ctx, normalizedEmail);
       return {
         email: memberEmail,
         outcome: "member_unsubscribed" as const,
@@ -528,6 +553,11 @@ export const unsubscribeFromNewsletterByToken = mutation({
           userProfile.newsletterUnsubscribeToken ??
           createNewsletterUnsubscribeToken(),
       });
+
+      await deleteSubscribedExternalDuplicateAtEmail(
+        ctx,
+        normalizeEmailAddress(userProfile.email)
+      );
 
       return {
         email: userProfile.email,
@@ -682,13 +712,13 @@ export const searchNewsletterAudience = query({
         .withIndex("by_newsletter_status", (q) =>
           q.eq("newsletterStatus", NEWSLETTER_SUBSCRIBED)
         )
-        .collect(),
+        .take(MAX_AUDIENCE_SEARCH_SCAN_ROWS),
       ctx.db
         .query("newsletterExternalSubscribers")
         .withIndex("by_newsletter_status", (q) =>
           q.eq("newsletterStatus", NEWSLETTER_SUBSCRIBED)
         )
-        .collect(),
+        .take(MAX_AUDIENCE_SEARCH_SCAN_ROWS),
     ]);
 
     const needleLower = needle.toLowerCase();
