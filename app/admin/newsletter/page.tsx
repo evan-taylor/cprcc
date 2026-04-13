@@ -199,6 +199,17 @@ export default function AdminNewsletterPage() {
 
             <Card className="rounded-[1.75rem]">
               <CardHeader>
+                <CardTitle>Bounces</CardTitle>
+                <CardDescription>
+                  When our email provider reports a hard bounce for an address,
+                  that address is unsubscribed from the newsletter
+                  automatically.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="rounded-[1.75rem]">
+              <CardHeader>
                 <CardTitle>Recent campaigns</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">

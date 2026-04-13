@@ -1,8 +1,8 @@
-import type { EmailEvent } from "@convex-dev/resend";
 import { httpRouter } from "convex/server";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { auth } from "./auth";
+import type { ResendEmailBouncedWebhookPayload } from "./newsletters";
 import { resend } from "./resend";
 
 const http = httpRouter();
@@ -20,10 +20,8 @@ http.route({
       return response;
     }
 
-    const payload = (await newsletterRequest.json()) as {
-      data?: { email_id?: string };
-      type?: string;
-    } | null;
+    const payload =
+      (await newsletterRequest.json()) as ResendEmailBouncedWebhookPayload | null;
 
     if (
       !payload ||
@@ -34,7 +32,7 @@ http.route({
     }
 
     await ctx.runMutation(internal.newsletters.handleResendEmailEvent, {
-      event: payload as EmailEvent,
+      event: payload,
     });
 
     return response;

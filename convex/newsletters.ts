@@ -1,4 +1,3 @@
-import { type EmailEvent, vEmailEvent } from "@convex-dev/resend";
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import {
@@ -303,14 +302,59 @@ async function unsubscribeExternalSubscriberForBounce(
   return 1;
 }
 
-function getEventRecipientEmails(event: EmailEvent) {
+/**
+ * Matches Resend `email.bounced` webhooks. The package `vEmailEvent` omits
+ * `bounce.diagnosticCode`, which Resend now sends, so we validate this shape explicitly.
+ */
+const vResendEmailBouncedEvent = v.object({
+  created_at: v.string(),
+  data: v.object({
+    bounce: v.object({
+      diagnosticCode: v.optional(v.union(v.string(), v.array(v.string()))),
+      message: v.string(),
+      subType: v.string(),
+      type: v.string(),
+    }),
+    created_at: v.string(),
+    email_id: v.string(),
+    from: v.union(v.string(), v.array(v.string())),
+    headers: v.optional(
+      v.array(v.object({ name: v.string(), value: v.string() }))
+    ),
+    subject: v.string(),
+    to: v.union(v.string(), v.array(v.string())),
+  }),
+  type: v.literal("email.bounced"),
+});
+
+/** Matches `vResendEmailBouncedEvent` — used by `http.ts` when forwarding webhooks. */
+export interface ResendEmailBouncedWebhookPayload {
+  created_at: string;
+  data: {
+    bounce: {
+      diagnosticCode?: string | string[];
+      message: string;
+      subType: string;
+      type: string;
+    };
+    created_at: string;
+    email_id: string;
+    from: string | string[];
+    headers?: { name: string; value: string }[];
+    subject: string;
+    to: string | string[];
+  };
+  type: "email.bounced";
+}
+
+function getEventRecipientEmails(event: { data: { to: string | string[] } }) {
   const recipients = event.data.to;
   return Array.isArray(recipients) ? recipients : [recipients];
 }
 
 export const handleResendEmailEvent = internalMutation({
   args: {
-    event: vEmailEvent,
+    event: vResendEmailBouncedEvent,
   },
   returns: v.null(),
   handler: async (ctx, args) => {
