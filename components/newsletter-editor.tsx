@@ -7,7 +7,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect, useRef, useState } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,6 +30,27 @@ const emptyEditorContent = "<p></p>";
 
 const HTTP_URL_PREFIX_REGEX = /^https?:\/\//i;
 
+/** Keeps focus in the TipTap editor so toolbar actions run (click/tap otherwise blur first). */
+function toolbarPointerDown(event: MouseEvent<HTMLButtonElement>) {
+  event.preventDefault();
+}
+
+function toggleBulletListFromToolbar(editor: Editor) {
+  const chain = editor.chain().focus();
+  if (editor.isActive("heading")) {
+    chain.setParagraph();
+  }
+  chain.toggleBulletList().run();
+}
+
+function toggleOrderedListFromToolbar(editor: Editor) {
+  const chain = editor.chain().focus();
+  if (editor.isActive("heading")) {
+    chain.setParagraph();
+  }
+  chain.toggleOrderedList().run();
+}
+
 function ToolbarButton({
   active,
   children,
@@ -41,15 +62,18 @@ function ToolbarButton({
   disabled?: boolean;
   onClick: () => void;
 }) {
+  const isToggle = active !== undefined;
   return (
     <button
-      className={`inline-flex min-h-11 items-center justify-center rounded-lg border px-3 py-2 font-medium text-sm transition-colors ${
+      aria-pressed={isToggle ? active : undefined}
+      className={`inline-flex min-h-11 touch-manipulation items-center justify-center rounded-lg border px-3 py-2 font-medium text-sm transition-colors ${
         active
           ? "border-red-200 bg-red-50 text-red-700"
-          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+          : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-muted)] hover:border-[color:var(--color-border-hover)] hover:bg-[color:var(--color-bg-subtle)] hover:text-[color:var(--color-text-emphasis)]"
       } disabled:cursor-not-allowed disabled:opacity-50`}
       disabled={disabled}
       onClick={onClick}
+      onMouseDown={toolbarPointerDown}
       type="button"
     >
       {children}
@@ -113,7 +137,7 @@ export function NewsletterEditor({
     editable: !disabled,
     editorProps: {
       attributes: {
-        class: `${largeWorkspace ? EDITOR_MIN_HEIGHT_LARGE : EDITOR_MIN_HEIGHT_DEFAULT} rounded-b-[1.5rem] px-5 py-5 text-[15px] leading-7 text-slate-900 focus:outline-none [&_a.newsletter-editor-link]:text-red-700 [&_a.newsletter-editor-link]:underline [&_a.newsletter-editor-link]:decoration-red-600/70`,
+        class: `${largeWorkspace ? EDITOR_MIN_HEIGHT_LARGE : EDITOR_MIN_HEIGHT_DEFAULT} rounded-b-[1.5rem] px-5 py-5 text-[15px] leading-7 text-[color:var(--color-text-emphasis)] focus:outline-none [&_a.newsletter-editor-link]:text-red-700 [&_a.newsletter-editor-link]:underline [&_a.newsletter-editor-link]:decoration-red-600/70 [&_blockquote]:my-4 [&_blockquote]:border-[color:var(--color-border)] [&_blockquote]:border-l-4 [&_blockquote]:pl-4 [&_blockquote]:text-[color:var(--color-text-muted)] [&_li]:my-1 [&_li>p]:mb-0 [&_li>p]:mt-0 [&_ol]:list-decimal [&_ol]:list-outside [&_ol]:pl-8 [&_ol_ol]:list-[lower-alpha] [&_ul]:list-disc [&_ul]:list-outside [&_ul]:pl-8 [&_ul_ul]:list-[circle]`,
       },
       handlePaste: (_view, event) => {
         if (modeRef.current !== "visual" || disabledRef.current) {
@@ -322,14 +346,14 @@ export function NewsletterEditor({
             <ToolbarButton
               active={editor.isActive("bulletList")}
               disabled={disabled}
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              onClick={() => toggleBulletListFromToolbar(editor)}
             >
               Bullets
             </ToolbarButton>
             <ToolbarButton
               active={editor.isActive("orderedList")}
               disabled={disabled}
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              onClick={() => toggleOrderedListFromToolbar(editor)}
             >
               Numbers
             </ToolbarButton>
@@ -390,11 +414,12 @@ export function NewsletterEditor({
               <p className="w-full text-red-600 text-sm">{linkError}</p>
             ) : null}
             <Button
-              className="ml-auto"
+              className="ml-auto touch-manipulation"
               disabled={disabled}
               onClick={() =>
                 editor.chain().focus().clearNodes().unsetAllMarks().run()
               }
+              onMouseDown={toolbarPointerDown}
               size="sm"
               type="button"
               variant="ghost"
@@ -404,7 +429,7 @@ export function NewsletterEditor({
           </div>
         </div>
         <div
-          className={`[&_.ProseMirror_blockquote]:mb-4 [&_.ProseMirror_h1]:mt-7 [&_.ProseMirror_h1]:mb-3 [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:text-slate-900 [&_.ProseMirror_h2]:mt-6 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:text-slate-900 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h3]:mt-5 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:text-slate-900 [&_.ProseMirror_h4]:mt-4 [&_.ProseMirror_h4]:mb-2 [&_.ProseMirror_h4]:font-semibold [&_.ProseMirror_h4]:text-base [&_.ProseMirror_h4]:text-slate-900 [&_.ProseMirror_hr]:my-6 [&_.ProseMirror_hr]:border-slate-200 [&_.ProseMirror_li]:mb-1 [&_.ProseMirror_ol]:mb-4 [&_.ProseMirror_p]:mb-4 [&_.ProseMirror_ul]:mb-4 ${
+          className={`[&_.ProseMirror_blockquote]:mb-4 [&_.ProseMirror_h1]:mt-7 [&_.ProseMirror_h1]:mb-3 [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h2]:mt-6 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h3]:mt-5 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h4]:mt-4 [&_.ProseMirror_h4]:mb-2 [&_.ProseMirror_h4]:font-semibold [&_.ProseMirror_h4]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h4]:text-base [&_.ProseMirror_hr]:my-6 [&_.ProseMirror_hr]:border-[color:var(--color-border)] [&_.ProseMirror_li]:mb-1 [&_.ProseMirror_ol]:mb-4 [&_.ProseMirror_p]:mb-4 [&_.ProseMirror_ul]:mb-4 ${
             mode === "markdown" ? "hidden" : ""
           }`}
         >

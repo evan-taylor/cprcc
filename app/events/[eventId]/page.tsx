@@ -4,105 +4,20 @@ import { useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useRef, useState } from "react";
+import { AdminRsvpCard } from "@/components/event-detail/admin-rsvp-card";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-
-const CONVEX_ID_PATTERN = /^[a-z0-9]{32}$/;
-type CampusLocation = "onCampus" | "offCampus";
-
-const formatCampusLocation = (campusLocation: CampusLocation) => {
-  if (campusLocation === "onCampus") {
-    return "On campus";
-  }
-  return "Off campus";
-};
-
-const formatShiftTime = (startTime: number, endTime?: number) => {
-  const start = new Date(startTime).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
-  if (endTime === undefined) {
-    return start;
-  }
-
-  const end = new Date(endTime).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
-  return `${start} - ${end}`;
-};
-
-const getShiftCoverageStatus = (
-  signupCount: number,
-  requiredPeople: number
-): string => {
-  if (signupCount === 0) {
-    return "Open";
-  }
-  if (signupCount >= requiredPeople) {
-    return "Filled";
-  }
-  return "Partially filled";
-};
-
-interface AdminRsvpCardProps {
-  rsvp: {
-    _id: Id<"rsvps">;
-    canDrive: boolean;
-    campusLocation?: CampusLocation;
-    driverInfo?: { carColor: string; carType: string };
-    needsRide: boolean;
-    selfTransport?: boolean;
-    shiftId?: Id<"shifts">;
-    userEmail?: string;
-    userName: string;
-    userPhoneNumber?: string;
-  };
-  shiftLabel?: string;
-}
-
-function AdminRsvpCard({ rsvp, shiftLabel }: AdminRsvpCardProps) {
-  return (
-    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <div>
-        <p className="font-semibold text-slate-900 text-sm">{rsvp.userName}</p>
-        <p className="text-slate-900 text-xs">{rsvp.userEmail}</p>
-        {rsvp.userPhoneNumber && (
-          <p className="text-slate-900 text-xs">
-            <a
-              className="hover:text-rose-600"
-              href={`tel:${rsvp.userPhoneNumber}`}
-            >
-              {rsvp.userPhoneNumber}
-            </a>
-          </p>
-        )}
-        {rsvp.canDrive && (
-          <p className="mt-1 text-blue-700 text-xs">
-            Driver: {rsvp.driverInfo?.carColor} {rsvp.driverInfo?.carType}
-          </p>
-        )}
-        {rsvp.needsRide && (
-          <p className="mt-1 text-orange-700 text-xs">Needs ride</p>
-        )}
-        {rsvp.selfTransport && (
-          <p className="mt-1 text-green-700 text-xs">Self-transport</p>
-        )}
-        {rsvp.campusLocation && (
-          <p className="mt-1 text-indigo-700 text-xs">
-            Pickup area: {formatCampusLocation(rsvp.campusLocation)}
-          </p>
-        )}
-      </div>
-      {shiftLabel && <p className="text-slate-900 text-xs">{shiftLabel}</p>}
-    </div>
-  );
-}
+import {
+  type CampusLocation,
+  CONVEX_ID_PATTERN,
+  formatCampusLocation,
+  formatShiftTime,
+  getShiftCoverageStatus,
+  shiftLabelClass,
+} from "@/lib/event-detail-formatting";
 
 interface RsvpStatusProps {
   event: {
@@ -203,16 +118,6 @@ function RsvpStatusSection({
   );
 }
 
-const shiftLabelClass = (isDisabled: boolean, isSelected: boolean) => {
-  if (isDisabled) {
-    return "cursor-not-allowed opacity-60";
-  }
-  if (isSelected) {
-    return "border-rose-400 bg-rose-50 ring-2 ring-rose-400";
-  }
-  return "border-slate-200 bg-slate-50 hover:border-rose-200";
-};
-
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: page component with loading/auth guards and complex event detail rendering
 export default function EventDetailPage() {
   const params = useParams();
@@ -272,6 +177,7 @@ export default function EventDetailPage() {
           fullScreen={false}
           message="Loading event..."
         />
+        <SiteFooter />
       </div>
     );
   }
@@ -282,14 +188,15 @@ export default function EventDetailPage() {
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
-            <h1 className="font-semibold text-2xl text-slate-900">
+            <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Event Not Found
             </h1>
-            <p className="mt-3 text-slate-900">
+            <p className="mt-3 text-[color:var(--color-text-emphasis)]">
               This event does not exist or has been deleted.
             </p>
           </div>
         </div>
+        <SiteFooter />
       </div>
     );
   }
@@ -559,7 +466,7 @@ export default function EventDetailPage() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <h1 className="font-semibold text-3xl text-slate-900">
+                  <h1 className="font-semibold text-3xl text-[color:var(--color-text-emphasis)]">
                     {event.title}
                   </h1>
                   {event.eventType === "boothing" && (
@@ -573,7 +480,9 @@ export default function EventDetailPage() {
                     </span>
                   )}
                 </div>
-                <p className="mt-4 text-slate-900">{event.description}</p>
+                <p className="mt-4 text-[color:var(--color-text-emphasis)]">
+                  {event.description}
+                </p>
               </div>
               {currentUser?.role === "board" && (
                 <div className="flex flex-col gap-2">
@@ -605,8 +514,10 @@ export default function EventDetailPage() {
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="font-semibold text-slate-900 text-sm">Date</p>
-                <p className="mt-1 text-slate-900">
+                <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
+                  Date
+                </p>
+                <p className="mt-1 text-[color:var(--color-text-emphasis)]">
                   {eventDate.toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -616,8 +527,10 @@ export default function EventDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-slate-900 text-sm">Time</p>
-                <p className="mt-1 text-slate-900">
+                <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
+                  Time
+                </p>
+                <p className="mt-1 text-[color:var(--color-text-emphasis)]">
                   {eventDate.toLocaleTimeString("en-US", {
                     hour: "numeric",
                     minute: "2-digit",
@@ -630,12 +543,18 @@ export default function EventDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-slate-900 text-sm">Location</p>
-                <p className="mt-1 text-slate-900">{event.location}</p>
+                <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
+                  Location
+                </p>
+                <p className="mt-1 text-[color:var(--color-text-emphasis)]">
+                  {event.location}
+                </p>
               </div>
               <div>
-                <p className="font-semibold text-slate-900 text-sm">RSVPs</p>
-                <p className="mt-1 text-slate-900">
+                <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
+                  RSVPs
+                </p>
+                <p className="mt-1 text-[color:var(--color-text-emphasis)]">
                   {uniqueRsvpUserIds.size} people
                 </p>
               </div>
@@ -645,7 +564,7 @@ export default function EventDetailPage() {
           {event.eventType === "boothing" && event.shifts.length > 0 && (
             <div className="editorial-card rounded-3xl p-8">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-semibold text-slate-900 text-xl">
+                <h2 className="font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                   Available Shifts
                   {selectedShiftIds.size > 0 && (
                     <span className="ml-2 rounded-full bg-rose-100 px-3 py-1 font-semibold text-rose-700 text-sm">
@@ -656,14 +575,14 @@ export default function EventDetailPage() {
                 {currentUser && (
                   <div className="flex gap-2">
                     <button
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
+                      className="rounded-lg border border-[color:var(--color-border-hover)] px-3 py-1.5 font-semibold text-[color:var(--color-text-emphasis)] text-sm transition hover:bg-[color:var(--color-surface-hover)]"
                       onClick={selectAllAvailableShifts}
                       type="button"
                     >
                       Select All
                     </button>
                     <button
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
+                      className="rounded-lg border border-[color:var(--color-border-hover)] px-3 py-1.5 font-semibold text-[color:var(--color-text-emphasis)] text-sm transition hover:bg-[color:var(--color-surface-hover)]"
                       onClick={clearShiftSelection}
                       type="button"
                     >
@@ -696,7 +615,7 @@ export default function EventDetailPage() {
                         {currentUser && !isDisabled && (
                           <input
                             checked={isSelected}
-                            className="h-5 w-5 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                            className="h-5 w-5 rounded border-[color:var(--color-border-hover)] text-rose-600 focus:ring-rose-500"
                             id={`shift-${shift._id}`}
                             onChange={() => {
                               toggleShiftSelection(shift._id);
@@ -714,7 +633,7 @@ export default function EventDetailPage() {
                           />
                         )}
                         <div className="flex-1">
-                          <p className="font-semibold text-slate-900">
+                          <p className="font-semibold text-[color:var(--color-text-emphasis)]">
                             {shiftStart.toLocaleTimeString("en-US", {
                               hour: "numeric",
                               minute: "2-digit",
@@ -725,7 +644,7 @@ export default function EventDetailPage() {
                               minute: "2-digit",
                             })}
                           </p>
-                          <p className="mt-1 text-slate-900 text-sm">
+                          <p className="mt-1 text-[color:var(--color-text-emphasis)] text-sm">
                             {shiftRsvps.length} / {shift.requiredPeople}{" "}
                             volunteers
                             {isFull && " (Full)"}
@@ -738,7 +657,7 @@ export default function EventDetailPage() {
                         </span>
                       )}
                       {currentUser && isFull && !userHasThisShift && (
-                        <span className="rounded-full bg-slate-100 px-3 py-1.5 font-semibold text-slate-900 text-xs">
+                        <span className="rounded-full bg-[color:var(--color-bg-subtle)] px-3 py-1.5 font-semibold text-[color:var(--color-text-emphasis)] text-xs">
                           Full
                         </span>
                       )}
@@ -751,7 +670,7 @@ export default function EventDetailPage() {
 
           {currentUser && (
             <div className="editorial-card rounded-3xl p-8" ref={rsvpFormRef}>
-              <h2 className="mb-4 font-semibold text-slate-900 text-xl">
+              <h2 className="mb-4 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                 Your RSVP
               </h2>
 
@@ -839,7 +758,7 @@ export default function EventDetailPage() {
                       </label>
                       <input
                         autoComplete="tel"
-                        className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm placeholder:text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-[color:var(--color-text-emphasis)] text-sm shadow-sm placeholder:text-[color:var(--color-text-emphasis)] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         id="phoneNumber"
                         inputMode="tel"
                         onChange={(e) => setPhoneNumber(e.target.value)}
@@ -852,7 +771,7 @@ export default function EventDetailPage() {
 
                   {event.isOffsite && (
                     <div className="space-y-4">
-                      <p className="font-semibold text-slate-900 text-sm">
+                      <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                         Transportation
                       </p>
                       <label
@@ -861,7 +780,7 @@ export default function EventDetailPage() {
                       >
                         <input
                           checked={needsRide}
-                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          className="mt-px h-4 w-4 shrink-0 rounded border-[color:var(--color-border-hover)] text-rose-600 focus:ring-rose-500"
                           id="needsRide"
                           onChange={(e) => {
                             setNeedsRide(e.target.checked);
@@ -872,7 +791,7 @@ export default function EventDetailPage() {
                           }}
                           type="checkbox"
                         />
-                        <span className="text-slate-900 text-sm leading-5">
+                        <span className="text-[color:var(--color-text-emphasis)] text-sm leading-5">
                           I need a ride
                         </span>
                       </label>
@@ -882,7 +801,7 @@ export default function EventDetailPage() {
                       >
                         <input
                           checked={canDrive}
-                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          className="mt-px h-4 w-4 shrink-0 rounded border-[color:var(--color-border-hover)] text-rose-600 focus:ring-rose-500"
                           id="canDrive"
                           onChange={(e) => {
                             setCanDrive(e.target.checked);
@@ -893,7 +812,7 @@ export default function EventDetailPage() {
                           }}
                           type="checkbox"
                         />
-                        <span className="text-slate-900 text-sm leading-5">
+                        <span className="text-[color:var(--color-text-emphasis)] text-sm leading-5">
                           I can drive
                         </span>
                       </label>
@@ -903,7 +822,7 @@ export default function EventDetailPage() {
                       >
                         <input
                           checked={selfTransport}
-                          className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          className="mt-px h-4 w-4 shrink-0 rounded border-[color:var(--color-border-hover)] text-rose-600 focus:ring-rose-500"
                           id="selfTransport"
                           onChange={(e) => {
                             setSelfTransport(e.target.checked);
@@ -915,14 +834,14 @@ export default function EventDetailPage() {
                           }}
                           type="checkbox"
                         />
-                        <span className="text-slate-900 text-sm leading-5">
+                        <span className="text-[color:var(--color-text-emphasis)] text-sm leading-5">
                           I will transport myself
                         </span>
                       </label>
 
                       {(needsRide || canDrive) && (
                         <fieldset className="space-y-2">
-                          <legend className="font-semibold text-slate-900 text-sm">
+                          <legend className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                             Are you on campus or off campus?
                           </legend>
                           <label
@@ -931,14 +850,14 @@ export default function EventDetailPage() {
                           >
                             <input
                               checked={campusLocation === "onCampus"}
-                              className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                              className="mt-px h-4 w-4 shrink-0 rounded border-[color:var(--color-border-hover)] text-rose-600 focus:ring-rose-500"
                               id="campusLocationOn"
                               name="campusLocation"
                               onChange={() => setCampusLocation("onCampus")}
                               type="radio"
                               value="onCampus"
                             />
-                            <span className="text-slate-900 text-sm leading-5">
+                            <span className="text-[color:var(--color-text-emphasis)] text-sm leading-5">
                               I&apos;m on campus
                             </span>
                           </label>
@@ -948,14 +867,14 @@ export default function EventDetailPage() {
                           >
                             <input
                               checked={campusLocation === "offCampus"}
-                              className="mt-px h-4 w-4 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                              className="mt-px h-4 w-4 shrink-0 rounded border-[color:var(--color-border-hover)] text-rose-600 focus:ring-rose-500"
                               id="campusLocationOff"
                               name="campusLocation"
                               onChange={() => setCampusLocation("offCampus")}
                               type="radio"
                               value="offCampus"
                             />
-                            <span className="text-slate-900 text-sm leading-5">
+                            <span className="text-[color:var(--color-text-emphasis)] text-sm leading-5">
                               I&apos;m off campus
                             </span>
                           </label>
@@ -964,18 +883,18 @@ export default function EventDetailPage() {
 
                       {canDrive && (
                         <div className="editorial-card-soft mt-4 space-y-3 rounded-lg p-4">
-                          <p className="font-semibold text-slate-900 text-sm">
+                          <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                             Driver Information
                           </p>
                           <div>
                             <label
-                              className="block text-slate-900 text-sm"
+                              className="block text-[color:var(--color-text-emphasis)] text-sm"
                               htmlFor="carType"
                             >
                               Car Type
                             </label>
                             <input
-                              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                              className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                               id="carType"
                               onChange={(e) => setCarType(e.target.value)}
                               placeholder="e.g., Honda Civic"
@@ -986,13 +905,13 @@ export default function EventDetailPage() {
                           </div>
                           <div>
                             <label
-                              className="block text-slate-900 text-sm"
+                              className="block text-[color:var(--color-text-emphasis)] text-sm"
                               htmlFor="carColor"
                             >
                               Car Color
                             </label>
                             <input
-                              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                              className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                               id="carColor"
                               onChange={(e) => setCarColor(e.target.value)}
                               placeholder="e.g., Blue"
@@ -1003,13 +922,13 @@ export default function EventDetailPage() {
                           </div>
                           <div>
                             <label
-                              className="block text-slate-900 text-sm"
+                              className="block text-[color:var(--color-text-emphasis)] text-sm"
                               htmlFor="capacity"
                             >
                               Passenger Capacity
                             </label>
                             <input
-                              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                              className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                               id="capacity"
                               max="8"
                               min="1"
@@ -1034,7 +953,7 @@ export default function EventDetailPage() {
 
                   <div className="flex gap-3">
                     <button
-                      className="flex-1 rounded-full border border-slate-300 px-4 py-2 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
+                      className="flex-1 rounded-full border border-[color:var(--color-border-hover)] px-4 py-2 font-semibold text-[color:var(--color-text-emphasis)] text-sm transition hover:bg-[color:var(--color-surface-hover)]"
                       onClick={() => {
                         setShowRsvpForm(false);
                         setSelectedShiftIds(new Set());
@@ -1047,7 +966,7 @@ export default function EventDetailPage() {
                       Cancel
                     </button>
                     <button
-                      className="flex-1 rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700 disabled:bg-slate-400"
+                      className="flex-1 rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700 disabled:bg-[color:var(--color-text-subtle)]"
                       disabled={
                         isSubmitting ||
                         (event.eventType === "boothing" &&
@@ -1073,7 +992,7 @@ export default function EventDetailPage() {
 
           {!currentUser && (
             <div className="rounded-3xl border border-rose-300 bg-white p-8 text-center shadow-sm">
-              <p className="text-slate-900">
+              <p className="text-[color:var(--color-text-emphasis)]">
                 Please{" "}
                 <button
                   className="font-semibold text-rose-600 hover:text-rose-700"
@@ -1089,14 +1008,14 @@ export default function EventDetailPage() {
 
           {currentUser?.role === "board" && (
             <div className="editorial-card rounded-3xl p-8">
-              <h2 className="mb-4 font-semibold text-slate-900 text-xl">
+              <h2 className="mb-4 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                 Attendees ({uniqueRsvpUserIds.size} volunteers,{" "}
                 {event.rsvps.length} signups)
               </h2>
               {(() => {
                 if (event.rsvps.length === 0) {
                   return (
-                    <p className="text-center text-slate-900 text-sm">
+                    <p className="text-center text-[color:var(--color-text-emphasis)] text-sm">
                       No RSVPs yet
                     </p>
                   );
@@ -1120,18 +1039,18 @@ export default function EventDetailPage() {
 
                         return (
                           <section
-                            className="rounded-2xl border border-slate-200 bg-white p-5"
+                            className="rounded-2xl border border-[color:var(--color-border)] bg-white p-5"
                             key={shift._id}
                           >
                             <div className="mb-4 flex items-center justify-between gap-3">
                               <div>
-                                <h3 className="font-semibold text-lg text-slate-900">
+                                <h3 className="font-semibold text-[color:var(--color-text-emphasis)] text-lg">
                                   {formatShiftTime(
                                     shift.startTime,
                                     shift.endTime
                                   )}
                                 </h3>
-                                <p className="mt-1 text-slate-900 text-sm">
+                                <p className="mt-1 text-[color:var(--color-text-emphasis)] text-sm">
                                   {shiftRsvps.length} / {shift.requiredPeople}{" "}
                                   volunteers
                                 </p>
@@ -1142,7 +1061,7 @@ export default function EventDetailPage() {
                             </div>
 
                             {shiftRsvps.length === 0 ? (
-                              <p className="text-slate-900 text-sm">
+                              <p className="text-[color:var(--color-text-emphasis)] text-sm">
                                 No one is signed up for this shift yet.
                               </p>
                             ) : (
@@ -1157,12 +1076,12 @@ export default function EventDetailPage() {
                       })}
 
                       {unassignedRsvps.length > 0 && (
-                        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                        <section className="rounded-2xl border border-[color:var(--color-border)] bg-white p-5">
                           <div className="mb-4">
-                            <h3 className="font-semibold text-lg text-slate-900">
+                            <h3 className="font-semibold text-[color:var(--color-text-emphasis)] text-lg">
                               Unassigned shift signups
                             </h3>
-                            <p className="mt-1 text-slate-900 text-sm">
+                            <p className="mt-1 text-[color:var(--color-text-emphasis)] text-sm">
                               These RSVPs are not currently attached to a shift.
                             </p>
                           </div>
@@ -1209,6 +1128,7 @@ export default function EventDetailPage() {
           )}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

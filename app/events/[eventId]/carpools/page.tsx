@@ -14,6 +14,7 @@ import {
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
@@ -121,10 +122,10 @@ export default function CarpoolManagementPage() {
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
-            <h1 className="font-semibold text-2xl text-slate-900">
+            <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Access Denied
             </h1>
-            <p className="mt-3 text-slate-900">
+            <p className="mt-3 text-[color:var(--color-text-emphasis)]">
               Only board members can manage carpools.
             </p>
           </div>
@@ -139,7 +140,7 @@ export default function CarpoolManagementPage() {
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
-            <h1 className="font-semibold text-2xl text-slate-900">
+            <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Event Not Found
             </h1>
           </div>
@@ -154,10 +155,10 @@ export default function CarpoolManagementPage() {
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
-            <h1 className="font-semibold text-2xl text-slate-900">
+            <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Not an Offsite Event
             </h1>
-            <p className="mt-3 text-slate-900">
+            <p className="mt-3 text-[color:var(--color-text-emphasis)]">
               Carpools are only available for offsite events.
             </p>
           </div>
@@ -404,7 +405,9 @@ export default function CarpoolManagementPage() {
           <h1 className="font-display font-semibold text-4xl text-[color:var(--color-text-emphasis)]">
             Carpool Management
           </h1>
-          <p className="mt-2 text-slate-900">{event.title}</p>
+          <p className="mt-2 text-[color:var(--color-text-emphasis)]">
+            {event.title}
+          </p>
         </header>
 
         {error && (
@@ -421,25 +424,31 @@ export default function CarpoolManagementPage() {
 
         <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="editorial-card rounded-3xl p-6">
-            <p className="font-semibold text-slate-900 text-sm">Total RSVPs</p>
-            <p className="mt-2 font-bold text-3xl text-slate-900">
+            <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
+              Total RSVPs
+            </p>
+            <p className="mt-2 font-bold text-3xl text-[color:var(--color-text-emphasis)]">
               {uniqueRsvpUserIds.size}
             </p>
           </div>
           <div className="editorial-card rounded-3xl p-6">
-            <p className="font-semibold text-slate-900 text-sm">Drivers</p>
+            <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
+              Drivers
+            </p>
             <p className="mt-2 font-bold text-3xl text-blue-600">
               {uniqueDriverUserIds.size}
             </p>
           </div>
           <div className="editorial-card rounded-3xl p-6">
-            <p className="font-semibold text-slate-900 text-sm">Need Rides</p>
+            <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
+              Need Rides
+            </p>
             <p className="mt-2 font-bold text-3xl text-orange-600">
               {uniqueRiderUserIds.size}
             </p>
           </div>
           <div className="editorial-card rounded-3xl p-6">
-            <p className="font-semibold text-slate-900 text-sm">
+            <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
               Self-Transport
             </p>
             <p className="mt-2 font-bold text-3xl text-green-600">
@@ -449,12 +458,12 @@ export default function CarpoolManagementPage() {
         </div>
 
         <div className="editorial-card mb-8 rounded-3xl p-8">
-          <h2 className="mb-4 font-semibold text-slate-900 text-xl">
+          <h2 className="mb-4 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
             Carpool Actions
           </h2>
           <div className="flex flex-wrap gap-3">
             <button
-              className="rounded-full bg-rose-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-rose-700 disabled:bg-slate-400"
+              className="rounded-full bg-rose-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-rose-700 disabled:bg-[color:var(--color-text-subtle)]"
               disabled={isGenerating || drivers.length === 0}
               onClick={handleGenerateCarpools}
               type="button"
@@ -462,7 +471,7 @@ export default function CarpoolManagementPage() {
               {isGenerating ? "Generating..." : "Generate Carpools"}
             </button>
             <button
-              className="rounded-full bg-green-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-green-700 disabled:bg-slate-400"
+              className="rounded-full bg-green-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-green-700 disabled:bg-[color:var(--color-text-subtle)]"
               disabled={isFinalizing || carpools.length === 0 || allFinalized}
               onClick={handleFinalizeCarpools}
               type="button"
@@ -470,7 +479,7 @@ export default function CarpoolManagementPage() {
               {isFinalizing ? "Finalizing..." : "Finalize Carpools"}
             </button>
             <button
-              className="rounded-full bg-blue-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-blue-700 disabled:bg-slate-400"
+              className="rounded-full bg-blue-600 px-6 py-3 font-semibold text-sm text-white transition hover:bg-blue-700 disabled:bg-[color:var(--color-text-subtle)]"
               disabled={isSendingEmails || !allFinalized}
               onClick={handleSendEmails}
               type="button"
@@ -478,7 +487,7 @@ export default function CarpoolManagementPage() {
               {isSendingEmails ? "Sending..." : "Send Email Notifications"}
             </button>
           </div>
-          <p className="mt-4 text-slate-900 text-sm">
+          <p className="mt-4 text-[color:var(--color-text-emphasis)] text-sm">
             Generate carpools to automatically assign riders to drivers.
             Finalize when you&apos;re happy with the assignments, then send
             email notifications to all participants.
@@ -486,8 +495,8 @@ export default function CarpoolManagementPage() {
         </div>
 
         {carpools.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-            <p className="text-slate-900">
+          <div className="rounded-3xl border border-[color:var(--color-border)] bg-white p-10 text-center shadow-sm">
+            <p className="text-[color:var(--color-text-emphasis)]">
               No carpools generated yet. Click &quot;Generate Carpools&quot; to
               create assignments.
             </p>
@@ -501,11 +510,11 @@ export default function CarpoolManagementPage() {
           >
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-2xl text-slate-900">
+                <h2 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
                   Carpool Assignments ({carpools.length})
                 </h2>
                 {anyDraft && (
-                  <p className="text-slate-900 text-sm">
+                  <p className="text-[color:var(--color-text-emphasis)] text-sm">
                     💡 Drag passengers between carpools to reassign
                   </p>
                 )}
@@ -545,10 +554,10 @@ export default function CarpoolManagementPage() {
                           role="button"
                           tabIndex={0}
                         >
-                          <p className="font-semibold text-slate-900 text-sm">
+                          <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                             {rsvp.userName}
                           </p>
-                          <p className="text-slate-900 text-xs">
+                          <p className="text-[color:var(--color-text-emphasis)] text-xs">
                             {rsvp.userEmail}
                           </p>
                           {rsvp.campusLocation && (
@@ -558,7 +567,7 @@ export default function CarpoolManagementPage() {
                             </p>
                           )}
                           {shiftTimes && (
-                            <p className="mt-1 text-slate-900 text-xs">
+                            <p className="mt-1 text-[color:var(--color-text-emphasis)] text-xs">
                               Shifts: {shiftTimes}
                             </p>
                           )}
@@ -575,10 +584,10 @@ export default function CarpoolManagementPage() {
 
                 const borderClass = (() => {
                   if (isDraft && !isFull) {
-                    return "border-slate-200 hover:border-blue-300";
+                    return "border-[color:var(--color-border)] hover:border-blue-300";
                   }
                   if (isDraft && isFull) {
-                    return "border-slate-300 bg-slate-50";
+                    return "border-[color:var(--color-border-hover)] bg-[color:var(--color-bg-subtle)]";
                   }
                   return "border-green-200";
                 })();
@@ -626,7 +635,7 @@ export default function CarpoolManagementPage() {
                     }}
                   >
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-semibold text-slate-900 text-xl">
+                      <h3 className="font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                         Carpool {index + 1}
                       </h3>
                       <div className="flex items-center gap-2">
@@ -688,11 +697,11 @@ export default function CarpoolManagementPage() {
                     </div>
 
                     <div>
-                      <p className="mb-3 font-semibold text-slate-900 text-sm uppercase tracking-wide">
+                      <p className="mb-3 font-semibold text-[color:var(--color-text-emphasis)] text-sm uppercase tracking-wide">
                         Passengers ({carpool.riders.length})
                       </p>
                       {carpool.riders.length === 0 ? (
-                        <p className="text-center text-slate-900 text-sm">
+                        <p className="text-center text-[color:var(--color-text-emphasis)] text-sm">
                           No passengers assigned
                         </p>
                       ) : (
@@ -704,9 +713,9 @@ export default function CarpoolManagementPage() {
                             return (
                               // biome-ignore lint/a11y/useSemanticElements: draggable container needs role="button" for keyboard accessibility; a <button> is not appropriate for drag-and-drop source elements
                               <div
-                                className={`rounded-lg border border-slate-200 bg-slate-50 p-3 ${
+                                className={`rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] p-3 ${
                                   isDraft
-                                    ? "cursor-move hover:bg-slate-100"
+                                    ? "cursor-move hover:bg-[color:var(--color-surface-hover)]"
                                     : ""
                                 }`}
                                 draggable={isDraft}
@@ -725,10 +734,10 @@ export default function CarpoolManagementPage() {
                                 role="button"
                                 tabIndex={0}
                               >
-                                <p className="font-semibold text-slate-900 text-sm">
+                                <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                                   {rider.name}
                                 </p>
-                                <p className="text-slate-900 text-xs">
+                                <p className="text-[color:var(--color-text-emphasis)] text-xs">
                                   {rider.email}
                                 </p>
                                 {rider.campusLocation && (
@@ -738,7 +747,7 @@ export default function CarpoolManagementPage() {
                                   </p>
                                 )}
                                 {shiftTimes && (
-                                  <p className="mt-1 text-slate-900 text-xs">
+                                  <p className="mt-1 text-[color:var(--color-text-emphasis)] text-xs">
                                     Shifts: {shiftTimes}
                                   </p>
                                 )}
@@ -756,10 +765,12 @@ export default function CarpoolManagementPage() {
             <DragOverlay>
               {activeRider && (
                 <div className="cursor-grabbing rounded-lg border-2 border-blue-400 bg-white p-3 shadow-xl">
-                  <p className="font-semibold text-slate-900 text-sm">
+                  <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                     {activeRider.name}
                   </p>
-                  <p className="text-slate-900 text-xs">{activeRider.email}</p>
+                  <p className="text-[color:var(--color-text-emphasis)] text-xs">
+                    {activeRider.email}
+                  </p>
                   {activeRider.campusLocation && (
                     <p className="mt-1 text-indigo-700 text-xs">
                       Pickup area:{" "}
@@ -783,6 +794,7 @@ export default function CarpoolManagementPage() {
           </div>
         )}
       </main>
+      <SiteFooter />
     </div>
   );
 }

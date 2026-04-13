@@ -5,13 +5,7 @@ import posthog from "posthog-js";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import { parseNewsletterImportPaste } from "@/lib/newsletter-import";
@@ -107,12 +101,6 @@ export function NewsletterImportPanel({
     <Card className="rounded-[1.75rem]">
       <CardHeader>
         <CardTitle>Import subscribers</CardTitle>
-        <CardDescription>
-          Paste a column of emails from Excel, or CSV rows (with or without a
-          name column). We match club member accounts first; other addresses are
-          stored as imported contacts and receive campaigns until they
-          unsubscribe.
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Textarea

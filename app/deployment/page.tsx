@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 
 export const metadata: Metadata = {
@@ -250,7 +251,7 @@ export default async function DeploymentPage() {
               </article>
             ))}
           </div>
-          <p className="mt-4 text-slate-400 text-sm leading-relaxed">
+          <p className="mt-4 text-[color:var(--color-text-subtle)] text-sm leading-relaxed">
             Light blue = client-facing, yellow = first-time volunteer
             priorities, green = best for volunteers with health licenses.
           </p>
@@ -263,7 +264,7 @@ export default async function DeploymentPage() {
           <ul className="mt-4 space-y-3">
             {reminderItems.map((item) => (
               <li
-                className="flex items-start gap-3 text-slate-500 text-sm leading-relaxed"
+                className="flex items-start gap-3 text-[color:var(--color-text-muted)] text-sm leading-relaxed"
                 key={item}
               >
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
@@ -273,6 +274,7 @@ export default async function DeploymentPage() {
           </ul>
         </section>
       </main>
+      <SiteFooter />
     </div>
   );
 }

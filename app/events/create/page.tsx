@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useMemo, useState } from "react";
 import { MonthCalendar } from "@/components/events/month-calendar";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
@@ -125,10 +126,10 @@ export default function CreateEventPage() {
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
           <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
-            <h1 className="font-semibold text-2xl text-slate-900">
+            <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Access Denied
             </h1>
-            <p className="mt-3 text-slate-900">
+            <p className="mt-3 text-[color:var(--color-text-emphasis)]">
               Only board members can create events.
             </p>
           </div>
@@ -306,27 +307,27 @@ export default function CreateEventPage() {
           <h1 className="font-display font-semibold text-4xl text-[color:var(--color-text-emphasis)]">
             Create Event
           </h1>
-          <p className="mt-2 text-slate-900">
+          <p className="mt-2 text-[color:var(--color-text-emphasis)]">
             Create a new volunteer opportunity for members to RSVP to.
           </p>
         </header>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="editorial-card rounded-3xl p-8">
-            <h2 className="mb-6 font-semibold text-slate-900 text-xl">
+            <h2 className="mb-6 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
               Event Details
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label
-                  className="block font-semibold text-slate-900 text-sm"
+                  className="block font-semibold text-[color:var(--color-text-emphasis)] text-sm"
                   htmlFor="title"
                 >
                   Event Title
                 </label>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-4 py-2 text-[color:var(--color-text-emphasis)] placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="title"
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -337,13 +338,13 @@ export default function CreateEventPage() {
 
               <div>
                 <label
-                  className="block font-semibold text-slate-900 text-sm"
+                  className="block font-semibold text-[color:var(--color-text-emphasis)] text-sm"
                   htmlFor="description"
                 >
                   Description
                 </label>
                 <textarea
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-4 py-2 text-[color:var(--color-text-emphasis)] placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="description"
                   onChange={(e) => setDescription(e.target.value)}
                   required
@@ -354,13 +355,13 @@ export default function CreateEventPage() {
 
               <div>
                 <label
-                  className="block font-semibold text-slate-900 text-sm"
+                  className="block font-semibold text-[color:var(--color-text-emphasis)] text-sm"
                   htmlFor="slug"
                 >
                   URL Slug
                 </label>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-4 py-2 text-[color:var(--color-text-emphasis)] placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="slug"
                   onChange={(e) => {
                     setSlug(e.target.value);
@@ -370,7 +371,7 @@ export default function CreateEventPage() {
                   type="text"
                   value={slug}
                 />
-                <p className="mt-1 text-slate-900 text-xs">
+                <p className="mt-1 text-[color:var(--color-text-emphasis)] text-xs">
                   The URL will be: /events/
                   {slug || suggestedSlug || "your-event-slug"}
                 </p>
@@ -378,13 +379,13 @@ export default function CreateEventPage() {
 
               <div>
                 <label
-                  className="block font-semibold text-slate-900 text-sm"
+                  className="block font-semibold text-[color:var(--color-text-emphasis)] text-sm"
                   htmlFor="location"
                 >
                   Location
                 </label>
                 <input
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-4 py-2 text-[color:var(--color-text-emphasis)] placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="location"
                   onChange={(e) => setLocation(e.target.value)}
                   required
@@ -396,16 +397,16 @@ export default function CreateEventPage() {
               <div className="space-y-4 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="font-semibold text-slate-900 text-sm">
+                    <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                       Dates
                     </p>
-                    <p className="mt-1 text-slate-900 text-sm">
+                    <p className="mt-1 text-[color:var(--color-text-emphasis)] text-sm">
                       {selectedDatesLabel}
                     </p>
                   </div>
                   {selectedDates.length > 0 ? (
                     <button
-                      className="rounded-full border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 text-sm transition hover:bg-slate-50"
+                      className="rounded-full border border-[color:var(--color-border-hover)] bg-white px-4 py-2 font-semibold text-[color:var(--color-text-emphasis)] text-sm transition hover:bg-[color:var(--color-surface-hover)]"
                       onClick={handleClearDates}
                       type="button"
                     >
@@ -421,12 +422,12 @@ export default function CreateEventPage() {
                   selectedDates={selectedDates}
                   visibleMonth={calendarMonth}
                 />
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-slate-900 text-sm">
+                    <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                       Selected Days
                     </p>
-                    <p className="text-slate-900 text-xs">
+                    <p className="text-[color:var(--color-text-emphasis)] text-xs">
                       {eventsForCalendar === undefined
                         ? "Loading existing event markers..."
                         : `${Object.keys(eventCountsByDate).length} dates already have events`}
@@ -453,7 +454,7 @@ export default function CreateEventPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-3 text-slate-900 text-sm">
+                    <p className="mt-3 text-[color:var(--color-text-emphasis)] text-sm">
                       Pick one or more dates above. Each selected day will
                       create its own event entry.
                     </p>
@@ -464,13 +465,13 @@ export default function CreateEventPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label
-                    className="block font-semibold text-slate-900 text-sm"
+                    className="block font-semibold text-[color:var(--color-text-emphasis)] text-sm"
                     htmlFor="startTime"
                   >
                     Start Time
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-4 py-2 text-[color:var(--color-text-emphasis)] placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="startTime"
                     onChange={(e) => setStartTime(e.target.value)}
                     required
@@ -481,13 +482,13 @@ export default function CreateEventPage() {
 
                 <div>
                   <label
-                    className="block font-semibold text-slate-900 text-sm"
+                    className="block font-semibold text-[color:var(--color-text-emphasis)] text-sm"
                     htmlFor="endTime"
                   >
                     End Time
                   </label>
                   <input
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-4 py-2 text-[color:var(--color-text-emphasis)] placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     id="endTime"
                     onChange={(e) => setEndTime(e.target.value)}
                     required
@@ -497,24 +498,24 @@ export default function CreateEventPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                <p className="font-semibold text-slate-900 text-sm">
+              <div className="rounded-2xl border border-[color:var(--color-border)] bg-white px-4 py-3">
+                <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                   Time Applies to Every Selected Date
                 </p>
-                <p className="mt-1 text-slate-900 text-sm">
+                <p className="mt-1 text-[color:var(--color-text-emphasis)] text-sm">
                   {dateSelectionSummary}
                 </p>
               </div>
 
               <div>
                 <label
-                  className="block font-semibold text-slate-900 text-sm"
+                  className="block font-semibold text-[color:var(--color-text-emphasis)] text-sm"
                   htmlFor="eventType"
                 >
                   Event Type
                 </label>
                 <select
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-4 py-2 text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   id="eventType"
                   onChange={(e) =>
                     setEventType(e.target.value as "regular" | "boothing")
@@ -529,13 +530,13 @@ export default function CreateEventPage() {
               <div className="flex items-center gap-2">
                 <input
                   checked={isOffsite}
-                  className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                  className="h-4 w-4 rounded border-[color:var(--color-border-hover)] text-rose-600 focus:ring-rose-500"
                   id="isOffsite"
                   onChange={(e) => setIsOffsite(e.target.checked)}
                   type="checkbox"
                 />
                 <label
-                  className="font-semibold text-slate-900 text-sm"
+                  className="font-semibold text-[color:var(--color-text-emphasis)] text-sm"
                   htmlFor="isOffsite"
                 >
                   Offsite event (requires carpools)
@@ -548,11 +549,11 @@ export default function CreateEventPage() {
             <div className="editorial-card rounded-3xl p-8">
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h2 className="font-semibold text-slate-900 text-xl">
+                  <h2 className="font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                     Shifts
                   </h2>
                   {selectedDates.length > 1 ? (
-                    <p className="mt-1 text-slate-900 text-sm">
+                    <p className="mt-1 text-[color:var(--color-text-emphasis)] text-sm">
                       These shift times will be created on each selected date.
                     </p>
                   ) : null}
@@ -567,7 +568,7 @@ export default function CreateEventPage() {
               </div>
 
               {shifts.length === 0 ? (
-                <p className="text-center text-slate-900 text-sm">
+                <p className="text-center text-[color:var(--color-text-emphasis)] text-sm">
                   No shifts added yet. Click &quot;Add Shift&quot; to create
                   time slots.
                 </p>
@@ -579,7 +580,7 @@ export default function CreateEventPage() {
                       key={shift.id}
                     >
                       <div className="mb-3 flex items-center justify-between">
-                        <h3 className="font-semibold text-slate-900">
+                        <h3 className="font-semibold text-[color:var(--color-text-emphasis)]">
                           Shift {index + 1}
                         </h3>
                         <button
@@ -593,13 +594,13 @@ export default function CreateEventPage() {
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
                           <label
-                            className="block text-slate-900 text-sm"
+                            className="block text-[color:var(--color-text-emphasis)] text-sm"
                             htmlFor={`shift-${shift.id}-start`}
                           >
                             Start Time
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-3 py-2 text-[color:var(--color-text-emphasis)] text-sm placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-start`}
                             onChange={(e) =>
                               updateShift(index, "startTime", e.target.value)
@@ -611,13 +612,13 @@ export default function CreateEventPage() {
                         </div>
                         <div>
                           <label
-                            className="block text-slate-900 text-sm"
+                            className="block text-[color:var(--color-text-emphasis)] text-sm"
                             htmlFor={`shift-${shift.id}-end`}
                           >
                             End Time
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-3 py-2 text-[color:var(--color-text-emphasis)] text-sm placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-end`}
                             onChange={(e) =>
                               updateShift(index, "endTime", e.target.value)
@@ -629,13 +630,13 @@ export default function CreateEventPage() {
                         </div>
                         <div>
                           <label
-                            className="block text-slate-900 text-sm"
+                            className="block text-[color:var(--color-text-emphasis)] text-sm"
                             htmlFor={`shift-${shift.id}-people`}
                           >
                             People Needed
                           </label>
                           <input
-                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 text-sm placeholder:text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="mt-1 w-full rounded-lg border border-[color:var(--color-border-hover)] bg-white px-3 py-2 text-[color:var(--color-text-emphasis)] text-sm placeholder:text-[color:var(--color-text-emphasis)] focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
                             id={`shift-${shift.id}-people`}
                             min="1"
                             onChange={(e) =>
@@ -666,14 +667,14 @@ export default function CreateEventPage() {
 
           <div className="flex gap-4">
             <button
-              className="flex-1 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-900 transition hover:bg-slate-50"
+              className="flex-1 rounded-full border border-[color:var(--color-border-hover)] px-6 py-3 font-semibold text-[color:var(--color-text-emphasis)] transition hover:bg-[color:var(--color-surface-hover)]"
               onClick={() => router.push("/events")}
               type="button"
             >
               Cancel
             </button>
             <button
-              className="flex-1 rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition hover:bg-rose-700 disabled:bg-slate-400"
+              className="flex-1 rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition hover:bg-rose-700 disabled:bg-[color:var(--color-text-subtle)]"
               disabled={isSubmitting}
               type="submit"
             >
@@ -682,6 +683,7 @@ export default function CreateEventPage() {
           </div>
         </form>
       </main>
+      <SiteFooter />
     </div>
   );
 }

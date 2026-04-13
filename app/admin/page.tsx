@@ -93,10 +93,10 @@ export default function AdminPage() {
                 />
               </svg>
             </div>
-            <h1 className="font-bold font-display text-slate-900 text-xl">
+            <h1 className="font-bold font-display text-[color:var(--color-text-emphasis)] text-xl">
               Access Denied
             </h1>
-            <p className="mt-2 text-slate-500 text-sm">
+            <p className="mt-2 text-[color:var(--color-text-muted)] text-sm">
               Only board members can access this page.
             </p>
             <button
@@ -164,12 +164,8 @@ export default function AdminPage() {
               <div>
                 <p className="editorial-kicker">Newsletters</p>
                 <h2 className="mt-3 font-display font-semibold text-2xl text-slate-900 sm:text-3xl">
-                  Send club-wide email campaigns
+                  Newsletters
                 </h2>
-                <p className="mt-2 max-w-2xl text-[color:var(--color-text-muted)]">
-                  Compose rich-text updates, send them to subscribed members,
-                  and keep a history of recent campaigns inside the app.
-                </p>
               </div>
               <button
                 className="inline-flex h-11 items-center justify-center rounded-lg bg-red-600 px-6 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 active:scale-[0.97]"

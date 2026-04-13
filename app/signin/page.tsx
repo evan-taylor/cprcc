@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
+import { AuthPageShell } from "@/components/auth-page-shell";
 import { api } from "@/convex/_generated/api";
 
 export default function SignIn() {
@@ -107,21 +108,9 @@ export default function SignIn() {
   };
 
   return (
-    <div className="flex min-h-[100svh] items-center justify-center bg-[color:var(--color-bg-subtle)] px-4 py-12">
+    <AuthPageShell>
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link className="inline-block" href="/">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 shadow-lg shadow-red-600/25">
-              <svg
-                className="h-8 w-8 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <title>Red Cross logo</title>
-                <path d="M14 2h-4v8H2v4h8v8h4v-8h8v-4h-8V2z" />
-              </svg>
-            </div>
-          </Link>
           <h1 className="font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)]">
             {flow === "signIn" ? "Welcome back" : "Create your account"}
           </h1>
@@ -133,7 +122,7 @@ export default function SignIn() {
         </div>
 
         <div className="editorial-card rounded-2xl p-6 sm:p-8">
-          <div className="mb-6 flex gap-1 rounded-xl bg-slate-100 p-1">
+          <div className="mb-6 flex gap-1 rounded-xl bg-[color:var(--color-bg-subtle)] p-1">
             <button
               className={`flex-1 rounded-lg px-4 py-2 font-medium text-sm transition-all duration-200 ${
                 flow === "signIn"
@@ -169,13 +158,13 @@ export default function SignIn() {
               <>
                 <div>
                   <label
-                    className="mb-1.5 block font-medium text-slate-700 text-sm"
+                    className="mb-1.5 block font-medium text-[color:var(--color-text)] text-sm"
                     htmlFor="name"
                   >
                     Full Name
                   </label>
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 transition-colors duration-200 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                    className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-emphasis)] transition-colors duration-200 placeholder:text-[color:var(--color-text-subtle)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                     id="name"
                     name="name"
                     placeholder="Enter your full name"
@@ -185,29 +174,29 @@ export default function SignIn() {
                 </div>
                 <div>
                   <label
-                    className="mb-1.5 block font-medium text-slate-700 text-sm"
+                    className="mb-1.5 block font-medium text-[color:var(--color-text)] text-sm"
                     htmlFor="phoneNumber"
                   >
                     Phone Number
                   </label>
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 transition-colors duration-200 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                    className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-emphasis)] transition-colors duration-200 placeholder:text-[color:var(--color-text-subtle)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                     id="phoneNumber"
                     name="phoneNumber"
                     placeholder="(555) 123-4567"
                     type="tel"
                   />
-                  <p className="mt-1.5 text-slate-400 text-xs">
+                  <p className="mt-1.5 text-[color:var(--color-text-subtle)] text-xs">
                     Optional — recommended for carpool coordination
                   </p>
                 </div>
                 <label
-                  className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  className="flex items-start gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] px-4 py-3"
                   htmlFor="newsletterOptIn"
                 >
                   <input
                     checked={newsletterOptIn}
-                    className="mt-1 h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                    className="mt-1 h-4 w-4 rounded border-[color:var(--color-border-hover)] text-red-600 focus:ring-red-500"
                     id="newsletterOptIn"
                     onChange={(event) =>
                       setNewsletterOptIn(event.target.checked)
@@ -215,10 +204,10 @@ export default function SignIn() {
                     type="checkbox"
                   />
                   <span className="min-w-0">
-                    <span className="block font-medium text-slate-900 text-sm">
+                    <span className="block font-medium text-[color:var(--color-text-emphasis)] text-sm">
                       Email me club news and newsletters
                     </span>
-                    <span className="mt-1 block text-slate-500 text-xs">
+                    <span className="mt-1 block text-[color:var(--color-text-muted)] text-xs">
                       Get event announcements, volunteer updates, and chapter
                       highlights. You can unsubscribe at any time.
                     </span>
@@ -229,13 +218,13 @@ export default function SignIn() {
 
             <div>
               <label
-                className="mb-1.5 block font-medium text-slate-700 text-sm"
+                className="mb-1.5 block font-medium text-[color:var(--color-text)] text-sm"
                 htmlFor="email"
               >
                 Email Address
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 transition-colors duration-200 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-emphasis)] transition-colors duration-200 placeholder:text-[color:var(--color-text-subtle)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                 id="email"
                 name="email"
                 placeholder="you@example.com"
@@ -246,13 +235,13 @@ export default function SignIn() {
 
             <div>
               <label
-                className="mb-1.5 block font-medium text-slate-700 text-sm"
+                className="mb-1.5 block font-medium text-[color:var(--color-text)] text-sm"
                 htmlFor="password"
               >
                 Password
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 transition-colors duration-200 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-emphasis)] transition-colors duration-200 placeholder:text-[color:var(--color-text-subtle)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                 id="password"
                 minLength={8}
                 name="password"
@@ -261,7 +250,7 @@ export default function SignIn() {
                 type="password"
               />
               {flow === "signUp" && (
-                <p className="mt-1.5 text-slate-400 text-xs">
+                <p className="mt-1.5 text-[color:var(--color-text-subtle)] text-xs">
                   Must be at least 8 characters
                 </p>
               )}
@@ -299,7 +288,7 @@ export default function SignIn() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-slate-500 text-sm">
+          <div className="mt-6 text-center text-[color:var(--color-text-muted)] text-sm">
             {flow === "signIn" ? (
               <p>
                 New to Red Cross?{" "}
@@ -332,10 +321,10 @@ export default function SignIn() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-slate-400 text-xs">
+        <p className="mt-6 text-center text-[color:var(--color-text-subtle)] text-xs">
           By signing up, you agree to help make a difference in our community
         </p>
       </div>
-    </div>
+    </AuthPageShell>
   );
 }

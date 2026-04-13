@@ -3,7 +3,8 @@
 import { useMutation, useQuery } from "convex/react";
 import Image from "next/image";
 import posthog from "posthog-js";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
@@ -29,17 +30,6 @@ interface GalleryPhoto {
 }
 
 export default function GalleryPage() {
-  useEffect(() => {
-    document.title = "Photo Gallery | Cal Poly Red Cross Club";
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute(
-        "content",
-        "Browse photos from Cal Poly Red Cross Club events and activities. See our volunteers in action at blood drives, community service events, and disaster relief training."
-      );
-    }
-  }, []);
-
   const photos = useQuery(api.photos.listPhotos);
   const currentUser = useQuery(api.users.getCurrentUser);
   const generateUploadUrl = useMutation(api.photos.generateUploadUrl);
@@ -279,7 +269,7 @@ export default function GalleryPage() {
                 </label>
                 <input
                   accept="image/*,.heic,.heif"
-                  className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-red-50 file:px-4 file:py-2 file:font-semibold file:text-red-700 file:text-sm hover:file:bg-red-100 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  className="block w-full rounded-xl border border-[color:var(--color-border)] bg-white px-3 py-2.5 text-[color:var(--color-text-emphasis)] text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-red-50 file:px-4 file:py-2 file:font-semibold file:text-red-700 file:text-sm hover:file:bg-red-100 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                   disabled={uploading}
                   id="photo-upload"
                   multiple
@@ -291,14 +281,14 @@ export default function GalleryPage() {
 
               {selectedImages.length > 0 && (
                 <div className="space-y-3">
-                  <p className="font-medium text-slate-600 text-sm">
+                  <p className="font-medium text-[color:var(--color-text-muted)] text-sm">
                     Selected: {selectedImages.length} file
                     {selectedImages.length !== 1 ? "s" : ""}
                   </p>
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                     {selectedImages.map((img) => (
                       <div
-                        className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                        className="relative aspect-square overflow-hidden rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)]"
                         key={img.id}
                       >
                         <Image
@@ -328,7 +318,7 @@ export default function GalleryPage() {
                   Caption (optional)
                 </label>
                 <input
-                  className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 text-sm placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  className="block w-full rounded-xl border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-emphasis)] text-sm placeholder:text-[color:var(--color-text-subtle)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                   disabled={uploading}
                   id="caption"
                   onChange={(e) => setCaption(e.target.value)}
@@ -378,13 +368,13 @@ export default function GalleryPage() {
           <div className="grid gap-5 sm:columns-2 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }, (_, i) => (
               <div
-                className="animate-pulse overflow-hidden rounded-2xl border border-slate-100 bg-slate-50"
+                className="animate-pulse overflow-hidden rounded-2xl border border-[color:var(--color-border)]/50 bg-[color:var(--color-bg-subtle)]"
                 key={`photo-skeleton-${i.toString()}`}
               >
-                <div className="aspect-[4/3] bg-slate-100" />
+                <div className="aspect-[4/3] bg-[color:var(--color-border)]/40" />
                 <div className="p-4">
-                  <div className="mb-2 h-4 w-3/4 rounded bg-slate-100" />
-                  <div className="h-3 w-1/2 rounded bg-slate-100" />
+                  <div className="mb-2 h-4 w-3/4 rounded bg-[color:var(--color-border)]/50" />
+                  <div className="h-3 w-1/2 rounded bg-[color:var(--color-border)]/40" />
                 </div>
               </div>
             ))}
@@ -392,10 +382,10 @@ export default function GalleryPage() {
         )}
 
         {photos !== undefined && photos.length === 0 && (
-          <div className="mx-auto max-w-md py-16 text-center">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+          <div className="editorial-card-soft mx-auto max-w-md rounded-2xl px-6 py-14 text-center">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--color-bg-subtle)]">
               <svg
-                className="h-8 w-8 text-slate-400"
+                className="h-8 w-8 text-[color:var(--color-text-subtle)]"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={1.5}
@@ -413,7 +403,9 @@ export default function GalleryPage() {
               No photos yet
             </h2>
             <p className="mt-2 text-[color:var(--color-text-muted)]">
-              Check back soon for photos from our events and activities.
+              {currentUser?.role === "board"
+                ? "Upload images using the form above to build our gallery."
+                : "Check back soon for photos from our events and activities."}
             </p>
           </div>
         )}
@@ -423,7 +415,7 @@ export default function GalleryPage() {
             {photos.map((photo: GalleryPhoto) => (
               <div className="mb-5 break-inside-avoid" key={photo._id}>
                 <article className="group editorial-card overflow-hidden rounded-2xl transition-all duration-200 hover:shadow-lg">
-                  <div className="relative overflow-hidden bg-slate-100">
+                  <div className="relative overflow-hidden bg-[color:var(--color-bg-subtle)]">
                     {photo.url && (
                       <Image
                         alt={photo.caption || "Event scene"}
@@ -441,11 +433,11 @@ export default function GalleryPage() {
                   </div>
                   <div className="p-4">
                     {photo.caption && (
-                      <p className="mb-2 text-slate-700 text-sm leading-relaxed">
+                      <p className="mb-2 text-[color:var(--color-text)] text-sm leading-relaxed">
                         {photo.caption}
                       </p>
                     )}
-                    <div className="flex items-center justify-between text-slate-400 text-xs">
+                    <div className="flex items-center justify-between text-[color:var(--color-text-subtle)] text-xs">
                       <span>By {photo.uploaderName}</span>
                       <span>
                         {new Date(photo.uploadedAt).toLocaleDateString(
@@ -455,7 +447,7 @@ export default function GalleryPage() {
                       </span>
                     </div>
                     {currentUser?.role === "board" && (
-                      <div className="mt-3 border-slate-100 border-t pt-3">
+                      <div className="mt-3 border-[color:var(--color-border)]/60 border-t pt-3">
                         {deleteError && deletingPhotoId === photo._id && (
                           <p className="mb-2 text-red-600 text-xs">
                             {deleteError}
@@ -481,6 +473,7 @@ export default function GalleryPage() {
           </div>
         )}
       </main>
+      <SiteFooter />
     </div>
   );
 }

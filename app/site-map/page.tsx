@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 
 const sitePages = [
@@ -78,6 +79,7 @@ export default function SitemapPage() {
           ))}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

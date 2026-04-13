@@ -4,6 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useState } from "react";
+import { AuthPageShell } from "@/components/auth-page-shell";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -93,21 +94,9 @@ function ResetPasswordPageContent() {
   };
 
   return (
-    <div className="flex min-h-[100svh] items-center justify-center bg-[color:var(--color-bg-subtle)] px-4 py-12">
+    <AuthPageShell>
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link className="inline-block" href="/">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 shadow-lg shadow-red-600/25">
-              <svg
-                className="h-8 w-8 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <title>Red Cross logo</title>
-                <path d="M14 2h-4v8H2v4h8v8h4v-8h8v-4h-8V2z" />
-              </svg>
-            </div>
-          </Link>
           <h1 className="font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)]">
             Set a new password
           </h1>
@@ -142,14 +131,14 @@ function ResetPasswordPageContent() {
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label
-                  className="mb-1.5 block font-medium text-slate-700 text-sm"
+                  className="mb-1.5 block font-medium text-[color:var(--color-text)] text-sm"
                   htmlFor="email"
                 >
                   Email Address
                 </label>
                 <input
                   autoComplete="email"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 transition-colors duration-200 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-emphasis)] transition-colors duration-200 placeholder:text-[color:var(--color-text-subtle)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                   id="email"
                   name="email"
                   onChange={(event) => setEmail(event.target.value)}
@@ -162,14 +151,14 @@ function ResetPasswordPageContent() {
 
               <div>
                 <label
-                  className="mb-1.5 block font-medium text-slate-700 text-sm"
+                  className="mb-1.5 block font-medium text-[color:var(--color-text)] text-sm"
                   htmlFor="newPassword"
                 >
                   New Password
                 </label>
                 <input
                   autoComplete="new-password"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 transition-colors duration-200 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-emphasis)] transition-colors duration-200 placeholder:text-[color:var(--color-text-subtle)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                   id="newPassword"
                   minLength={MIN_PASSWORD_LENGTH}
                   name="newPassword"
@@ -183,14 +172,14 @@ function ResetPasswordPageContent() {
 
               <div>
                 <label
-                  className="mb-1.5 block font-medium text-slate-700 text-sm"
+                  className="mb-1.5 block font-medium text-[color:var(--color-text)] text-sm"
                   htmlFor="confirmPassword"
                 >
                   Confirm New Password
                 </label>
                 <input
                   autoComplete="new-password"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 transition-colors duration-200 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-emphasis)] transition-colors duration-200 placeholder:text-[color:var(--color-text-subtle)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                   id="confirmPassword"
                   minLength={MIN_PASSWORD_LENGTH}
                   name="confirmPassword"
@@ -218,7 +207,7 @@ function ResetPasswordPageContent() {
             </form>
           )}
 
-          <p className="mt-6 text-center text-slate-500 text-sm">
+          <p className="mt-6 text-center text-[color:var(--color-text-muted)] text-sm">
             Need a new link?{" "}
             <Link
               className="font-medium text-red-600 transition-colors duration-150 hover:text-red-700"
@@ -229,13 +218,13 @@ function ResetPasswordPageContent() {
           </p>
         </div>
       </div>
-    </div>
+    </AuthPageShell>
   );
 }
 
 function ResetPasswordPageFallback() {
   return (
-    <div className="flex min-h-[100svh] items-center justify-center bg-[color:var(--color-bg-subtle)] px-4 py-12">
+    <AuthPageShell>
       <div className="w-full max-w-sm">
         <div className="editorial-card rounded-2xl p-6 text-center sm:p-8">
           <p className="font-medium text-[color:var(--color-text-emphasis)] text-sm">
@@ -243,7 +232,7 @@ function ResetPasswordPageFallback() {
           </p>
         </div>
       </div>
-    </div>
+    </AuthPageShell>
   );
 }
 

@@ -4,6 +4,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -118,16 +119,16 @@ export default function NewsletterPage() {
                   className={`rounded-[1.25rem] border px-5 py-5 text-left transition-all ${
                     isSubscribed
                       ? "border-green-200 bg-green-50 shadow-sm"
-                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      : "border-[color:var(--color-border)] bg-white hover:border-[color:var(--color-border-hover)] hover:bg-[color:var(--color-surface-hover)]"
                   } disabled:cursor-not-allowed disabled:opacity-60`}
                   disabled={isSaving}
                   onClick={() => handleSubscriptionChange(true)}
                   type="button"
                 >
-                  <p className="font-semibold text-slate-900 text-sm">
+                  <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                     Stay subscribed
                   </p>
-                  <p className="mt-2 text-slate-500 text-sm">
+                  <p className="mt-2 text-[color:var(--color-text-muted)] text-sm">
                     Receive newsletters, event announcements, and highlights
                     from the club.
                   </p>
@@ -136,17 +137,17 @@ export default function NewsletterPage() {
                 <button
                   className={`rounded-[1.25rem] border px-5 py-5 text-left transition-all ${
                     isSubscribed
-                      ? "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      ? "border-[color:var(--color-border)] bg-white hover:border-[color:var(--color-border-hover)] hover:bg-[color:var(--color-surface-hover)]"
                       : "border-orange-200 bg-orange-50 shadow-sm"
                   } disabled:cursor-not-allowed disabled:opacity-60`}
                   disabled={isSaving}
                   onClick={() => handleSubscriptionChange(false)}
                   type="button"
                 >
-                  <p className="font-semibold text-slate-900 text-sm">
+                  <p className="font-semibold text-[color:var(--color-text-emphasis)] text-sm">
                     Unsubscribe
                   </p>
-                  <p className="mt-2 text-slate-500 text-sm">
+                  <p className="mt-2 text-[color:var(--color-text-muted)] text-sm">
                     Stop future newsletter campaigns while keeping your CPRCC
                     account active.
                   </p>
@@ -156,6 +157,7 @@ export default function NewsletterPage() {
           </Card>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
