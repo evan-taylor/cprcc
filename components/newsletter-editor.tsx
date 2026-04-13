@@ -66,7 +66,7 @@ function ToolbarButton({
   return (
     <button
       aria-pressed={isToggle ? active : undefined}
-      className={`inline-flex min-h-11 touch-manipulation items-center justify-center rounded-lg border px-3 py-2 font-medium text-sm transition-colors ${
+      className={`inline-flex min-h-11 touch-manipulation items-center justify-center whitespace-nowrap rounded-lg border px-3 py-2 font-medium text-sm transition-colors sm:min-h-9 sm:py-1.5 ${
         active
           ? "border-red-200 bg-red-50 text-red-700"
           : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-muted)] hover:border-[color:var(--color-border-hover)] hover:bg-[color:var(--color-bg-subtle)] hover:text-[color:var(--color-text-emphasis)]"
@@ -84,6 +84,8 @@ function ToolbarButton({
 const EDITOR_MIN_HEIGHT_DEFAULT = "min-h-[20rem]";
 const EDITOR_MIN_HEIGHT_LARGE =
   "min-h-[min(70vh,52rem)] sm:min-h-[min(75vh,56rem)]";
+const EDITOR_PLACEHOLDER_CLASSES =
+  "[&_.is-editor-empty:first-child::before]:pointer-events-none [&_.is-editor-empty:first-child::before]:float-left [&_.is-editor-empty:first-child::before]:h-0 [&_.is-editor-empty:first-child::before]:text-[color:var(--color-text-subtle)] [&_.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]";
 
 const HEADING_LEVELS = [
   { label: "H1", level: 1 as const },
@@ -137,7 +139,7 @@ export function NewsletterEditor({
     editable: !disabled,
     editorProps: {
       attributes: {
-        class: `${largeWorkspace ? EDITOR_MIN_HEIGHT_LARGE : EDITOR_MIN_HEIGHT_DEFAULT} rounded-b-[1.5rem] px-5 py-5 text-[15px] leading-7 text-[color:var(--color-text-emphasis)] focus:outline-none [&_a.newsletter-editor-link]:text-red-700 [&_a.newsletter-editor-link]:underline [&_a.newsletter-editor-link]:decoration-red-600/70 [&_blockquote]:my-4 [&_blockquote]:border-[color:var(--color-border)] [&_blockquote]:border-l-4 [&_blockquote]:pl-4 [&_blockquote]:text-[color:var(--color-text-muted)] [&_li]:my-1 [&_li>p]:mb-0 [&_li>p]:mt-0 [&_ol]:list-decimal [&_ol]:list-outside [&_ol]:pl-8 [&_ol_ol]:list-[lower-alpha] [&_ul]:list-disc [&_ul]:list-outside [&_ul]:pl-8 [&_ul_ul]:list-[circle]`,
+        class: `${largeWorkspace ? EDITOR_MIN_HEIGHT_LARGE : EDITOR_MIN_HEIGHT_DEFAULT} ${EDITOR_PLACEHOLDER_CLASSES} rounded-b-[1.5rem] px-5 py-5 text-[15px] leading-7 text-[color:var(--color-text-emphasis)] focus:outline-none [&_a.newsletter-editor-link]:text-red-700 [&_a.newsletter-editor-link]:underline [&_a.newsletter-editor-link]:decoration-red-600/70 [&_blockquote]:my-4 [&_blockquote]:border-[color:var(--color-border)] [&_blockquote]:border-l-4 [&_blockquote]:pl-4 [&_blockquote]:text-[color:var(--color-text-muted)] [&_li]:my-1 [&_li>p]:mb-0 [&_li>p]:mt-0 [&_ol]:list-decimal [&_ol]:list-outside [&_ol]:pl-8 [&_ol_ol]:list-[lower-alpha] [&_ul]:list-disc [&_ul]:list-outside [&_ul]:pl-8 [&_ul_ul]:list-[circle]`,
       },
       handlePaste: (_view, event) => {
         if (modeRef.current !== "visual" || disabledRef.current) {
@@ -255,9 +257,11 @@ export function NewsletterEditor({
 
   if (!editor) {
     return (
-      <div className="editorial-card overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
-        <div className="border-slate-200 border-b px-5 py-4">
-          <p className="text-slate-500 text-sm">Loading editor…</p>
+      <div className="editorial-card overflow-hidden rounded-[1.5rem] border border-[color:var(--color-border)] bg-white">
+        <div className="border-[color:var(--color-border)] border-b px-5 py-4">
+          <p className="text-[color:var(--color-text-muted)] text-sm">
+            Loading editor…
+          </p>
         </div>
         <div className="space-y-3 px-5 py-6">
           <div className="shimmer-surface h-4 rounded-lg" />
@@ -275,176 +279,220 @@ export function NewsletterEditor({
           error ? "border-red-300" : ""
         }`}
       >
-        <div className="flex flex-wrap gap-2 border-slate-200 border-b bg-slate-50/80 px-4 py-4">
-          <div className="flex w-full gap-2 sm:w-auto">
-            <ToolbarButton
-              active={mode === "visual"}
-              disabled={disabled}
-              onClick={() => {
-                if (mode === "markdown") {
-                  switchToVisual();
-                }
-              }}
-            >
-              Visual
-            </ToolbarButton>
-            <ToolbarButton
-              active={mode === "markdown"}
-              disabled={disabled}
-              onClick={() => {
-                if (mode === "visual") {
-                  switchToMarkdown();
-                }
-              }}
-            >
-              Markdown
-            </ToolbarButton>
-          </div>
-          <div
-            className={mode === "visual" ? "contents" : "hidden"}
-            data-editor-visual=""
-          >
-            <ToolbarButton
-              active={editor.isActive("bold")}
-              disabled={disabled}
-              onClick={() => editor.chain().focus().toggleBold().run()}
-            >
-              Bold
-            </ToolbarButton>
-            <ToolbarButton
-              active={editor.isActive("italic")}
-              disabled={disabled}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-            >
-              Italic
-            </ToolbarButton>
-            <ToolbarButton
-              active={editor.isActive("underline")}
-              disabled={disabled}
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-            >
-              Underline
-            </ToolbarButton>
-            {HEADING_LEVELS.map(({ label, level }) => (
+        <div className="space-y-0 border-[color:var(--color-border)] border-b bg-[color:var(--color-bg-subtle)]/70">
+          <div className="flex flex-wrap items-center gap-2 px-3 py-3">
+            <div className="flex gap-1 rounded-xl bg-white p-1 shadow-sm">
               <ToolbarButton
-                active={editor.isActive("heading", { level })}
+                active={mode === "visual"}
                 disabled={disabled}
-                key={level}
-                onClick={() =>
-                  editor.chain().focus().toggleHeading({ level }).run()
-                }
-              >
-                {label}
-              </ToolbarButton>
-            ))}
-            <ToolbarButton
-              disabled={disabled}
-              onClick={() => editor.chain().focus().setHorizontalRule().run()}
-            >
-              Rule
-            </ToolbarButton>
-            <ToolbarButton
-              active={editor.isActive("bulletList")}
-              disabled={disabled}
-              onClick={() => toggleBulletListFromToolbar(editor)}
-            >
-              Bullets
-            </ToolbarButton>
-            <ToolbarButton
-              active={editor.isActive("orderedList")}
-              disabled={disabled}
-              onClick={() => toggleOrderedListFromToolbar(editor)}
-            >
-              Numbers
-            </ToolbarButton>
-            <ToolbarButton
-              active={editor.isActive({ textAlign: "left" })}
-              disabled={disabled}
-              onClick={() => editor.chain().focus().setTextAlign("left").run()}
-            >
-              Left
-            </ToolbarButton>
-            <ToolbarButton
-              active={editor.isActive({ textAlign: "center" })}
-              disabled={disabled}
-              onClick={() =>
-                editor.chain().focus().setTextAlign("center").run()
-              }
-            >
-              Center
-            </ToolbarButton>
-            <div className="flex w-full min-w-[min(100%,20rem)] flex-1 flex-col gap-2 sm:w-auto sm:min-w-0 sm:flex-none sm:flex-row sm:items-center">
-              <Input
-                aria-label="Link URL"
-                className="min-w-0 flex-1 py-2 text-sm"
-                disabled={disabled}
-                onChange={(event) => {
-                  setLinkHref(event.target.value);
-                  setLinkError(undefined);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    applyLinkHref();
+                onClick={() => {
+                  if (mode === "markdown") {
+                    switchToVisual();
                   }
                 }}
-                placeholder="https://example.org"
-                value={linkHref}
-              />
+              >
+                Visual
+              </ToolbarButton>
               <ToolbarButton
+                active={mode === "markdown"}
                 disabled={disabled}
                 onClick={() => {
-                  applyLinkHref();
+                  if (mode === "visual") {
+                    switchToMarkdown();
+                  }
                 }}
               >
-                Apply link
-              </ToolbarButton>
-              <ToolbarButton
-                active={editor.isActive("link")}
-                disabled={disabled || !editor.isActive("link")}
-                onClick={() => {
-                  setLinkError(undefined);
-                  editor.chain().focus().unsetLink().run();
-                }}
-              >
-                Remove link
+                Markdown
               </ToolbarButton>
             </div>
-            {linkError ? (
-              <p className="w-full text-red-600 text-sm">{linkError}</p>
-            ) : null}
-            <Button
-              className="ml-auto touch-manipulation"
-              disabled={disabled}
-              onClick={() =>
-                editor.chain().focus().clearNodes().unsetAllMarks().run()
-              }
-              onMouseDown={toolbarPointerDown}
-              size="sm"
-              type="button"
-              variant="ghost"
+            <div
+              className={mode === "visual" ? "contents" : "hidden"}
+              data-editor-visual=""
             >
-              Clear formatting
-            </Button>
+              <span
+                aria-hidden="true"
+                className="mx-1 h-5 w-px bg-[color:var(--color-border)]"
+              />
+              <div className="flex gap-1">
+                <ToolbarButton
+                  active={editor.isActive("bold")}
+                  disabled={disabled}
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                >
+                  Bold
+                </ToolbarButton>
+                <ToolbarButton
+                  active={editor.isActive("italic")}
+                  disabled={disabled}
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                >
+                  Italic
+                </ToolbarButton>
+                <ToolbarButton
+                  active={editor.isActive("underline")}
+                  disabled={disabled}
+                  onClick={() => editor.chain().focus().toggleUnderline().run()}
+                >
+                  Underline
+                </ToolbarButton>
+              </div>
+              <span
+                aria-hidden="true"
+                className="mx-1 h-5 w-px bg-[color:var(--color-border)] max-sm:hidden"
+              />
+              <div className="flex gap-1">
+                {HEADING_LEVELS.map(({ label, level }) => (
+                  <ToolbarButton
+                    active={editor.isActive("heading", { level })}
+                    disabled={disabled}
+                    key={level}
+                    onClick={() =>
+                      editor.chain().focus().toggleHeading({ level }).run()
+                    }
+                  >
+                    {label}
+                  </ToolbarButton>
+                ))}
+              </div>
+              <span
+                aria-hidden="true"
+                className="mx-1 h-5 w-px bg-[color:var(--color-border)] max-sm:hidden"
+              />
+              <div className="flex gap-1">
+                <ToolbarButton
+                  active={editor.isActive("bulletList")}
+                  disabled={disabled}
+                  onClick={() => toggleBulletListFromToolbar(editor)}
+                >
+                  Bullets
+                </ToolbarButton>
+                <ToolbarButton
+                  active={editor.isActive("orderedList")}
+                  disabled={disabled}
+                  onClick={() => toggleOrderedListFromToolbar(editor)}
+                >
+                  Numbers
+                </ToolbarButton>
+                <ToolbarButton
+                  disabled={disabled}
+                  onClick={() =>
+                    editor.chain().focus().setHorizontalRule().run()
+                  }
+                >
+                  Rule
+                </ToolbarButton>
+              </div>
+              <span
+                aria-hidden="true"
+                className="mx-1 h-5 w-px bg-[color:var(--color-border)] max-sm:hidden"
+              />
+              <div className="flex gap-1">
+                <ToolbarButton
+                  active={editor.isActive({ textAlign: "left" })}
+                  disabled={disabled}
+                  onClick={() =>
+                    editor.chain().focus().setTextAlign("left").run()
+                  }
+                >
+                  Left
+                </ToolbarButton>
+                <ToolbarButton
+                  active={editor.isActive({ textAlign: "center" })}
+                  disabled={disabled}
+                  onClick={() =>
+                    editor.chain().focus().setTextAlign("center").run()
+                  }
+                >
+                  Center
+                </ToolbarButton>
+              </div>
+              <div className="ml-auto">
+                <Button
+                  className="touch-manipulation"
+                  disabled={disabled}
+                  onClick={() =>
+                    editor.chain().focus().clearNodes().unsetAllMarks().run()
+                  }
+                  onMouseDown={toolbarPointerDown}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  Clear formatting
+                </Button>
+              </div>
+            </div>
           </div>
+          {mode === "visual" && (
+            <div className="flex flex-col gap-2 border-[color:var(--color-border)] border-t bg-white/65 px-3 py-3 sm:flex-row sm:items-end">
+              <div className="min-w-0 flex-1">
+                <label
+                  className="mb-1.5 block font-medium text-[color:var(--color-text-muted)] text-sm"
+                  htmlFor="newsletter-link-url"
+                >
+                  Link URL
+                </label>
+                <Input
+                  className="min-w-0 py-2 text-sm"
+                  disabled={disabled}
+                  id="newsletter-link-url"
+                  onChange={(event) => {
+                    setLinkHref(event.target.value);
+                    setLinkError(undefined);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      applyLinkHref();
+                    }
+                  }}
+                  placeholder="https://example.org"
+                  value={linkHref}
+                />
+              </div>
+              <div className="flex gap-1.5">
+                <ToolbarButton
+                  disabled={disabled}
+                  onClick={() => {
+                    applyLinkHref();
+                  }}
+                >
+                  Apply link
+                </ToolbarButton>
+                <ToolbarButton
+                  active={editor.isActive("link")}
+                  disabled={disabled || !editor.isActive("link")}
+                  onClick={() => {
+                    setLinkError(undefined);
+                    editor.chain().focus().unsetLink().run();
+                  }}
+                >
+                  Remove link
+                </ToolbarButton>
+              </div>
+              {linkError ? (
+                <p className="text-red-600 text-sm">{linkError}</p>
+              ) : null}
+            </div>
+          )}
         </div>
         <div
-          className={`[&_.ProseMirror_blockquote]:mb-4 [&_.ProseMirror_h1]:mt-7 [&_.ProseMirror_h1]:mb-3 [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h2]:mt-6 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h3]:mt-5 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h4]:mt-4 [&_.ProseMirror_h4]:mb-2 [&_.ProseMirror_h4]:font-semibold [&_.ProseMirror_h4]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h4]:text-base [&_.ProseMirror_hr]:my-6 [&_.ProseMirror_hr]:border-[color:var(--color-border)] [&_.ProseMirror_li]:mb-1 [&_.ProseMirror_ol]:mb-4 [&_.ProseMirror_p]:mb-4 [&_.ProseMirror_ul]:mb-4 ${
+          className={`[&_.ProseMirror_blockquote]:mb-4 [&_.ProseMirror_h1]:mt-7 [&_.ProseMirror_h1]:mb-3 [&_.ProseMirror_h1]:font-semibold [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h2]:mt-6 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h2]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h3]:mt-5 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h4]:mt-4 [&_.ProseMirror_h4]:mb-2 [&_.ProseMirror_h4]:font-semibold [&_.ProseMirror_h4]:text-[color:var(--color-text-emphasis)] [&_.ProseMirror_h4]:text-base [&_.ProseMirror_hr]:my-6 [&_.ProseMirror_hr]:border-[color:var(--color-border)] [&_.ProseMirror_li]:mb-1 [&_.ProseMirror_ol]:mb-4 [&_.ProseMirror_p]:mb-4 [&_.ProseMirror_ul]:mb-4 ${
             mode === "markdown" ? "hidden" : ""
           }`}
         >
           <EditorContent editor={editor} />
         </div>
         {mode === "markdown" ? (
-          <div className="border-slate-200 border-t bg-white px-4 py-4">
+          <div className="border-[color:var(--color-border)] border-t bg-white px-4 py-4">
             <label
-              className="mb-2 block font-medium text-slate-900 text-sm"
+              className="mb-2 block font-medium text-[color:var(--color-text-emphasis)] text-sm"
               htmlFor="newsletter-markdown-body"
             >
               Markdown
             </label>
             <textarea
-              className={`${largeWorkspace ? EDITOR_MIN_HEIGHT_LARGE : EDITOR_MIN_HEIGHT_DEFAULT} w-full resize-y rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 font-mono text-[14px] text-slate-900 leading-6 placeholder:text-slate-400 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20`}
+              className={`${largeWorkspace ? EDITOR_MIN_HEIGHT_LARGE : EDITOR_MIN_HEIGHT_DEFAULT} w-full resize-y rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-subtle)] px-4 py-3 font-mono text-[14px] text-[color:var(--color-text-emphasis)] leading-6 placeholder:text-[color:var(--color-text-subtle)] focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/20`}
               disabled={disabled}
               id="newsletter-markdown-body"
               onChange={(event) => {
@@ -458,13 +506,13 @@ export function NewsletterEditor({
               spellCheck={false}
               value={markdownDraft}
             />
-            <p className="mt-2 text-slate-500 text-xs">
+            <p className="mt-2 text-[color:var(--color-text-muted)] text-xs">
               GitHub-flavored Markdown:{" "}
-              <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+              <code className="rounded bg-[color:var(--color-bg-subtle)] px-1 py-0.5 text-[11px]">
                 ## / ### / ####
               </code>{" "}
               headings,{" "}
-              <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+              <code className="rounded bg-[color:var(--color-bg-subtle)] px-1 py-0.5 text-[11px]">
                 ---
               </code>{" "}
               rules, lists, and links. Use Visual for H1–H4 and Rule buttons.

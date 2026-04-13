@@ -81,7 +81,7 @@ export function CardTitle({
 }: CardTitleProps) {
   return (
     <h3
-      className={`font-bold font-display text-[color:var(--color-text-emphasis)] text-xl leading-tight ${className}`}
+      className={`font-display font-semibold text-[color:var(--color-text-emphasis)] text-xl ${className}`}
       {...props}
     >
       {children}

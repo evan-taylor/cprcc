@@ -14,9 +14,6 @@ import { PageLoader } from "@/components/ui/page-loader";
 import { api } from "@/convex/_generated/api";
 import { repairVisualEditorHtmlIfMarkdown } from "@/lib/newsletter-markdown";
 
-const initialEditorContent =
-  "<h2>What’s new with Cal Poly Red Cross Club</h2><p>Share your latest updates, volunteer opportunities, and reminders here.</p><ul><li>Upcoming events and meeting details</li><li>Volunteer opportunities and trainings</li><li>Important club announcements</li></ul><p>Thank you for being part of our chapter.</p>";
-
 export default function AdminNewsletterNewPage() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const router = useRouter();
@@ -30,7 +27,7 @@ export default function AdminNewsletterNewPage() {
   const [profileEnsured, setProfileEnsured] = useState(false);
   const [subject, setSubject] = useState("");
   const [previewText, setPreviewText] = useState("");
-  const [htmlContent, setHtmlContent] = useState(initialEditorContent);
+  const [htmlContent, setHtmlContent] = useState("");
   const [subjectError, setSubjectError] = useState<string | undefined>();
   const [editorError, setEditorError] = useState<string | undefined>();
   const [isSending, setIsSending] = useState(false);
@@ -143,7 +140,7 @@ export default function AdminNewsletterNewPage() {
         <SiteHeader />
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4">
           <div className="text-center">
-            <h1 className="font-bold font-display text-slate-900 text-xl">
+            <h1 className="font-display font-semibold text-[color:var(--color-text-emphasis)] text-xl">
               Access Denied
             </h1>
             <p className="mt-2 text-slate-500 text-sm">

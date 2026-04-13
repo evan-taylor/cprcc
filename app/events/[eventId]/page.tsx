@@ -187,7 +187,7 @@ export default function EventDetailPage() {
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-rose-300 bg-white p-6 text-center shadow-sm sm:p-10">
             <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Event Not Found
             </h1>
@@ -462,11 +462,11 @@ export default function EventDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="editorial-card rounded-3xl p-8">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <h1 className="font-semibold text-3xl text-[color:var(--color-text-emphasis)]">
+          <div className="editorial-card rounded-3xl p-5 sm:p-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)] tracking-tight sm:text-3xl">
                     {event.title}
                   </h1>
                   {event.eventType === "boothing" && (
@@ -485,7 +485,7 @@ export default function EventDetailPage() {
                 </p>
               </div>
               {currentUser?.role === "board" && (
-                <div className="flex flex-col gap-2">
+                <div className="flex gap-2 sm:flex-col">
                   <button
                     className="rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
                     onClick={() =>
@@ -562,7 +562,7 @@ export default function EventDetailPage() {
           </div>
 
           {event.eventType === "boothing" && event.shifts.length > 0 && (
-            <div className="editorial-card rounded-3xl p-8">
+            <div className="editorial-card rounded-3xl p-5 sm:p-8">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                   Available Shifts
@@ -669,7 +669,10 @@ export default function EventDetailPage() {
           )}
 
           {currentUser && (
-            <div className="editorial-card rounded-3xl p-8" ref={rsvpFormRef}>
+            <div
+              className="editorial-card rounded-3xl p-5 sm:p-8"
+              ref={rsvpFormRef}
+            >
               <h2 className="mb-4 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                 Your RSVP
               </h2>
@@ -1007,7 +1010,7 @@ export default function EventDetailPage() {
           )}
 
           {currentUser?.role === "board" && (
-            <div className="editorial-card rounded-3xl p-8">
+            <div className="editorial-card rounded-3xl p-5 sm:p-8">
               <h2 className="mb-4 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                 Attendees ({uniqueRsvpUserIds.size} volunteers,{" "}
                 {event.rsvps.length} signups)

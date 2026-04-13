@@ -93,7 +93,7 @@ export default function AdminPage() {
                 />
               </svg>
             </div>
-            <h1 className="font-bold font-display text-[color:var(--color-text-emphasis)] text-xl">
+            <h1 className="font-display font-semibold text-[color:var(--color-text-emphasis)] text-xl">
               Access Denied
             </h1>
             <p className="mt-2 text-[color:var(--color-text-muted)] text-sm">
@@ -180,10 +180,7 @@ export default function AdminPage() {
                 <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
                   Subscribed
                 </p>
-                <p
-                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
-                  style={{ fontVariantNumeric: "tabular-nums" }}
-                >
+                <p className="mt-2 font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] tabular-nums">
                   {newsletterOverview?.subscribedMembersCount ?? 0}
                 </p>
               </div>
@@ -191,10 +188,7 @@ export default function AdminPage() {
                 <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
                   Unsubscribed
                 </p>
-                <p
-                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
-                  style={{ fontVariantNumeric: "tabular-nums" }}
-                >
+                <p className="mt-2 font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] tabular-nums">
                   {newsletterOverview?.unsubscribedMembersCount ?? 0}
                 </p>
               </div>
@@ -202,10 +196,7 @@ export default function AdminPage() {
                 <p className="text-slate-500 text-xs uppercase tracking-[0.18em]">
                   Recent campaigns
                 </p>
-                <p
-                  className="mt-2 font-display font-semibold text-3xl text-slate-900"
-                  style={{ fontVariantNumeric: "tabular-nums" }}
-                >
+                <p className="mt-2 font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] tabular-nums">
                   {newsletterOverview?.recentCampaigns.length ?? 0}
                 </p>
               </div>
@@ -226,10 +217,7 @@ export default function AdminPage() {
               <h2 className="font-display font-semibold text-lg text-slate-900">
                 Members
               </h2>
-              <span
-                className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600 text-xs"
-                style={{ fontVariantNumeric: "tabular-nums" }}
-              >
+              <span className="rounded-full bg-[color:var(--color-bg-subtle)] px-3 py-1 font-medium text-[color:var(--color-text-muted)] text-xs tabular-nums">
                 {members.length} {members.length === 1 ? "member" : "members"}
               </span>
             </div>
@@ -383,10 +371,7 @@ function UserSection({
         <h2 className="font-display font-semibold text-lg text-slate-900">
           {title}
         </h2>
-        <span
-          className="rounded-full bg-red-50 px-3 py-1 font-medium text-red-600 text-xs"
-          style={{ fontVariantNumeric: "tabular-nums" }}
-        >
+        <span className="rounded-full bg-red-50 px-3 py-1 font-medium text-red-600 text-xs tabular-nums">
           {countLabel}
         </span>
       </div>

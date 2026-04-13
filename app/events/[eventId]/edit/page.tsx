@@ -115,7 +115,7 @@ export default function EditEventPage() {
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-rose-300 bg-white p-6 text-center shadow-sm sm:p-10">
             <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Event Not Found
             </h1>
@@ -133,7 +133,7 @@ export default function EditEventPage() {
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-rose-300 bg-white p-6 text-center shadow-sm sm:p-10">
             <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Access Denied
             </h1>
@@ -228,7 +228,7 @@ export default function EditEventPage() {
         </header>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="editorial-card rounded-3xl p-8">
+          <div className="editorial-card rounded-3xl p-5 sm:p-8">
             <h2 className="mb-6 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
               Event Details
             </h2>
@@ -414,7 +414,7 @@ export default function EditEventPage() {
           </div>
 
           {event.eventType === "boothing" && event.shifts.length > 0 && (
-            <div className="editorial-card rounded-3xl p-8">
+            <div className="editorial-card rounded-3xl p-5 sm:p-8">
               <h2 className="mb-4 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
                 Shifts
               </h2>

@@ -103,9 +103,9 @@ export default async function DeploymentPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <article className="editorial-card-soft rounded-2xl p-6">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
+            <div className="mb-3 flex size-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
               <svg
-                className="h-4 w-4"
+                className="size-4"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -129,9 +129,9 @@ export default async function DeploymentPage() {
             </p>
           </article>
           <article className="editorial-card-soft rounded-2xl p-6">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
+            <div className="mb-3 flex size-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
               <svg
-                className="h-4 w-4"
+                className="size-4"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -186,12 +186,9 @@ export default async function DeploymentPage() {
                 key={step.title}
               >
                 {index < steps.length - 1 && (
-                  <div className="absolute top-11 left-5 h-[calc(100%-2.75rem)] w-px bg-gradient-to-b from-red-200 to-slate-100" />
+                  <div className="absolute top-11 left-5 h-[calc(100%-2.75rem)] w-px bg-gradient-to-b from-red-200 to-[color:var(--color-bg-subtle)]" />
                 )}
-                <div
-                  className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 font-bold text-sm text-white shadow-md shadow-red-600/20"
-                  style={{ fontVariantNumeric: "tabular-nums" }}
-                >
+                <div className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full bg-red-600 font-semibold text-sm text-white tabular-nums shadow-md shadow-red-600/20">
                   {index + 1}
                 </div>
                 <div className="editorial-card flex-1 rounded-2xl p-5 transition-colors duration-200">
@@ -217,7 +214,7 @@ export default async function DeploymentPage() {
         </section>
 
         <section>
-          <p className="font-semibold text-slate-400 text-xs uppercase tracking-wider">
+          <p className="font-semibold text-[color:var(--color-text-subtle)] text-xs uppercase tracking-wider">
             Figure 1
           </p>
           <h2 className="mt-1 font-display font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
@@ -267,7 +264,7 @@ export default async function DeploymentPage() {
                 className="flex items-start gap-3 text-[color:var(--color-text-muted)] text-sm leading-relaxed"
                 key={item}
               >
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-red-400" />
                 {item}
               </li>
             ))}

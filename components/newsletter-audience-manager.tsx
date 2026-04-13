@@ -30,7 +30,7 @@ export function NewsletterAudienceAccessDenied({
       <SiteHeader />
       <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4">
         <div className="text-center">
-          <h1 className="font-bold font-display text-slate-900 text-xl">
+          <h1 className="font-display font-semibold text-[color:var(--color-text-emphasis)] text-xl">
             Access Denied
           </h1>
           <p className="mt-2 text-slate-500 text-sm">

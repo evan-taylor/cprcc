@@ -49,16 +49,8 @@ export default async function HomePage() {
       <HeroSection />
       <main>
         <QuickStats />
-        <ContentSection
-          id="mission"
-          paragraphs={missionCopy}
-          title="Our Mission"
-        />
-        <ContentSection
-          id="who-we-are"
-          paragraphs={whoWeAreCopy}
-          title="Who We Are"
-        />
+        <MissionSection />
+        <WhoWeAreSection />
         <CTASection />
       </main>
       <SiteFooter />
@@ -77,42 +69,34 @@ function HeroSection() {
         sizes="100vw"
         src={heroImage}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628]/88 via-black/60 to-[#1a0a0a]/85" />
-      <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,rgb(255_255_255_/_0.12),transparent_55%)]" />
-      <div className="pointer-events-none absolute -top-28 left-1/2 z-0 h-[22rem] w-[22rem] -translate-x-1/2 rounded-full bg-[color:var(--color-primary)]/25 blur-[100px]" />
-      <div className="pointer-events-none absolute -bottom-24 -left-24 z-0 h-72 w-72 rounded-full bg-[color:var(--color-accent)]/20 blur-[90px]" />
+      <div className="absolute inset-0 bg-black/58" />
+      <div className="absolute inset-x-0 top-1/2 h-[30rem] -translate-y-1/2 bg-gradient-to-b from-transparent via-black/30 to-transparent" />
       <div className="relative z-10 mx-auto max-w-3xl px-6">
         <div className="animate-fade-up">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 font-medium text-white/85 text-xs uppercase tracking-[0.2em] backdrop-blur-md">
             <span
               aria-hidden="true"
-              className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-primary)] shadow-[0_0_14px_rgb(226_18_36_/_0.55)]"
+              className="size-1.5 rounded-full bg-[color:var(--color-primary)]"
             />
             Cal Poly San Luis Obispo
           </p>
         </div>
-        <h1 className="stagger-1 animate-fade-up font-bold text-5xl tracking-[-0.04em] sm:text-6xl lg:text-[4.25rem] lg:leading-[1.05]">
-          <span className="block font-display text-white/95">Red Cross</span>
-          <span className="mt-1 block bg-gradient-to-r from-white via-white to-white/75 bg-clip-text font-display text-transparent">
-            Club
-          </span>
+        <h1 className="stagger-1 animate-fade-up font-semibold text-5xl tracking-tight sm:text-6xl lg:text-[4.25rem]">
+          <span className="block font-display text-white">Red Cross</span>
+          <span className="mt-1 block font-display text-white/80">Club</span>
         </h1>
-        <div className="stagger-2 mx-auto mt-5 flex animate-fade-up justify-center gap-2">
-          <span className="h-1 w-10 rounded-full bg-[color:var(--color-primary)]" />
-          <span className="h-1 w-3 rounded-full bg-white/35" />
-        </div>
-        <p className="stagger-3 mx-auto mt-6 max-w-xl animate-fade-up text-lg text-white/78 leading-relaxed sm:text-xl">
+        <p className="stagger-2 mx-auto mt-6 max-w-[40ch] animate-fade-up text-pretty text-lg text-white/78 sm:text-xl">
           Preventing and relieving suffering through volunteer action
         </p>
-        <div className="stagger-4 mt-9 flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <div className="stagger-3 mt-9 flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-xl bg-[color:var(--color-primary)] px-8 font-semibold text-base text-white shadow-lg shadow-red-900/35 hover:bg-[color:var(--color-primary-hover)] hover:shadow-red-900/40 hover:shadow-xl active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-xl bg-[color:var(--color-primary)] px-7 font-semibold text-base text-white shadow-lg shadow-red-900/35 hover:bg-[color:var(--color-primary-hover)] hover:shadow-red-900/40 hover:shadow-xl active:scale-[0.97]"
             href="/events"
           >
             View Upcoming Events
           </Link>
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-xl border border-white/25 bg-white/12 px-8 font-semibold text-base text-white ring-1 ring-white/15 ring-inset backdrop-blur-md hover:bg-white/20 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-xl border border-white/25 bg-white/12 px-7 font-semibold text-base text-white ring-1 ring-white/15 ring-inset backdrop-blur-md hover:bg-white/20 active:scale-[0.97]"
             href="/volunteer-connection"
           >
             Get Involved
@@ -121,7 +105,7 @@ function HeroSection() {
       </div>
       <div className="absolute bottom-8 flex animate-scroll-hint flex-col items-center gap-1 text-white/50 text-xs">
         <svg
-          className="h-5 w-5"
+          className="size-5"
           fill="none"
           stroke="currentColor"
           strokeWidth={2}
@@ -148,51 +132,62 @@ function QuickStats() {
 
   return (
     <section className="relative border-[color:var(--color-border)]/50 border-b bg-[color:var(--color-bg-subtle)]/50 py-12">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 px-6 sm:grid-cols-3">
+      <dl className="mx-auto grid max-w-5xl grid-cols-1 gap-4 px-6 sm:grid-cols-3">
         {stats.map((stat, index) => (
-          <article
+          <div
             className={`editorial-card-soft interactive-lift flex animate-fade-up flex-col items-center gap-1 rounded-2xl px-6 py-7 text-center ${
               index === 1 ? "stagger-1" : ""
             } ${index === 2 ? "stagger-2" : ""}`}
             key={stat.label}
           >
-            <span
-              className="font-bold font-display text-3xl text-red-600 sm:text-4xl"
-              style={{ fontVariantNumeric: "tabular-nums" }}
-            >
-              {stat.value}
-            </span>
-            <span className="text-[color:var(--color-text-muted)] text-sm">
+            <dt className="order-2 text-[color:var(--color-text-muted)] text-sm">
               {stat.label}
-            </span>
-          </article>
+            </dt>
+            <dd className="font-display font-semibold text-3xl text-red-600 tabular-nums sm:text-4xl">
+              {stat.value}
+            </dd>
+          </div>
         ))}
+      </dl>
+    </section>
+  );
+}
+
+function MissionSection() {
+  return (
+    <section className="py-[var(--spacing-section)]" id="mission">
+      <div className="mx-auto max-w-5xl px-6">
+        <div className="max-w-3xl">
+          <p className="editorial-kicker">Our Purpose</p>
+          <h2 className="mt-3 max-w-[30ch] font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] tracking-tight sm:text-4xl">
+            Our Mission
+          </h2>
+          <div className="editorial-lead mt-6 space-y-5">
+            {missionCopy.map((paragraph) => (
+              <p key={`mission-${paragraph.slice(0, contentKeyPrefixLength)}`}>
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-function ContentSection({
-  id,
-  title,
-  paragraphs,
-}: {
-  id: string;
-  title: string;
-  paragraphs: string[];
-}) {
+function WhoWeAreSection() {
   return (
-    <section className="py-[var(--spacing-section)]" id={id}>
+    <section
+      className="border-[color:var(--color-border)]/40 border-y bg-[color:var(--color-bg-subtle)]/40 py-[var(--spacing-section)]"
+      id="who-we-are"
+    >
       <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <h2 className="font-bold font-display text-3xl text-[color:var(--color-text-emphasis)] sm:text-4xl">
-            {title}
-          </h2>
-          <div className="h-0.5 w-12 rounded-full bg-red-600/30" />
-        </div>
+        <h2 className="max-w-[30ch] font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] tracking-tight sm:text-4xl">
+          Who We Are
+        </h2>
         <div className="editorial-lead space-y-5">
-          {paragraphs.map((paragraph) => (
-            <p key={`${id}-${paragraph.slice(0, contentKeyPrefixLength)}`}>
+          {whoWeAreCopy.map((paragraph) => (
+            <p key={`who-${paragraph.slice(0, contentKeyPrefixLength)}`}>
               {paragraph}
             </p>
           ))}
@@ -204,24 +199,24 @@ function ContentSection({
 
 function CTASection() {
   return (
-    <section className="relative border-[color:var(--color-border)]/50 border-t bg-gradient-to-b from-[color:var(--color-bg-subtle)]/80 to-[color:var(--color-bg)] py-[var(--spacing-section)]">
+    <section className="relative py-[var(--spacing-section)]">
       <div className="mx-auto max-w-3xl px-6 text-center">
-        <h2 className="font-bold font-display text-3xl text-[color:var(--color-text-emphasis)] sm:text-4xl">
+        <h2 className="mx-auto max-w-[24ch] font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] tracking-tight sm:text-4xl">
           Ready to make a difference?
         </h2>
-        <p className="editorial-lead mx-auto mt-4 max-w-xl">
+        <p className="editorial-lead mx-auto mt-4 max-w-[48ch]">
           Join our community of volunteers and help us serve those in need. All
           Cal Poly students are welcome.
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-lg bg-red-600 px-8 font-semibold text-base text-white shadow-md shadow-red-600/20 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-xl bg-red-600 px-7 font-semibold text-base text-white shadow-md shadow-red-600/20 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
             href="/volunteer-connection"
           >
             Start Volunteering
           </Link>
           <Link
-            className="interactive-lift inline-flex h-12 items-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-8 font-semibold text-[color:var(--color-text-emphasis)] text-base shadow-sm hover:border-[color:var(--color-accent-light)] hover:bg-[color:var(--color-accent-soft)] hover:text-[color:var(--color-accent)] active:scale-[0.97]"
+            className="interactive-lift inline-flex h-12 items-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-7 font-semibold text-[color:var(--color-text-emphasis)] text-base shadow-sm hover:border-[color:var(--color-accent-light)] hover:bg-[color:var(--color-accent-soft)] hover:text-[color:var(--color-accent)] active:scale-[0.97]"
             href="/contact"
           >
             Contact Us

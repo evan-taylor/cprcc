@@ -112,7 +112,7 @@ export default function AdminNewsletterPage() {
                 />
               </svg>
             </div>
-            <h1 className="font-bold font-display text-slate-900 text-xl">
+            <h1 className="font-display font-semibold text-[color:var(--color-text-emphasis)] text-xl">
               Access Denied
             </h1>
             <p className="mt-2 text-slate-500 text-sm">
@@ -276,10 +276,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
       <p className="text-[color:var(--color-text-muted)] text-xs uppercase tracking-[0.16em]">
         {label}
       </p>
-      <p
-        className="mt-2 font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)]"
-        style={{ fontVariantNumeric: "tabular-nums" }}
-      >
+      <p className="mt-2 font-display font-semibold text-3xl text-[color:var(--color-text-emphasis)] tabular-nums">
         {value}
       </p>
     </div>

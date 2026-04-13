@@ -87,11 +87,9 @@
   --motion-base: 220ms;
   --motion-slow: 320ms;
 
-  /* Ambient surfaces */
+  /* Surfaces */
   --surface-glass: rgb(255 255 255 / 0.72);
   --surface-glass-strong: rgb(255 255 255 / 0.88);
-  --glow-primary: color-mix(in oklab, var(--color-primary-light) 68%, white);
-  --glow-accent: color-mix(in oklab, var(--color-accent-light) 52%, white);
 
   @media (resolution >= 2dppx) {
     --border-hairline: 0.5px;
@@ -161,46 +159,6 @@ html {
   isolation: isolate;
 }
 
-.app-chrome::before {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  content: "";
-  background:
-    radial-gradient(
-      110% 95% at 0% -8%,
-      color-mix(in oklab, var(--color-primary-light) 58%, white) 0%,
-      transparent 58%
-    ),
-    radial-gradient(
-      85% 80% at 100% 0%,
-      color-mix(in oklab, var(--color-accent-light) 48%, white) 0%,
-      transparent 56%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--color-bg) 86%, white) 0%,
-      var(--color-bg) 22%,
-      color-mix(in oklab, var(--color-bg) 94%, white) 100%
-    );
-}
-
-.app-chrome::after {
-  position: fixed;
-  inset: -8rem;
-  z-index: -1;
-  pointer-events: none;
-  content: "";
-  background:
-    radial-gradient(36rem 36rem at 6% 8%, var(--glow-primary), transparent 64%),
-    radial-gradient(34rem 34rem at 92% 30%, var(--glow-accent), transparent 62%);
-  opacity: 0.38;
-  filter: blur(70px);
-  transform: translate3d(0, 0, 0);
-  animation: ambient-drift 22s var(--ease-in-out-cubic) infinite;
-}
-
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -213,7 +171,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-family-display);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   color: inherit;
   letter-spacing: 0;
@@ -275,17 +233,9 @@ h4 {
 @utility editorial-card {
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(
-      120% 100% at 100% 0%,
-      color-mix(in oklab, var(--color-accent) 12%, transparent),
-      transparent 58%
-    ),
-    linear-gradient(170deg, rgb(255 255 255 / 0.98), rgb(248 250 252 / 0.98));
-  border: var(--border-hairline) solid
-    color-mix(in oklab, var(--color-border) 88%, white);
-  box-shadow: var(--shadow-md);
-  isolation: isolate;
+  background-color: var(--color-surface);
+  border: var(--border-hairline) solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   transition:
     transform var(--motion-base) var(--ease-out-quart),
     box-shadow var(--motion-base) var(--ease-out-quart),
@@ -295,15 +245,8 @@ h4 {
 @utility editorial-card-soft {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(
-    160deg,
-    color-mix(in oklab, var(--color-primary-light) 28%, white),
-    color-mix(in oklab, var(--color-accent-light) 26%, white)
-  );
-  border: var(--border-hairline) solid
-    color-mix(in oklab, var(--color-border) 90%, white);
-  box-shadow: var(--shadow-sm);
-  isolation: isolate;
+  background-color: var(--color-bg-subtle);
+  border: var(--border-hairline) solid var(--color-border);
   transition:
     transform var(--motion-base) var(--ease-out-quart),
     box-shadow var(--motion-base) var(--ease-out-quart),
@@ -311,9 +254,8 @@ h4 {
 }
 
 @utility editorial-pill {
-  background: color-mix(in oklab, var(--color-bg-subtle) 85%, white);
-  border: var(--border-hairline) solid
-    color-mix(in oklab, var(--color-border) 85%, white);
+  background-color: var(--color-bg-subtle);
+  border: var(--border-hairline) solid var(--color-border);
   border-radius: var(--radius-full);
 }
 
@@ -335,7 +277,7 @@ h4 {
 @utility shimmer-surface {
   position: relative;
   overflow: hidden;
-  background-color: color-mix(in oklab, var(--color-bg-subtle) 92%, white);
+  background-color: var(--color-bg-subtle);
 }
 
 .shimmer-surface::after {
@@ -350,17 +292,6 @@ h4 {
   );
   transform: translateX(-100%);
   animation: shimmer 1.25s var(--ease-in-out-cubic) infinite;
-}
-
-/* Stagger animation utility for child elements */
-@keyframes ambient-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(2.5rem, -1.5rem, 0) scale(1.07);
-  }
 }
 
 @keyframes shimmer {
@@ -640,8 +571,6 @@ h4 {
       scroll-behavior: auto;
     }
 
-    .app-chrome::before,
-    .app-chrome::after,
     .shimmer-surface::after {
       transform: none;
       animation: none;

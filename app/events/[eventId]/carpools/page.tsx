@@ -121,7 +121,7 @@ export default function CarpoolManagementPage() {
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-rose-300 bg-white p-6 text-center shadow-sm sm:p-10">
             <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Access Denied
             </h1>
@@ -139,7 +139,7 @@ export default function CarpoolManagementPage() {
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-rose-300 bg-white p-6 text-center shadow-sm sm:p-10">
             <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Event Not Found
             </h1>
@@ -154,7 +154,7 @@ export default function CarpoolManagementPage() {
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-rose-300 bg-white p-6 text-center shadow-sm sm:p-10">
             <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Not an Offsite Event
             </h1>
@@ -457,7 +457,7 @@ export default function CarpoolManagementPage() {
           </div>
         </div>
 
-        <div className="editorial-card mb-8 rounded-3xl p-8">
+        <div className="editorial-card mb-8 rounded-3xl p-5 sm:p-8">
           <h2 className="mb-4 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
             Carpool Actions
           </h2>
@@ -495,7 +495,7 @@ export default function CarpoolManagementPage() {
         </div>
 
         {carpools.length === 0 ? (
-          <div className="rounded-3xl border border-[color:var(--color-border)] bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-[color:var(--color-border)] bg-white p-6 text-center shadow-sm sm:p-10">
             <p className="text-[color:var(--color-text-emphasis)]">
               No carpools generated yet. Click &quot;Generate Carpools&quot; to
               create assignments.

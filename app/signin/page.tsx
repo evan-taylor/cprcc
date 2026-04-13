@@ -196,7 +196,7 @@ export default function SignIn() {
                 >
                   <input
                     checked={newsletterOptIn}
-                    className="mt-1 h-4 w-4 rounded border-[color:var(--color-border-hover)] text-red-600 focus:ring-red-500"
+                    className="mt-1 size-4 rounded border-[color:var(--color-border-hover)] text-red-600 focus:ring-red-500"
                     id="newsletterOptIn"
                     onChange={(event) =>
                       setNewsletterOptIn(event.target.checked)
@@ -279,7 +279,7 @@ export default function SignIn() {
             >
               {loading && (
                 <span className="flex items-center justify-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   Please wait…
                 </span>
               )}

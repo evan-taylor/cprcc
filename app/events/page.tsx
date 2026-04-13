@@ -33,7 +33,7 @@ export default function EventsPage() {
             <Link href="/events/create">
               <Button className="interactive-lift" size="lg">
                 <svg
-                  className="h-4 w-4"
+                  className="size-4"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={2}
@@ -88,7 +88,7 @@ function LoadingSkeleton() {
             <div className="shimmer-surface h-4 w-full rounded-lg" />
             <div className="shimmer-surface h-4 w-2/3 rounded-lg" />
           </div>
-          <div className="border-slate-50 border-t pt-4">
+          <div className="border-[color:var(--color-border)]/50 border-t pt-4">
             <div className="shimmer-surface mb-2 h-4 w-1/2 rounded-lg" />
             <div className="shimmer-surface h-4 w-2/3 rounded-lg" />
           </div>
@@ -101,9 +101,9 @@ function LoadingSkeleton() {
 function EmptyState({ showBoardCreate }: { showBoardCreate?: boolean }) {
   return (
     <div className="mx-auto max-w-md py-16 text-center">
-      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50/80">
+      <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-red-50/80">
         <svg
-          className="h-8 w-8 text-red-400"
+          className="size-8 text-red-400"
           fill="none"
           stroke="currentColor"
           strokeWidth={1.5}
@@ -131,7 +131,7 @@ function EmptyState({ showBoardCreate }: { showBoardCreate?: boolean }) {
           rel="noopener noreferrer"
           target="_blank"
         >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
             <title>Instagram</title>
             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
           </svg>
@@ -143,7 +143,7 @@ function EmptyState({ showBoardCreate }: { showBoardCreate?: boolean }) {
           rel="noopener noreferrer"
           target="_blank"
         >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
             <title>GroupMe</title>
             <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10zm1-17h-2v8h2V5zm0 10h-2v2h2v-2z" />
           </svg>
@@ -192,11 +192,8 @@ function EventCard({ event }: { event: EventData }) {
             )}
             {event.isOffsite && <Badge variant="secondary">Offsite</Badge>}
           </div>
-          <div className="flex-shrink-0 rounded-xl bg-red-50 px-3.5 py-2 text-center">
-            <div
-              className="font-bold font-display text-2xl text-red-600 leading-none"
-              style={{ fontVariantNumeric: "tabular-nums" }}
-            >
+          <div className="shrink-0 rounded-xl bg-red-50 px-3.5 py-2 text-center">
+            <div className="font-display font-semibold text-2xl text-red-600 tabular-nums leading-none">
               {eventDate.getDate()}
             </div>
             <div className="mt-0.5 font-semibold text-[10px] text-red-500 uppercase">
@@ -207,7 +204,7 @@ function EventCard({ event }: { event: EventData }) {
           </div>
         </div>
 
-        <h2 className="mb-2 font-display font-semibold text-[color:var(--color-text-emphasis)] text-lg leading-snug transition-colors duration-150 group-hover:text-red-600">
+        <h2 className="mb-2 font-display font-semibold text-[color:var(--color-text-emphasis)] text-lg transition-colors duration-150 group-hover:text-red-600">
           {event.title}
         </h2>
         <p className="mb-5 line-clamp-2 text-[color:var(--color-text-muted)] text-sm leading-relaxed">
@@ -217,7 +214,7 @@ function EventCard({ event }: { event: EventData }) {
         <div className="space-y-2.5 border-[color:var(--color-border)]/70 border-t pt-4 text-[color:var(--color-text-muted)] text-sm">
           <div className="flex items-center gap-2.5">
             <svg
-              className="h-4 w-4 flex-shrink-0 text-[color:var(--color-text-subtle)]"
+              className="size-4 shrink-0 text-[color:var(--color-text-subtle)]"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}
@@ -244,7 +241,7 @@ function EventCard({ event }: { event: EventData }) {
           </div>
           <div className="flex items-center gap-2.5">
             <svg
-              className="h-4 w-4 flex-shrink-0 text-[color:var(--color-text-subtle)]"
+              className="size-4 shrink-0 text-[color:var(--color-text-subtle)]"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}

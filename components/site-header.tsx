@@ -175,9 +175,8 @@ export default function SiteHeader({
             ? "border-white/20 border-b bg-[color:var(--surface-glass)]/5 text-white backdrop-blur-2xl"
             : "border-[color:var(--color-border)]/70 border-b bg-[color:var(--surface-glass-strong)] text-[color:var(--color-text)] shadow-sm backdrop-blur-2xl"
         }`}
-        style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3.5 sm:gap-4 sm:px-6 lg:px-8">
           <Link
             aria-label="Cal Poly Red Cross Club — Home"
             className={`group flex items-center gap-2.5 font-display text-lg tracking-tight transition-colors duration-200 ${
@@ -187,10 +186,10 @@ export default function SiteHeader({
             }`}
             href="/"
           >
-            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/95 shadow-sm ring-1 ring-black/5 transition-transform duration-200 group-hover:scale-[1.03]">
+            <span className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/95 shadow-sm ring-1 ring-black/5 transition-transform duration-200 group-hover:scale-[1.03]">
               <Image
                 alt=""
-                className="h-6 w-6"
+                className="size-6"
                 height={24}
                 src="/redcross.svg"
                 width={24}
@@ -200,7 +199,7 @@ export default function SiteHeader({
               Cal Poly Red Cross Club
             </span>
           </Link>
-          <div className="flex flex-1 items-center justify-end gap-5">
+          <div className="flex flex-1 items-center justify-end gap-3 sm:gap-5">
             <nav className="hidden items-center gap-1 md:flex">
               {navItems.map((item) => (
                 <Link
@@ -262,7 +261,6 @@ export default function SiteHeader({
         }`}
         id="mobile-navigation-panel"
         ref={mobileNavPanelRef}
-        style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
       >
         <div className="flex flex-col px-3 py-3">
           {navItems.map((item, index) => (
@@ -324,13 +322,13 @@ function MobileMenuButton({
       aria-controls="mobile-navigation-panel"
       aria-expanded={isOpen}
       aria-label="Toggle navigation menu"
-      className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-[color:var(--color-bg-subtle)] active:scale-95 md:hidden"
+      className="flex size-11 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-[color:var(--color-bg-subtle)] active:scale-95 md:hidden"
       onClick={onToggle}
       ref={menuButtonRef}
       type="button"
     >
       <svg
-        className="h-5 w-5 transition-transform duration-200"
+        className="size-5 transition-transform duration-200"
         fill="none"
         stroke={iconColor}
         strokeLinecap="round"
@@ -380,7 +378,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
   if (!isAuthenticated) {
     return (
       <Link
-        className={`inline-flex h-11 items-center rounded-lg px-5 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
+        className={`inline-flex h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-4 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 sm:px-5 ${
           inverted
             ? "bg-white/15 text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 focus-visible:ring-white/60"
             : "bg-red-600 text-white shadow-md shadow-red-600/25 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-lg focus-visible:ring-red-500"
@@ -399,7 +397,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
 
   return (
     <button
-      className={`inline-flex h-11 items-center rounded-lg px-5 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
+      className={`inline-flex h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-4 font-semibold text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 sm:px-5 ${
         inverted
           ? "bg-white/15 text-white ring-1 ring-white/25 ring-inset backdrop-blur-sm hover:bg-white/25 focus-visible:ring-white/60"
           : "bg-red-600 text-white shadow-md shadow-red-600/25 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-lg focus-visible:ring-red-500"

@@ -353,7 +353,7 @@ export default function GalleryPage() {
               >
                 {uploading ? (
                   <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <div className="mr-2 size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Uploading…
                   </>
                 ) : (
@@ -365,7 +365,7 @@ export default function GalleryPage() {
         )}
 
         {photos === undefined && (
-          <div className="grid gap-5 sm:columns-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }, (_, i) => (
               <div
                 className="animate-pulse overflow-hidden rounded-2xl border border-[color:var(--color-border)]/50 bg-[color:var(--color-bg-subtle)]"
@@ -383,9 +383,9 @@ export default function GalleryPage() {
 
         {photos !== undefined && photos.length === 0 && (
           <div className="editorial-card-soft mx-auto max-w-md rounded-2xl px-6 py-14 text-center">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--color-bg-subtle)]">
+            <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-[color:var(--color-bg-subtle)]">
               <svg
-                className="h-8 w-8 text-[color:var(--color-text-subtle)]"
+                className="size-8 text-[color:var(--color-text-subtle)]"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={1.5}

@@ -131,9 +131,7 @@ export function MonthCalendar({
               onClick={() => onToggleDate(dateValue)}
               type="button"
             >
-              <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                {date.getDate()}
-              </span>
+              <span className="tabular-nums">{date.getDate()}</span>
               {hasEvents ? (
                 <span
                   className={`absolute top-1 right-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] ${

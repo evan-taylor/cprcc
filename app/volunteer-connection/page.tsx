@@ -96,9 +96,9 @@ export default async function VolunteerConnectionPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="editorial-card-soft rounded-2xl p-6">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
+            <div className="mb-3 flex size-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
               <svg
-                className="h-4 w-4"
+                className="size-4"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -127,9 +127,9 @@ export default async function VolunteerConnectionPage() {
             </p>
           </div>
           <div className="editorial-card-soft rounded-2xl p-6">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
+            <div className="mb-3 flex size-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
               <svg
-                className="h-4 w-4"
+                className="size-4"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -164,10 +164,7 @@ export default async function VolunteerConnectionPage() {
                 {index < steps.length - 1 && (
                   <div className="absolute top-11 left-5 h-[calc(100%-2.75rem)] w-px bg-gradient-to-b from-red-200 to-[color:var(--color-bg-subtle)]" />
                 )}
-                <div
-                  className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 font-bold text-sm text-white shadow-md shadow-red-600/20"
-                  style={{ fontVariantNumeric: "tabular-nums" }}
-                >
+                <div className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full bg-red-600 font-semibold text-sm text-white tabular-nums shadow-md shadow-red-600/20">
                   {index + 1}
                 </div>
                 <div className="editorial-card flex-1 rounded-2xl p-5 transition-colors duration-200">
@@ -193,7 +190,7 @@ export default async function VolunteerConnectionPage() {
             log your hours.
           </p>
           <Link
-            className="mt-5 inline-flex h-11 items-center rounded-lg bg-red-600 px-7 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
+            className="mt-5 inline-flex h-11 items-center rounded-xl bg-red-600 px-7 font-semibold text-sm text-white shadow-md shadow-red-600/20 transition-all duration-200 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 active:scale-[0.97]"
             href="/events"
           >
             Browse Events

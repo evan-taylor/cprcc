@@ -125,7 +125,7 @@ export default function CreateEventPage() {
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <div className="flex items-center justify-center pt-20">
-          <div className="rounded-3xl border border-rose-300 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-rose-300 bg-white p-6 text-center shadow-sm sm:p-10">
             <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
               Access Denied
             </h1>
@@ -313,7 +313,7 @@ export default function CreateEventPage() {
         </header>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="editorial-card rounded-3xl p-8">
+          <div className="editorial-card rounded-3xl p-5 sm:p-8">
             <h2 className="mb-6 font-semibold text-[color:var(--color-text-emphasis)] text-xl">
               Event Details
             </h2>
@@ -546,7 +546,7 @@ export default function CreateEventPage() {
           </div>
 
           {eventType === "boothing" && (
-            <div className="editorial-card rounded-3xl p-8">
+            <div className="editorial-card rounded-3xl p-5 sm:p-8">
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h2 className="font-semibold text-[color:var(--color-text-emphasis)] text-xl">
