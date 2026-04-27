@@ -57,7 +57,7 @@ async function sendOneNewsletterEmail(
       to: [recipient.email],
       replyTo: [CLUB_EMAIL_REPLY_TO],
       subject,
-      html: generateNewsletterEmailHtml({
+      html: await generateNewsletterEmailHtml({
         bodyHtml: htmlContent,
         previewText,
         subject,
