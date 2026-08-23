@@ -44,7 +44,7 @@ const contacts = [
   {
     label: "GroupMe",
     value: "Join our group chat",
-    link: "https://groupme.com/join_group/110362987/vWy9gKFG",
+    link: "https://groupme.com/join_group/116126921/R28N4h8n",
     description: "Stay updated on events and activities",
     icon: (
       <svg

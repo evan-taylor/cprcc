@@ -90,7 +90,7 @@ export default function RootLayout({
     email: "redcrossclub@calpoly.edu",
     sameAs: [
       "https://www.instagram.com/calpolyredcrossclub",
-      "https://groupme.com/join_group/110362987/vWy9gKFG",
+      "https://groupme.com/join_group/116126921/R28N4h8n",
     ],
     parentOrganization: {
       "@type": "Organization",
