@@ -22,7 +22,7 @@ const socialLinks = [
     ),
   },
   {
-    href: "https://groupme.com/join_group/110362987/vWy9gKFG",
+    href: "https://groupme.com/join_group/116126921/R28N4h8n",
     label: "GroupMe chat",
     icon: (
       <svg

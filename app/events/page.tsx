@@ -139,7 +139,7 @@ function EmptyState({ showBoardCreate }: { showBoardCreate?: boolean }) {
         </a>
         <a
           className="editorial-pill inline-flex items-center gap-2 px-5 py-2.5 font-medium text-[color:var(--color-text)] text-sm transition-all duration-200 hover:bg-white hover:text-[color:var(--color-text-emphasis)] active:scale-[0.97]"
-          href="https://groupme.com/join_group/110362987/vWy9gKFG"
+          href="https://groupme.com/join_group/116126921/R28N4h8n"
           rel="noopener noreferrer"
           target="_blank"
         >
