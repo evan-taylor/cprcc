@@ -1,8 +1,18 @@
+import parse from "html-react-parser";
+import { createElement } from "react";
 import {
-  CLUB_EMAIL_REPLY_TO,
-  createPlainTextFromHtml,
-  escapeHtmlPlainText,
-} from "../lib/email";
+  Body,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Link,
+  Preview,
+  render,
+  Section,
+  Text,
+} from "react-email";
+import { CLUB_EMAIL_REPLY_TO, createPlainTextFromHtml } from "../lib/email";
 
 /** Match real `style=` only — avoid false positives like `data-style=`. */
 const HTML_STYLE_ATTR_REGEX = /(^|[\s])style\s*=/i;
@@ -13,6 +23,90 @@ interface NewsletterEmailParams {
   subject: string;
   unsubscribeUrl: string;
 }
+
+const OUTER_BACKGROUND_COLOR = "#f8fafc";
+const CARD_BORDER_COLOR = "#e2e8f0";
+const CLUB_RED = "#b91c1c";
+const TEXT_COLOR = "#0f172a";
+const MUTED_TEXT_COLOR = "#475569";
+const SUBTLE_TEXT_COLOR = "#64748b";
+
+const bodyStyle = {
+  backgroundColor: OUTER_BACKGROUND_COLOR,
+  color: TEXT_COLOR,
+  fontFamily: "Inter, Arial, sans-serif",
+  margin: "0",
+};
+
+const pageSectionStyle = {
+  backgroundColor: OUTER_BACKGROUND_COLOR,
+  padding: "32px 16px",
+};
+
+const containerStyle = {
+  backgroundColor: "#ffffff",
+  border: `1px solid ${CARD_BORDER_COLOR}`,
+  borderRadius: "24px",
+  maxWidth: "680px",
+  overflow: "hidden",
+};
+
+const headerSectionStyle = {
+  backgroundColor: CLUB_RED,
+  color: "#ffffff",
+  padding: "28px 32px",
+};
+
+const eyebrowStyle = {
+  fontSize: "12px",
+  letterSpacing: "0.16em",
+  lineHeight: "1.4",
+  margin: "0 0 8px",
+  opacity: "0.85",
+  textTransform: "uppercase" as const,
+};
+
+const headingStyle = {
+  fontSize: "28px",
+  fontWeight: "700",
+  lineHeight: "1.2",
+  margin: "0",
+};
+
+const contentSectionStyle = {
+  padding: "32px",
+};
+
+const contentWrapperStyle = {
+  color: TEXT_COLOR,
+  fontSize: "16px",
+  lineHeight: "1.7",
+};
+
+const footerSectionStyle = {
+  backgroundColor: OUTER_BACKGROUND_COLOR,
+  borderTop: `1px solid ${CARD_BORDER_COLOR}`,
+  padding: "24px 32px",
+};
+
+const replyTextStyle = {
+  color: MUTED_TEXT_COLOR,
+  fontSize: "14px",
+  lineHeight: "1.6",
+  margin: "0 0 12px",
+};
+
+const unsubscribeTextStyle = {
+  color: SUBTLE_TEXT_COLOR,
+  fontSize: "13px",
+  lineHeight: "1.6",
+  margin: "0",
+};
+
+const footerLinkStyle = {
+  color: CLUB_RED,
+  textDecoration: "none",
+};
 
 function applyNewsletterBodyStyles(html: string): string {
   let result = html;
@@ -99,71 +193,95 @@ function applyNewsletterBodyStyles(html: string): string {
   return result;
 }
 
-function getPreviewText(previewText?: string) {
-  if (!previewText) {
-    return "";
-  }
-
-  return `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtmlPlainText(
-    previewText
-  )}</div>`;
-}
-
-export function generateNewsletterEmailHtml({
+function NewsletterEmailTemplate({
   bodyHtml,
   previewText,
   subject,
   unsubscribeUrl,
 }: NewsletterEmailParams) {
-  const styledBody = applyNewsletterBodyStyles(bodyHtml);
-  const subjectEscaped = escapeHtmlPlainText(subject);
-  return `<!doctype html>
-<html lang="en">
-  <body style="margin:0;background:#f8fafc;color:#0f172a;font-family:Inter,Arial,sans-serif;">
-    ${getPreviewText(previewText)}
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#f8fafc;padding:32px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;max-width:680px;background:#ffffff;border:1px solid #e2e8f0;border-radius:24px;overflow:hidden;">
-            <tr>
-              <td style="background:#b91c1c;padding:28px 32px;color:#ffffff;">
-                <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;opacity:0.85;">
-                  Cal Poly Red Cross Club
-                </p>
-                <h1 style="margin:0;font-size:28px;line-height:1.2;font-weight:700;">
-                  ${subjectEscaped}
-                </h1>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:32px;">
-                <div style="font-size:16px;line-height:1.7;color:#0f172a;">
-                  ${styledBody}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td style="border-top:1px solid #e2e8f0;padding:24px 32px;background:#f8fafc;">
-                <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
-                  Replies to this email will go to
-                  <a href="mailto:${CLUB_EMAIL_REPLY_TO}" style="color:#b91c1c;text-decoration:none;">
-                    ${CLUB_EMAIL_REPLY_TO}
-                  </a>.
-                </p>
-                <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;">
-                  Don’t want club news and announcements in your inbox?
-                  <a href="${unsubscribeUrl}" style="color:#b91c1c;text-decoration:none;">
-                    Unsubscribe from the newsletter
-                  </a>.
-                </p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+  const bodyContent = parse(applyNewsletterBodyStyles(bodyHtml));
+
+  return createElement(
+    Html,
+    { lang: "en" },
+    createElement(Head),
+    previewText ? createElement(Preview, null, previewText) : null,
+    createElement(
+      Body,
+      { style: bodyStyle },
+      createElement(
+        Section,
+        { style: pageSectionStyle },
+        createElement(
+          Container,
+          { style: containerStyle },
+          createElement(
+            Section,
+            { style: headerSectionStyle },
+            createElement(
+              Text,
+              { style: eyebrowStyle },
+              "Cal Poly Red Cross Club"
+            ),
+            createElement(Heading, { as: "h1", style: headingStyle }, subject)
+          ),
+          createElement(
+            Section,
+            { style: contentSectionStyle },
+            createElement("div", { style: contentWrapperStyle }, bodyContent)
+          ),
+          createElement(
+            Section,
+            { style: footerSectionStyle },
+            createElement(
+              Text,
+              { style: replyTextStyle },
+              "Replies to this email will go to ",
+              createElement(
+                Link,
+                {
+                  href: `mailto:${CLUB_EMAIL_REPLY_TO}`,
+                  style: footerLinkStyle,
+                },
+                CLUB_EMAIL_REPLY_TO
+              ),
+              "."
+            ),
+            createElement(
+              Text,
+              { style: unsubscribeTextStyle },
+              "Don't want club news and announcements in your inbox? ",
+              createElement(
+                Link,
+                {
+                  href: unsubscribeUrl,
+                  style: footerLinkStyle,
+                },
+                "Unsubscribe from the newsletter"
+              ),
+              "."
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+export async function generateNewsletterEmailHtml({
+  bodyHtml,
+  previewText,
+  subject,
+  unsubscribeUrl,
+}: NewsletterEmailParams) {
+  return await render(
+    createElement(NewsletterEmailTemplate, {
+      bodyHtml,
+      previewText,
+      subject,
+      unsubscribeUrl,
+    })
+  );
 }
 
 export function generateNewsletterEmailText({
