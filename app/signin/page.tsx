@@ -9,6 +9,16 @@ import { useEffect, useRef, useState } from "react";
 import { AuthPageShell } from "@/components/auth-page-shell";
 import { api } from "@/convex/_generated/api";
 
+// Convex redacts errors thrown in server functions to a production message that
+// holds a per-call request id, for example "[Request ID: <id>] Server Error".
+// The id is unique per attempt.
+const CONVEX_REQUEST_ID_ERROR = /\[Request ID: [^\]]+\]/;
+
+// The password provider throws a redacted server error for wrong credentials.
+// We treat this as an expected sign-in failure, not an error worth tracking.
+const isExpectedCredentialError = (error: unknown): boolean =>
+  error instanceof Error && CONVEX_REQUEST_ID_ERROR.test(error.message);
+
 export default function SignIn() {
   const { signIn } = useAuthActions();
   const { isAuthenticated } = useConvexAuth();
@@ -53,18 +63,29 @@ export default function SignIn() {
 
     formData.set("flow", flow);
 
-    // The password provider throws here when the credentials are wrong. This is
-    // an expected outcome, so we count it with the sign_in_failed event and do
-    // not send it to error tracking. Convex hides the real message in production
-    // and puts a unique request id in it, so capturing it would open a new issue
-    // for every failed attempt.
     try {
       await signIn("password", formData);
-    } catch {
+    } catch (authError) {
       posthog.capture("sign_in_failed", { flow });
-      setError(
-        "Invalid email or password. If you don\u2019t have an account, please sign up."
-      );
+
+      if (isExpectedCredentialError(authError)) {
+        // We do not send this to error tracking: its request id is unique per
+        // attempt, so each one would open a new issue, and the sign_in_failed
+        // event above already counts these.
+        setError(
+          "Invalid email or password. If you don\u2019t have an account, please sign up."
+        );
+      } else {
+        // A transport or other unexpected failure. Its message is stable, so we
+        // capture it with a fixed fingerprint to surface outages as one issue,
+        // and we do not tell the user their password is wrong.
+        posthog.captureException(
+          authError instanceof Error ? authError : new Error("Sign-in failed"),
+          { $exception_fingerprint: "signin-unexpected-failure" }
+        );
+        setError("Something went wrong. Please try again.");
+      }
+
       setLoading(false);
       createdRef.current = false;
       return;
