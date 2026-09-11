@@ -1,5 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import {
   getCurrentUserProfile,
@@ -167,11 +167,24 @@ export const ensureCurrentUserProfile = mutation({
       throw new Error("Auth user not found");
     }
 
-    const email = (authUser as { email?: string }).email as string;
-    const name = (authUser as { name?: string }).name as string;
+    const rawEmail = (authUser as { email?: string | null }).email;
+    if (typeof rawEmail !== "string" || rawEmail.trim().length === 0) {
+      throw new ConvexError(
+        "Your account has no email address on file, so we could not finish setting up your profile."
+      );
+    }
+    const email = rawEmail.trim();
+
+    const rawName = (authUser as { name?: string | null }).name;
+    const atIndex = email.indexOf("@");
+    const emailLocalPart = atIndex > 0 ? email.slice(0, atIndex) : email;
+    const name =
+      typeof rawName === "string" && rawName.trim().length > 0
+        ? rawName.trim()
+        : emailLocalPart;
 
     const adminEmail = process.env.ADMIN_EMAIL || "etaylo28@calpoly.edu";
-    const isAdmin = email.trim().toLowerCase() === adminEmail.toLowerCase();
+    const isAdmin = email.toLowerCase() === adminEmail.toLowerCase();
     const role = isAdmin ? "board" : "member";
     const desiredNewsletterStatus =
       typeof args.newsletterOptIn === "boolean"
