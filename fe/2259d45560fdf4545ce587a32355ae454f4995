@@ -1,0 +1,30 @@
+app/events/[eventId]/carpools/page.tsx
+  h_83bc5aaa251b9b 16,182-187,211-214,236-240,311-314
+app/events/[eventId]/edit/page.tsx
+  h_83bc5aaa251b9b 5,182-188,206-212
+app/gallery/page.tsx
+  h_83bc5aaa251b9b 230
+app/global-error.tsx
+  h_83bc5aaa251b9b 1-32
+app/signin/page.tsx
+  h_83bc5aaa251b9b 66,71,83-84
+components/convex-client-provider.tsx
+  h_83bc5aaa251b9b 4-7,17-51,59
+components/site-header.tsx
+  h_83bc5aaa251b9b 8,396
+instrumentation-client.ts
+  h_83bc5aaa251b9b 3-23
+next.config.ts
+  h_83bc5aaa251b9b 3-5,28-31,35-39,43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "fe2259d45560fdf4545ce587a32355ae454f4995",
+  "prompts": {},
+  "humans": {
+    "h_83bc5aaa251b9b": {
+      "author": "Evan Taylor <eltaylor1104@gmail.com>"
+    }
+  }
+}
