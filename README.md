@@ -39,7 +39,7 @@ This website provides information about the Cal Poly Red Cross Club, including:
    Create a `.env.local` file with:
    ```
    NEXT_PUBLIC_CONVEX_URL=your_convex_url
-   NEXT_PUBLIC_POSTHOG_KEY=your_posthog_project_key (optional)
+   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=your_posthog_project_key (optional; NEXT_PUBLIC_POSTHOG_KEY also works)
    RESEND_API_KEY=your_resend_api_key (optional, required for password reset and carpool emails)
    ```
 
