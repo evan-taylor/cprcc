@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
@@ -178,6 +179,13 @@ export default function EditEventPage() {
         slug: slugTouched ? slug : undefined,
       });
 
+      posthog.capture("event_updated", {
+        event_id: eventId,
+        event_type: event.eventType,
+        is_offsite: isOffsite,
+        slug_updated: slugTouched,
+      });
+
       router.push(`/events/${slugTouched ? slug : (event.slug ?? event._id)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update event");
@@ -195,6 +203,13 @@ export default function EditEventPage() {
 
     try {
       await deleteEvent({ eventId });
+      posthog.capture("event_deleted", {
+        event_id: eventId,
+        event_type: event.eventType,
+        is_offsite: event.isOffsite,
+        rsvp_count: event.rsvps.length,
+        shift_count: event.shifts.length,
+      });
       router.push("/events");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete event");

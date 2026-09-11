@@ -206,7 +206,6 @@ export default function GalleryPage() {
       );
       posthog.capture("photo_upload_failed", {
         photos_attempted: validImages.length,
-        error: error instanceof Error ? error.message : "Unknown error",
       });
       setUploadError(
         error instanceof Error ? error.message : "Failed to upload photos"
@@ -228,6 +227,7 @@ export default function GalleryPage() {
 
     try {
       await deletePhoto({ photoId });
+      posthog.capture("photo_deleted", { photo_id: photoId });
       setDeletingPhotoId(null);
     } catch (error) {
       setDeleteError(

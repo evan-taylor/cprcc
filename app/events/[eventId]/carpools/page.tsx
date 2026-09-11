@@ -13,6 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useState } from "react";
 import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
@@ -178,6 +179,12 @@ export default function CarpoolManagementPage() {
 
     try {
       const result = await generateCarpools({ eventId });
+      posthog.capture("carpools_generated", {
+        event_id: eventId,
+        carpools_created: result.carpoolsCreated,
+        riders_assigned: result.ridersAssigned,
+        riders_unassigned: result.ridersUnassigned,
+      });
       setSuccess(
         `Generated ${result.carpoolsCreated} carpools. ${result.ridersAssigned} riders assigned, ${result.ridersUnassigned} unassigned.`
       );
@@ -201,6 +208,10 @@ export default function CarpoolManagementPage() {
 
     try {
       const result = await finalizeCarpools({ eventId });
+      posthog.capture("carpools_finalized", {
+        event_id: eventId,
+        carpools_finalized: result.carpoolsFinalized,
+      });
       setSuccess(`Finalized ${result.carpoolsFinalized} carpools.`);
     } catch (err) {
       setError(
@@ -222,6 +233,11 @@ export default function CarpoolManagementPage() {
 
     try {
       const result = await sendCarpoolEmails({ eventId });
+      posthog.capture("carpool_notifications_sent", {
+        event_id: eventId,
+        emails_failed: result.emailsFailed,
+        emails_sent: result.emailsSent,
+      });
       setSuccess(
         `Sent ${result.emailsSent} emails successfully. ${result.emailsFailed} failed.`
       );
@@ -291,6 +307,10 @@ export default function CarpoolManagementPage() {
         riderRsvpId: riderId as Id<"rsvps">,
         fromCarpoolId: fromCarpool?.carpoolId,
         toCarpoolId,
+      });
+      posthog.capture("carpool_rider_reassigned", {
+        event_id: eventId,
+        reassignment_target: toCarpoolId ? "carpool" : "unassigned",
       });
       const SUCCESS_TIMEOUT_MS = 3000;
       setSuccess("Rider reassigned successfully");

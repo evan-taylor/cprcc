@@ -5,6 +5,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import {
   type RefObject,
   useCallback,
@@ -392,6 +393,7 @@ function AuthButton({ inverted }: { inverted: boolean }) {
 
   const handleSignOut = async () => {
     await signOut();
+    posthog.reset();
     router.push("/signin");
   };
 

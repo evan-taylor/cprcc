@@ -63,12 +63,12 @@ export default function SignIn() {
 
         await signIn("password", formData);
 
-        await ensureCurrentUserProfile({
+        const profileId = await ensureCurrentUserProfile({
           newsletterOptIn,
           phoneNumber: localPhone,
         });
 
-        posthog.identify(email, { email, name: name.trim() });
+        posthog.identify(String(profileId), { email, name: name.trim() });
         posthog.capture("user_signed_up", {
           has_phone_number: !!localPhone,
           newsletter_opt_in: newsletterOptIn,
@@ -80,7 +80,8 @@ export default function SignIn() {
         formData.set("flow", "signIn");
         await signIn("password", formData);
 
-        posthog.identify(email, { email });
+        const profileId = await ensureCurrentUserProfile({});
+        posthog.identify(String(profileId), { email });
         posthog.capture("user_signed_in");
 
         router.push("/");

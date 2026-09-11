@@ -292,7 +292,6 @@ export default function CreateEventPage() {
         event_type: eventType,
         is_offsite: isOffsite,
         selected_date_count: selectedDates.length,
-        error: err instanceof Error ? err.message : "Unknown error",
       });
       setError(err instanceof Error ? err.message : "Failed to create event");
       setIsSubmitting(false);

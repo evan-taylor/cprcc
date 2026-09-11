@@ -119,7 +119,6 @@ export default function AdminPage() {
       await promoteToBoard({ profileId });
       posthog.capture("user_promoted_to_board", {
         promoted_user_id: profileId,
-        promoted_user_name: promotedUser?.name,
       });
       toast.success(
         `Promoted ${promotedUser?.name ?? "member"} to board member.`

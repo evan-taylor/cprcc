@@ -360,7 +360,6 @@ export default function EventDetailPage() {
       if (failureCount === 0) {
         posthog.capture("event_rsvp_submitted", {
           event_id: eventId,
-          event_title: event.title,
           event_type: event.eventType,
           is_offsite: event.isOffsite,
           shifts_count: successCount,
@@ -379,7 +378,6 @@ export default function EventDetailPage() {
       } else if (successCount > 0) {
         posthog.capture("event_rsvp_submitted", {
           event_id: eventId,
-          event_title: event.title,
           event_type: event.eventType,
           is_offsite: event.isOffsite,
           shifts_count: successCount,
@@ -409,9 +407,7 @@ export default function EventDetailPage() {
       } else {
         posthog.capture("event_rsvp_failed", {
           event_id: eventId,
-          event_title: event.title,
           event_type: event.eventType,
-          error: results[0]?.error,
         });
         setError(results[0]?.error || "Failed to RSVP");
       }
@@ -421,9 +417,7 @@ export default function EventDetailPage() {
       );
       posthog.capture("event_rsvp_failed", {
         event_id: eventId,
-        event_title: event.title,
         event_type: event.eventType,
-        error: err instanceof Error ? err.message : "Unknown error",
       });
       setError(err instanceof Error ? err.message : "Failed to RSVP");
     } finally {
@@ -436,7 +430,6 @@ export default function EventDetailPage() {
       await deleteRsvp({ rsvpId });
       posthog.capture("event_rsvp_cancelled", {
         event_id: eventId,
-        event_title: event.title,
         event_type: event.eventType,
       });
     } catch (err) {
