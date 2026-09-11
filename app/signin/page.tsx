@@ -40,28 +40,45 @@ export default function SignIn() {
     setError(null);
     setLoading(true);
 
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get("name") as string;
+    const phoneNumber = formData.get("phoneNumber") as string;
+    const email = formData.get("email") as string;
+
+    if (flow === "signUp" && (!name || name.trim().length === 0)) {
+      setError("Please enter your name");
+      setLoading(false);
+      return;
+    }
+
+    formData.set("flow", flow);
+
+    // The password provider throws here when the credentials are wrong. This is
+    // an expected outcome, so we count it with the sign_in_failed event and do
+    // not send it to error tracking. Convex hides the real message in production
+    // and puts a unique request id in it, so capturing it would open a new issue
+    // for every failed attempt.
     try {
-      const formData = new FormData(e.target as HTMLFormElement);
-      const name = formData.get("name") as string;
-      const phoneNumber = formData.get("phoneNumber") as string;
+      await signIn("password", formData);
+    } catch {
+      posthog.capture("sign_in_failed", { flow });
+      setError(
+        "Invalid email or password. If you don\u2019t have an account, please sign up."
+      );
+      setLoading(false);
+      createdRef.current = false;
+      return;
+    }
 
-      const email = formData.get("email") as string;
-
+    // Authentication passed. A failure past this point is unexpected, so we send
+    // it to error tracking with a fixed message and an explicit fingerprint so
+    // that all occurrences group into one issue.
+    try {
       if (flow === "signUp") {
-        if (!name || name.trim().length === 0) {
-          setError("Please enter your name");
-          setLoading(false);
-          return;
-        }
-
         const localPhone =
           phoneNumber && phoneNumber.trim().length > 0
             ? phoneNumber.trim()
             : undefined;
-
-        formData.set("flow", "signUp");
-
-        await signIn("password", formData);
 
         const profileId = await ensureCurrentUserProfile({
           newsletterOptIn,
@@ -73,36 +90,19 @@ export default function SignIn() {
           has_phone_number: !!localPhone,
           newsletter_opt_in: newsletterOptIn,
         });
-
-        router.push("/");
-        setLoading(false);
       } else {
-        formData.set("flow", "signIn");
-        await signIn("password", formData);
-
         const profileId = await ensureCurrentUserProfile({});
         posthog.identify(String(profileId), { email });
         posthog.capture("user_signed_in");
+      }
 
-        router.push("/");
-        setLoading(false);
-      }
-    } catch (authError) {
-      posthog.captureException(
-        authError instanceof Error
-          ? authError
-          : new Error("Authentication failed")
-      );
-      posthog.capture("sign_in_failed", {
-        flow,
+      router.push("/");
+      setLoading(false);
+    } catch {
+      posthog.captureException(new Error("Sign-in profile setup failed"), {
+        $exception_fingerprint: "signin-profile-setup-failed",
       });
-      if (authError instanceof Error) {
-        setError(
-          "Invalid email or password. If you don\u2019t have an account, please sign up."
-        );
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      setError("Something went wrong. Please try again.");
       setLoading(false);
       createdRef.current = false;
     }
