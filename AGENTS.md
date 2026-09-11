@@ -252,7 +252,7 @@ There is no test script or test framework configured in `package.json`.
 | Variable | Required | Notes |
 |---|---|---|
 | `NEXT_PUBLIC_CONVEX_URL` | Yes | Set by `npx convex dev` or manually in `.env.local` |
-| `NEXT_PUBLIC_POSTHOG_KEY` | No | Analytics; gracefully degrades |
+| `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` or `NEXT_PUBLIC_POSTHOG_KEY` | No | Public PostHog project API key. Analytics skips init when unset. Reverse proxy defaults to US Cloud (`/ingest`). |
 | `RESEND_API_KEY` | No | Email notifications for carpools |
 
 ### Admin / test account

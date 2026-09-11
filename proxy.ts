@@ -21,7 +21,7 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
 });
 
 export const config = {
-  // The following matcher runs middleware on all routes
-  // except static assets.
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+  // Skip static assets and the PostHog reverse proxy so Convex auth
+  // middleware does not intercept `/ingest` event capture.
+  matcher: ["/((?!.*\\..*|_next|ingest).*)", "/", "/(api|trpc)(.*)"],
 };
