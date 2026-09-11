@@ -8,6 +8,15 @@ import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { AuthPageShell } from "@/components/auth-page-shell";
 import { api } from "@/convex/_generated/api";
+import {
+  getSignInFailureUserMessage,
+  isExpectedAuthFailure,
+  SIGN_IN_PROFILE_SETUP_FAILURE_FINGERPRINT,
+  SIGN_IN_PROFILE_SETUP_FAILURE_MESSAGE,
+  SIGN_IN_REQUEST_FAILURE_FINGERPRINT,
+  SIGN_IN_REQUEST_FAILURE_MESSAGE,
+  UNEXPECTED_SIGN_IN_USER_MESSAGE,
+} from "@/lib/signin-errors";
 
 export default function SignIn() {
   const { signIn } = useAuthActions();
@@ -40,28 +49,39 @@ export default function SignIn() {
     setError(null);
     setLoading(true);
 
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get("name") as string;
+    const phoneNumber = formData.get("phoneNumber") as string;
+    const email = formData.get("email") as string;
+
+    if (flow === "signUp" && (!name || name.trim().length === 0)) {
+      setError("Please enter your name");
+      setLoading(false);
+      return;
+    }
+
+    formData.set("flow", flow);
+
     try {
-      const formData = new FormData(e.target as HTMLFormElement);
-      const name = formData.get("name") as string;
-      const phoneNumber = formData.get("phoneNumber") as string;
+      await signIn("password", formData);
+    } catch (authError) {
+      if (isExpectedAuthFailure(authError)) {
+        posthog.capture("sign_in_failed", { flow });
+      } else {
+        posthog.captureException(new Error(SIGN_IN_REQUEST_FAILURE_MESSAGE), {
+          $exception_fingerprint: SIGN_IN_REQUEST_FAILURE_FINGERPRINT,
+        });
+      }
+      setError(getSignInFailureUserMessage(authError, flow));
+      setLoading(false);
+      createdRef.current = false;
+      return;
+    }
 
-      const email = formData.get("email") as string;
-
+    try {
       if (flow === "signUp") {
-        if (!name || name.trim().length === 0) {
-          setError("Please enter your name");
-          setLoading(false);
-          return;
-        }
-
-        const localPhone =
-          phoneNumber && phoneNumber.trim().length > 0
-            ? phoneNumber.trim()
-            : undefined;
-
-        formData.set("flow", "signUp");
-
-        await signIn("password", formData);
+        const trimmedPhone = phoneNumber.trim();
+        const localPhone = trimmedPhone.length > 0 ? trimmedPhone : undefined;
 
         const profileId = await ensureCurrentUserProfile({
           newsletterOptIn,
@@ -70,39 +90,25 @@ export default function SignIn() {
 
         posthog.identify(String(profileId), { email, name: name.trim() });
         posthog.capture("user_signed_up", {
-          has_phone_number: !!localPhone,
+          has_phone_number: localPhone !== undefined,
           newsletter_opt_in: newsletterOptIn,
         });
-
-        router.push("/");
-        setLoading(false);
       } else {
-        formData.set("flow", "signIn");
-        await signIn("password", formData);
-
         const profileId = await ensureCurrentUserProfile({});
         posthog.identify(String(profileId), { email });
         posthog.capture("user_signed_in");
+      }
 
-        router.push("/");
-        setLoading(false);
-      }
-    } catch (authError) {
+      router.push("/");
+      setLoading(false);
+    } catch {
       posthog.captureException(
-        authError instanceof Error
-          ? authError
-          : new Error("Authentication failed")
+        new Error(SIGN_IN_PROFILE_SETUP_FAILURE_MESSAGE),
+        {
+          $exception_fingerprint: SIGN_IN_PROFILE_SETUP_FAILURE_FINGERPRINT,
+        }
       );
-      posthog.capture("sign_in_failed", {
-        flow,
-      });
-      if (authError instanceof Error) {
-        setError(
-          "Invalid email or password. If you don\u2019t have an account, please sign up."
-        );
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      setError(UNEXPECTED_SIGN_IN_USER_MESSAGE);
       setLoading(false);
       createdRef.current = false;
     }
