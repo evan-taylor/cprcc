@@ -22,24 +22,20 @@ const isUnactionableNetworkError = (event: CaptureResult): boolean => {
     return false;
   }
 
-  const types = event.properties.$exception_types;
-  const values = event.properties.$exception_values;
-  if (
-    !(Array.isArray(types) && Array.isArray(values)) ||
-    types.length === 0 ||
-    types.length !== values.length
-  ) {
+  // posthog-js sets $exception_list client-side; each entry carries the error
+  // type and message. The $exception_types / $exception_values arrays are
+  // derived server-side and are absent here in before_send.
+  const exceptions = event.properties.$exception_list;
+  if (!Array.isArray(exceptions) || exceptions.length === 0) {
     return false;
   }
 
-  return types.every((type, index) => {
-    const value = values[index];
-    return (
-      type === "TypeError" &&
-      typeof value === "string" &&
-      UNACTIONABLE_NETWORK_MESSAGES.has(value.trim())
-    );
-  });
+  return exceptions.every(
+    (exception) =>
+      exception?.type === "TypeError" &&
+      typeof exception.value === "string" &&
+      UNACTIONABLE_NETWORK_MESSAGES.has(exception.value.trim())
+  );
 };
 
 const dropUnactionableNetworkErrors = (
