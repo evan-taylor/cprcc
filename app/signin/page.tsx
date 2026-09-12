@@ -2,10 +2,11 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AuthPageShell } from "@/components/auth-page-shell";
 import { api } from "@/convex/_generated/api";
 
@@ -19,6 +20,39 @@ const CONVEX_REQUEST_ID_ERROR = /\[Request ID: [^\]]+\]/;
 const isExpectedCredentialError = (error: unknown): boolean =>
   error instanceof Error && CONVEX_REQUEST_ID_ERROR.test(error.message);
 
+// Reports a failed signIn() call and returns the message to show the user. A
+// wrong password is expected and only counted; anything else is captured under a
+// fixed fingerprint so real outages group into one issue.
+const reportSignInFailure = (
+  authError: unknown,
+  flow: "signIn" | "signUp"
+): string => {
+  posthog.capture("sign_in_failed", { flow });
+
+  if (isExpectedCredentialError(authError)) {
+    return "Invalid email or password. If you don’t have an account, please sign up.";
+  }
+
+  posthog.captureException(
+    authError instanceof Error ? authError : new Error("Sign-in failed"),
+    { $exception_fingerprint: "signin-unexpected-failure" }
+  );
+  return "Something went wrong. Please try again.";
+};
+
+// What handleSubmit asks the authenticated effect to finish once the client is
+// signed in. We defer profile creation so the mutation never runs before the
+// auth token has propagated.
+type PendingProfile =
+  | {
+      flow: "signUp";
+      email: string;
+      name: string;
+      newsletterOptIn: boolean;
+      phoneNumber?: string;
+    }
+  | { flow: "signIn"; email: string };
+
 export default function SignIn() {
   const { signIn } = useAuthActions();
   const { isAuthenticated } = useConvexAuth();
@@ -30,102 +64,137 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [newsletterOptIn, setNewsletterOptIn] = useState(true);
   const createdRef = useRef(false);
+  const submittingRef = useRef(false);
+  const pendingProfileRef = useRef<PendingProfile | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    if (isAuthenticated && !createdRef.current) {
-      const pathname = window.location.pathname;
-      if (pathname !== "/signin") {
+  const completeProfileSetup = useCallback(async () => {
+    if (createdRef.current) {
+      return;
+    }
+    createdRef.current = true;
+
+    const pending = pendingProfileRef.current;
+
+    try {
+      if (pending?.flow === "signUp") {
+        const profileId = await ensureCurrentUserProfile({
+          newsletterOptIn: pending.newsletterOptIn,
+          phoneNumber: pending.phoneNumber,
+        });
+        posthog.identify(String(profileId), {
+          email: pending.email,
+          name: pending.name,
+        });
+        posthog.capture("user_signed_up", {
+          has_phone_number: !!pending.phoneNumber,
+          newsletter_opt_in: pending.newsletterOptIn,
+        });
+      } else if (pending) {
+        const profileId = await ensureCurrentUserProfile({});
+        posthog.identify(String(profileId), { email: pending.email });
+        posthog.capture("user_signed_in");
+      } else {
+        // An existing user who lands on /signin already authenticated. Make sure
+        // a profile row exists, but stay silent about any failure.
+        await ensureCurrentUserProfile({});
+      }
+
+      pendingProfileRef.current = null;
+
+      if (pending) {
+        router.push("/");
+      } else {
+        setLoading(false);
+      }
+    } catch (profileError) {
+      createdRef.current = false;
+      submittingRef.current = false;
+      pendingProfileRef.current = null;
+
+      if (!pending) {
         return;
       }
-      createdRef.current = true;
-      ensureCurrentUserProfile({}).catch(() => {
-        // Silently ignore profile creation errors for existing users
-      });
+
+      // A ConvexError carries a user-facing message, for example a missing email
+      // address. Anything else stays a generic message.
+      const message =
+        profileError instanceof ConvexError &&
+        typeof profileError.data === "string"
+          ? profileError.data
+          : "Something went wrong. Please try again.";
+
+      // The real cause is captured, not a synthetic error, so recurrences stay
+      // diagnosable. The fixed fingerprint keeps them in one issue.
+      posthog.captureException(
+        profileError instanceof Error
+          ? profileError
+          : new Error("Sign-in profile setup failed"),
+        { $exception_fingerprint: "signin-profile-setup-failed" }
+      );
+      setError(message);
+      setLoading(false);
     }
-  }, [isAuthenticated, ensureCurrentUserProfile]);
+  }, [ensureCurrentUserProfile, router]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+    if (window.location.pathname !== "/signin") {
+      return;
+    }
+    // Create the profile only once the client is authenticated. A mutation fired
+    // right after signIn() resolves can reach the server before the auth token
+    // propagates and fail as "not authenticated".
+    completeProfileSetup();
+  }, [isAuthenticated, completeProfileSetup]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (submittingRef.current) {
+      return;
+    }
+    submittingRef.current = true;
     setError(null);
     setLoading(true);
 
     const formData = new FormData(e.target as HTMLFormElement);
-    const name = formData.get("name") as string;
-    const phoneNumber = formData.get("phoneNumber") as string;
-    const email = formData.get("email") as string;
+    const name = ((formData.get("name") as string | null) ?? "").trim();
+    const phoneNumber = (
+      (formData.get("phoneNumber") as string | null) ?? ""
+    ).trim();
+    const email = ((formData.get("email") as string | null) ?? "").trim();
 
-    if (flow === "signUp" && (!name || name.trim().length === 0)) {
+    if (flow === "signUp" && name.length === 0) {
       setError("Please enter your name");
       setLoading(false);
+      submittingRef.current = false;
       return;
     }
 
     formData.set("flow", flow);
 
+    const normalizedPhone = phoneNumber.length > 0 ? phoneNumber : undefined;
+    pendingProfileRef.current =
+      flow === "signUp"
+        ? { flow, email, name, newsletterOptIn, phoneNumber: normalizedPhone }
+        : { flow, email };
+
     try {
       await signIn("password", formData);
     } catch (authError) {
-      posthog.capture("sign_in_failed", { flow });
-
-      if (isExpectedCredentialError(authError)) {
-        // We do not send this to error tracking: its request id is unique per
-        // attempt, so each one would open a new issue, and the sign_in_failed
-        // event above already counts these.
-        setError(
-          "Invalid email or password. If you don\u2019t have an account, please sign up."
-        );
-      } else {
-        // A transport or other unexpected failure. Its message is stable, so we
-        // capture it with a fixed fingerprint to surface outages as one issue,
-        // and we do not tell the user their password is wrong.
-        posthog.captureException(
-          authError instanceof Error ? authError : new Error("Sign-in failed"),
-          { $exception_fingerprint: "signin-unexpected-failure" }
-        );
-        setError("Something went wrong. Please try again.");
-      }
-
+      pendingProfileRef.current = null;
+      submittingRef.current = false;
+      setError(reportSignInFailure(authError, flow));
       setLoading(false);
-      createdRef.current = false;
       return;
     }
 
-    // Authentication passed. A failure past this point is unexpected, so we send
-    // it to error tracking with a fixed message and an explicit fingerprint so
-    // that all occurrences group into one issue.
-    try {
-      if (flow === "signUp") {
-        const localPhone =
-          phoneNumber && phoneNumber.trim().length > 0
-            ? phoneNumber.trim()
-            : undefined;
-
-        const profileId = await ensureCurrentUserProfile({
-          newsletterOptIn,
-          phoneNumber: localPhone,
-        });
-
-        posthog.identify(String(profileId), { email, name: name.trim() });
-        posthog.capture("user_signed_up", {
-          has_phone_number: !!localPhone,
-          newsletter_opt_in: newsletterOptIn,
-        });
-      } else {
-        const profileId = await ensureCurrentUserProfile({});
-        posthog.identify(String(profileId), { email });
-        posthog.capture("user_signed_in");
-      }
-
-      router.push("/");
-      setLoading(false);
-    } catch {
-      posthog.captureException(new Error("Sign-in profile setup failed"), {
-        $exception_fingerprint: "signin-profile-setup-failed",
-      });
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
-      createdRef.current = false;
+    // Auth passed. If the client is already authenticated, finish now; otherwise
+    // the effect above runs completeProfileSetup once isAuthenticated flips true.
+    if (isAuthenticated) {
+      await completeProfileSetup();
     }
   };
 
