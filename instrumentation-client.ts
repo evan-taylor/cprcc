@@ -47,13 +47,54 @@ const dropUnactionableNetworkErrors = (
   return event;
 };
 
+// The Meta in-app browser (Instagram, Facebook) injects a native bridge script
+// into every page it opens. That script reads window.webkit.messageHandlers
+// before the bridge exists and throws a TypeError. The throw is in injected
+// code, not ours — the repository never references webkit or messageHandlers —
+// but the injected script has no file of its own, so autocapture attributes it
+// to the visited page and opens a high-severity issue. Instagram links are a
+// main path to our event pages, so this recurs. Match the injected global in the
+// message to drop this class, including the same shape from other in-app
+// browsers.
+const INJECTED_BRIDGE_MESSAGE_MARKER = "webkit.messageHandlers";
+
+const isInjectedInAppBrowserError = (event: CaptureResult): boolean => {
+  if (event.event !== "$exception") {
+    return false;
+  }
+
+  const exceptions = event.properties.$exception_list;
+  if (!Array.isArray(exceptions) || exceptions.length === 0) {
+    return false;
+  }
+
+  return exceptions.every(
+    (exception) =>
+      exception?.type === "TypeError" &&
+      typeof exception.value === "string" &&
+      exception.value.includes(INJECTED_BRIDGE_MESSAGE_MARKER)
+  );
+};
+
+const dropInjectedInAppBrowserErrors = (
+  event: CaptureResult | null
+): CaptureResult | null => {
+  if (event && isInjectedInAppBrowserError(event)) {
+    return null;
+  }
+  return event;
+};
+
 if (POSTHOG_PROJECT_TOKEN) {
   posthog.init(POSTHOG_PROJECT_TOKEN, {
     api_host: "/ingest",
     ui_host: "https://us.posthog.com",
     defaults: "2026-01-30",
     capture_exceptions: true,
-    before_send: dropUnactionableNetworkErrors,
+    before_send: [
+      dropUnactionableNetworkErrors,
+      dropInjectedInAppBrowserErrors,
+    ],
     debug: process.env.NODE_ENV === "development",
   });
 }
