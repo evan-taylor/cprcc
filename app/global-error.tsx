@@ -5,10 +5,28 @@ import { useEffect } from "react";
 
 // A failed chunk fetch cannot be recovered by re-rendering: reset() reruns the
 // same code path against the same missing asset. A full reload fetches fresh
-// HTML that points at the current deployment's chunks. The flag makes the reload
-// fire once per tab session, so a chunk that stays missing shows the page below
-// instead of looping.
-const CHUNK_RELOAD_FLAG = "chunk-load-reloaded";
+// HTML that points at the current deployment's chunks.
+const CHUNK_RELOAD_KEY = "chunk-load-reloaded-at";
+// Reload at most once inside this window. A chunk that stays missing fails again
+// within it and shows the page below instead of looping, while a separate
+// failure later in the same tab falls outside it and gets its own recovery.
+const CHUNK_RELOAD_WINDOW_MS = 10_000;
+
+// sessionStorage throws when access is denied or the quota is exhausted, so a
+// failed read or write must not stop the exception from being reported. In that
+// case skip the reload, since the guard against a loop is no longer reliable.
+const shouldReloadForChunkError = (): boolean => {
+  try {
+    const lastReloadAt = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY));
+    if (Date.now() - lastReloadAt < CHUNK_RELOAD_WINDOW_MS) {
+      return false;
+    }
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 export default function GlobalError({
   error,
@@ -18,11 +36,7 @@ export default function GlobalError({
   reset: () => void;
 }>) {
   useEffect(() => {
-    if (
-      error.name === "ChunkLoadError" &&
-      sessionStorage.getItem(CHUNK_RELOAD_FLAG) !== "1"
-    ) {
-      sessionStorage.setItem(CHUNK_RELOAD_FLAG, "1");
+    if (error.name === "ChunkLoadError" && shouldReloadForChunkError()) {
       window.location.reload();
       return;
     }
