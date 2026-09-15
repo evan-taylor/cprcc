@@ -6,22 +6,23 @@ import { useEffect } from "react";
 // A failed chunk fetch cannot be recovered by re-rendering: reset() reruns the
 // same code path against the same missing asset. A full reload fetches fresh
 // HTML that points at the current deployment's chunks.
-const CHUNK_RELOAD_KEY = "chunk-load-reloaded-at";
-// Reload at most once inside this window. A chunk that stays missing fails again
-// within it and shows the page below instead of looping, while a separate
-// failure later in the same tab falls outside it and gets its own recovery.
-const CHUNK_RELOAD_WINDOW_MS = 10_000;
+const CHUNK_RELOAD_KEY = "chunk-load-reloads";
+// Reload at most this many times per tab session. A chunk that stays missing
+// then reaches the stable error page below instead of looping, whatever the
+// delay between one reload and the next failure. A count, not a time window,
+// because a failure that recurs slower than any window would defeat it.
+const MAX_CHUNK_RELOADS = 2;
 
-// sessionStorage throws when access is denied or the quota is exhausted, so a
-// failed read or write must not stop the exception from being reported. In that
-// case skip the reload, since the guard against a loop is no longer reliable.
+// sessionStorage throws when access is denied or the quota is exhausted. A failed
+// read or write must not stop the exception from being reported, so skip the
+// reload in that case: without the counter the loop can no longer be bounded.
 const shouldReloadForChunkError = (): boolean => {
   try {
-    const lastReloadAt = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY));
-    if (Date.now() - lastReloadAt < CHUNK_RELOAD_WINDOW_MS) {
+    const reloads = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY)) || 0;
+    if (reloads >= MAX_CHUNK_RELOADS) {
       return false;
     }
-    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(reloads + 1));
     return true;
   } catch {
     return false;
