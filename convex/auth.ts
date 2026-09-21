@@ -1,5 +1,6 @@
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, type EmailConfig } from "@convex-dev/auth/server";
+import { AUTH_SESSION_DURATION_MS } from "../lib/auth-session";
 import {
   generatePasswordResetEmailHtml,
   generatePasswordResetEmailSubject,
@@ -74,4 +75,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       },
     }),
   ],
+  session: {
+    inactiveDurationMs: AUTH_SESSION_DURATION_MS,
+    totalDurationMs: AUTH_SESSION_DURATION_MS,
+  },
 });
