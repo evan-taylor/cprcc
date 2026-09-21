@@ -43,6 +43,12 @@ This website provides information about the Cal Poly Red Cross Club, including:
    RESEND_API_KEY=your_resend_api_key (optional, required for password reset and carpool emails)
    ```
 
+   To upload browser source maps to PostHog at build time (so production
+   exception stacks resolve to real files), set two more variables in the
+   build/deploy environment: `POSTHOG_API_KEY` (a PostHog personal API key,
+   prefix `phx_`) and `POSTHOG_PROJECT_ID`. The build skips the upload when the
+   personal key is absent, so local builds need no change.
+
 4. Set up Convex authentication:
    ```bash
    npx convex dev
