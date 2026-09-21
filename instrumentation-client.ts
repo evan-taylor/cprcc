@@ -85,6 +85,34 @@ const dropInjectedInAppBrowserErrors = (
   return event;
 };
 
+// A ChunkLoadError means the browser could not fetch a Next.js static chunk: a
+// stale or unreachable deployment asset, or a request dropped inside an in-app
+// browser. It is not a defect in a route or component, and it clears when the
+// page reloads against the current deployment (see app/global-error.tsx). Left
+// alone, autocapture opens a fresh high-severity issue for each one. Match the
+// error type to drop this class.
+const isChunkLoadError = (event: CaptureResult): boolean => {
+  if (event.event !== "$exception") {
+    return false;
+  }
+
+  const exceptions = event.properties.$exception_list;
+  if (!Array.isArray(exceptions) || exceptions.length === 0) {
+    return false;
+  }
+
+  return exceptions.every((exception) => exception?.type === "ChunkLoadError");
+};
+
+const dropChunkLoadErrors = (
+  event: CaptureResult | null
+): CaptureResult | null => {
+  if (event && isChunkLoadError(event)) {
+    return null;
+  }
+  return event;
+};
+
 if (POSTHOG_PROJECT_TOKEN) {
   posthog.init(POSTHOG_PROJECT_TOKEN, {
     api_host: "/ingest",
@@ -94,6 +122,7 @@ if (POSTHOG_PROJECT_TOKEN) {
     before_send: [
       dropUnactionableNetworkErrors,
       dropInjectedInAppBrowserErrors,
+      dropChunkLoadErrors,
     ],
     debug: process.env.NODE_ENV === "development",
   });
