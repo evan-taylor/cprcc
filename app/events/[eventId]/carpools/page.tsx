@@ -60,9 +60,10 @@ export default function CarpoolManagementPage() {
   const eventId = event?._id as Id<"events"> | undefined;
 
   const currentUser = useQuery(api.users.getCurrentUser);
+  const isBoardMember = currentUser?.role === "board";
   const carpools = useQuery(
     api.carpools.getCarpools,
-    eventId ? { eventId } : "skip"
+    eventId && isBoardMember ? { eventId } : "skip"
   );
   const generateCarpools = useMutation(api.carpools.generateCarpools);
   const finalizeCarpools = useMutation(api.carpools.finalizeCarpools);
@@ -100,16 +101,12 @@ export default function CarpoolManagementPage() {
     })
   );
 
-  if (
-    event === undefined ||
-    currentUser === undefined ||
-    carpools === undefined
-  ) {
+  if (currentUser === undefined) {
     return (
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
         <PageLoader
-          detail="Loading drivers, riders, and current assignments."
+          detail="Checking board permissions before loading assignments."
           fullScreen={false}
           message="Loading carpool manager..."
         />
@@ -131,6 +128,19 @@ export default function CarpoolManagementPage() {
             </p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (event === undefined) {
+    return (
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
+        <SiteHeader />
+        <PageLoader
+          detail="Loading event details before opening carpool assignments."
+          fullScreen={false}
+          message="Loading carpool manager..."
+        />
       </div>
     );
   }
@@ -164,6 +174,19 @@ export default function CarpoolManagementPage() {
             </p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (carpools === undefined) {
+    return (
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
+        <SiteHeader />
+        <PageLoader
+          detail="Loading drivers, riders, and current assignments."
+          fullScreen={false}
+          message="Loading carpool manager..."
+        />
       </div>
     );
   }
