@@ -17,6 +17,47 @@ function deduplicateByUser<
   return Array.from(byUser.values());
 }
 
+async function deleteCarpoolWithMembers(
+  ctx: MutationCtx,
+  carpoolId: Id<"carpools">
+) {
+  const members = await ctx.db
+    .query("carpoolMembers")
+    .withIndex("by_carpool", (q) => q.eq("carpoolId", carpoolId))
+    .collect();
+  for (const member of members) {
+    await ctx.db.delete(member._id);
+  }
+  await ctx.db.delete(carpoolId);
+}
+
+export async function removeRsvpCarpoolAssignments(
+  ctx: MutationCtx,
+  rsvpId: Id<"rsvps">,
+  eventId: Id<"events">
+) {
+  const riderMemberships = await ctx.db
+    .query("carpoolMembers")
+    .withIndex("by_rsvp", (q) => q.eq("rsvpId", rsvpId))
+    .collect();
+
+  for (const member of riderMemberships) {
+    await ctx.db.delete(member._id);
+  }
+
+  const eventCarpools = await ctx.db
+    .query("carpools")
+    .withIndex("by_event", (q) => q.eq("eventId", eventId))
+    .collect();
+
+  for (const carpool of eventCarpools) {
+    if (carpool.driverRsvpId !== rsvpId) {
+      continue;
+    }
+    await deleteCarpoolWithMembers(ctx, carpool._id);
+  }
+}
+
 async function deleteExistingCarpools(ctx: MutationCtx, eventId: Id<"events">) {
   const existingCarpools = await ctx.db
     .query("carpools")
@@ -24,14 +65,7 @@ async function deleteExistingCarpools(ctx: MutationCtx, eventId: Id<"events">) {
     .collect();
 
   for (const carpool of existingCarpools) {
-    const members = await ctx.db
-      .query("carpoolMembers")
-      .withIndex("by_carpool", (q) => q.eq("carpoolId", carpool._id))
-      .collect();
-    for (const member of members) {
-      await ctx.db.delete(member._id);
-    }
-    await ctx.db.delete(carpool._id);
+    await deleteCarpoolWithMembers(ctx, carpool._id);
   }
 }
 
@@ -176,9 +210,11 @@ export const getCarpools = query({
     const carpoolDetails = await Promise.all(
       carpools.map(async (carpool) => {
         const driverRsvp = await ctx.db.get(carpool.driverRsvpId);
-        const driverProfile = driverRsvp
-          ? await ctx.db.get(driverRsvp.userProfileId)
-          : null;
+        if (!driverRsvp) {
+          return null;
+        }
+
+        const driverProfile = await ctx.db.get(driverRsvp.userProfileId);
 
         const members = await ctx.db
           .query("carpoolMembers")
@@ -245,17 +281,17 @@ export const getCarpools = query({
             name: driverProfile?.name ?? "Unknown",
             email: driverProfile?.email ?? "",
             phoneNumber: driverProfile?.phoneNumber,
-            campusLocation: driverRsvp?.campusLocation,
-            carType: driverRsvp?.driverInfo?.carType ?? "",
-            carColor: driverRsvp?.driverInfo?.carColor ?? "",
-            capacity: driverRsvp?.driverInfo?.capacity ?? 0,
+            campusLocation: driverRsvp.campusLocation,
+            carType: driverRsvp.driverInfo?.carType ?? "",
+            carColor: driverRsvp.driverInfo?.carColor ?? "",
+            capacity: driverRsvp.driverInfo?.capacity ?? 0,
           },
           riders: riderDetails,
         };
       })
     );
 
-    return carpoolDetails;
+    return carpoolDetails.filter((detail) => detail !== null);
   },
 });
 

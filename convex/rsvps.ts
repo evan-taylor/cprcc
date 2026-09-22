@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { removeRsvpCarpoolAssignments } from "./carpools";
 import { getCurrentUserProfile, requireAuth } from "./lib/auth";
 
 function validateTransportOptions(args: {
@@ -184,6 +185,7 @@ export const deleteRsvp = mutation({
       throw new Error("Can only delete your own RSVPs");
     }
 
+    await removeRsvpCarpoolAssignments(ctx, args.rsvpId, rsvp.eventId);
     await ctx.db.delete(args.rsvpId);
   },
 });
