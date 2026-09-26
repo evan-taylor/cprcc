@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
-import { requireBoardMember } from "./lib/auth";
+import { getCurrentUserProfile, requireBoardMember } from "./lib/auth";
 
 function deduplicateByUser<
   T extends { userProfileId: string; createdAt: number },
@@ -136,24 +136,12 @@ export const getCarpools = query({
   args: {
     eventId: v.id("events"),
   },
-  returns: v.array(
-    v.object({
-      carpoolId: v.id("carpools"),
-      status: v.union(v.literal("draft"), v.literal("finalized")),
-      driver: v.object({
-        rsvpId: v.id("rsvps"),
-        name: v.string(),
-        email: v.string(),
-        phoneNumber: v.optional(v.string()),
-        campusLocation: v.optional(
-          v.union(v.literal("onCampus"), v.literal("offCampus"))
-        ),
-        carType: v.string(),
-        carColor: v.string(),
-        capacity: v.number(),
-      }),
-      riders: v.array(
-        v.object({
+  returns: v.union(
+    v.array(
+      v.object({
+        carpoolId: v.id("carpools"),
+        status: v.union(v.literal("draft"), v.literal("finalized")),
+        driver: v.object({
           rsvpId: v.id("rsvps"),
           name: v.string(),
           email: v.string(),
@@ -161,12 +149,32 @@ export const getCarpools = query({
           campusLocation: v.optional(
             v.union(v.literal("onCampus"), v.literal("offCampus"))
           ),
-        })
-      ),
-    })
+          carType: v.string(),
+          carColor: v.string(),
+          capacity: v.number(),
+        }),
+        riders: v.array(
+          v.object({
+            rsvpId: v.id("rsvps"),
+            name: v.string(),
+            email: v.string(),
+            phoneNumber: v.optional(v.string()),
+            campusLocation: v.optional(
+              v.union(v.literal("onCampus"), v.literal("offCampus"))
+            ),
+          })
+        ),
+      })
+    ),
+    v.null()
   ),
   handler: async (ctx, args) => {
-    await requireBoardMember(ctx);
+    // Signed-out visitors and expired sessions get null, not a thrown error,
+    // so the page can prompt for sign-in instead of crashing.
+    const profile = await getCurrentUserProfile(ctx);
+    if (profile?.role !== "board") {
+      return null;
+    }
 
     const carpools = await ctx.db
       .query("carpools")

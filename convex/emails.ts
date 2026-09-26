@@ -48,6 +48,10 @@ export const sendCarpoolEmails = action({
       eventId: args.eventId,
     });
 
+    if (!carpools) {
+      throw new Error("Only board members can send carpool emails");
+    }
+
     if (!process.env.RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY not configured");
     }
