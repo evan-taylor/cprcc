@@ -12,6 +12,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useAction, useMutation, useQuery } from "convex/react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useState } from "react";
@@ -117,7 +118,31 @@ export default function CarpoolManagementPage() {
     );
   }
 
-  if (!currentUser || currentUser.role !== "board") {
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
+        <SiteHeader />
+        <div className="flex items-center justify-center pt-20">
+          <div className="rounded-3xl border border-rose-300 bg-white p-6 text-center shadow-sm sm:p-10">
+            <h1 className="font-semibold text-2xl text-[color:var(--color-text-emphasis)]">
+              Sign In Required
+            </h1>
+            <p className="mt-3 text-[color:var(--color-text-emphasis)]">
+              Sign in with a board account to manage carpools.
+            </p>
+            <Link
+              className="mt-6 inline-block rounded-full bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700"
+              href="/signin"
+            >
+              Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentUser.role !== "board" || carpools === null) {
     return (
       <div className="min-h-screen bg-[color:var(--color-bg-subtle)]">
         <SiteHeader />
